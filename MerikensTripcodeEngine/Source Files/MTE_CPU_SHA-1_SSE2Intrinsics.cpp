@@ -37,7 +37,7 @@
 // INCLUDE FILE(S)                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "MERIKENsTripcodeEngine.h"
+#include "MerikensTripcodeEngine.h"
 
 
 

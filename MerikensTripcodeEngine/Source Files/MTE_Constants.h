@@ -141,7 +141,7 @@
 
 // For screen output
 #define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1 Alpha 6"
-#define COMMAND                      "MERIKENsTripcodeEngine"
+#define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10
 #define PAUSE_INTERVAL               100          // in milliseconds

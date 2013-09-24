@@ -34,7 +34,7 @@
 // INCLUDE FILE(S)                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-// #include "MERIKENsTripcodeEngine.h"
+// #include "MerikensTripcodeEngine.h"
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 #include <nmmintrin.h>
