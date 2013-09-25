@@ -234,6 +234,8 @@ BOOL IsCPUBasedOnNehalemMicroarchitecture()
 {
 	int results[4];
 	int processorInfoArray[] = {
+		// 0x306a0, // For testing
+
 		// See: http://software.intel.com/en-us/articles/intel-architecture-and-processor-identification-with-cpuid-model-and-family-numbers
 		0x20650,
 		0x206c0,

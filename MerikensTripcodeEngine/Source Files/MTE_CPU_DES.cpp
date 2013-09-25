@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 6
+// Meriken's Tripcode Engine 1.1 Alpha 7
 // Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -267,35 +267,57 @@ static void DES_SetSalt(DES_Context *context, int salt)
 	unsigned char *p = (unsigned char *)(context->crypt25);
 	unsigned char instructionBytes[3];
 
-	// Rewrite "movdqa/vmovdqa xmm*, [rbx + 0xffffffff]" based on context->ExpansionFunction[].
-	if (context->useAVX) {
-		// vmovdqa xmm*, [rbx + 0xffffffff]
-		instructionBytes[0] = 0xc5;
-		instructionBytes[1] = 0xf9;
-		instructionBytes[2] = 0x6f;
-	} else {
-		// movdqa xmm*, [rbx + 0xffffffff]
-		instructionBytes[0] = 0x66;
-		instructionBytes[1] = 0x0f;
-		instructionBytes[2] = 0x6f;
-	}
+	// Rewrite "movdqa/vmovdqa/movaps xmm*, [rbx + 0xffffffff]" based on context->ExpansionFunction[].
 	for (int i = 0; rewriteTable[i] >= 0; ++i) {
-		for (; 
-			    *(p + 0) != instructionBytes[0]
-			 || *(p + 1) != instructionBytes[1]
-			 || *(p + 2) != instructionBytes[2]
-			 || (   *(p + 3) != 0x83
-			     && *(p + 3) != 0x8b
-			     && *(p + 3) != 0x93
-			     && *(p + 3) != 0x9b
-			     && *(p + 3) != 0xa3
-			     && *(p + 3) != 0xab);
-			 ++p)
-			;
+		if (context->useAVX) {
+			// vmovdqa xmm*, [rbx + 0xffffffff]
+			for (; 
+					*(p + 0) != 0xc5
+				 || *(p + 1) != 0xf9
+				 || *(p + 2) != 0x6f
+				 || (   *(p + 3) != 0x83
+					 && *(p + 3) != 0x8b
+					 && *(p + 3) != 0x93
+					 && *(p + 3) != 0x9b
+					 && *(p + 3) != 0xa3
+					 && *(p + 3) != 0xab);
+				 ++p)
+				;
+			p+= 4;
+		} else if (IsCPUBasedOnNehalemMicroarchitecture()) {
+			// movdqa xmm*, [rbx + 0xffffffff]
+			for (; 
+					*(p + 0) != 0x66
+				 || *(p + 1) != 0x0f
+				 || *(p + 2) != 0x6f
+				 || (   *(p + 3) != 0x83
+					 && *(p + 3) != 0x8b
+					 && *(p + 3) != 0x93
+					 && *(p + 3) != 0x9b
+					 && *(p + 3) != 0xa3
+					 && *(p + 3) != 0xab);
+				 ++p)
+				;
+			p+= 4;
+		} else {
+			// movaps xmm*, [rbx + 0xffffffff]
+			for (; 
+					*(p + 0) != 0x0f
+				 || *(p + 1) != 0x28
+				 || (   *(p + 2) != 0x83
+					 && *(p + 2) != 0x8b
+					 && *(p + 2) != 0x93
+					 && *(p + 2) != 0x9b
+					 && *(p + 2) != 0xa3
+					 && *(p + 2) != 0xab);
+				 ++p)
+				;
+			p += 3;
+		}
 		// printf("offset = %d\n", (unsigned char *)p - (unsigned char *)(context->crypt25));
 		if (rewriteTable[i] != SKIP)
-			*(__int32 *)(p + 4) = context->expansionFunction[rewriteTable[i]] * 8;
-		p += 8;
+			*(__int32 *)p = context->expansionFunction[rewriteTable[i]] * 8;
+		p += 4;
 	}
 #endif
 
@@ -309,7 +331,7 @@ static void DES_SetSalt(DES_Context *context, int salt)
 
 #ifndef USE_ASSEMBLER_FUNCTION
 
-static void DES_Crypt25_SSE2(DES_Context *context)
+static void DES_Crypt25_SSE2Intrinsics(DES_Context *context)
 {
 	int iterations, roundsAndSwapped; 
 	int keyScheduleIndexBase = 0;
@@ -318,13 +340,13 @@ static void DES_Crypt25_SSE2(DES_Context *context)
 	iterations = 25;
 
 start:
-	CPU_DES_SBoxes1_SSE2(context->expansionFunction, context->expandedKeySchedule, context->dataBlocks, keyScheduleIndexBase);
+	CPU_DES_SBoxes1_SSE2Intrinsics(context->expansionFunction, context->expandedKeySchedule, context->dataBlocks, keyScheduleIndexBase);
 
 	if (roundsAndSwapped == 0x100)
 		goto next;
 
 swap:
-	CPU_DES_SBoxes2_SSE2(context->expansionFunction, context->expandedKeySchedule, context->dataBlocks, keyScheduleIndexBase);
+	CPU_DES_SBoxes2_SSE2Intrinsics(context->expansionFunction, context->expandedKeySchedule, context->dataBlocks, keyScheduleIndexBase);
 
 	keyScheduleIndexBase += 96;
 
@@ -360,7 +382,7 @@ static void DES_Crypt(DES_Context *context)
 #ifdef USE_ASSEMBLER_FUNCTION
  	(*(context->crypt25))(context);
 #else
-	DES_Crypt25_SSE2(context);
+	DES_Crypt25_SSE2Intrinsics(context);
 #endif
 }
 
@@ -555,9 +577,13 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCPU(LPVOID threadParams)
 #ifdef USE_ASSEMBLER_FUNCTION
 	// Prepare a copy of DES_Crypt25_*() for thread-safe rewrites.
 #ifdef _M_X64
-	char *base = (char *)(context.useAVX ? DES_Crypt25_x64_AVX : DES_Crypt25_x64_SSE2);
+	char *base = (char *)(context.useAVX                         ? DES_Crypt25_x64_AVX          :
+		                  IsCPUBasedOnNehalemMicroarchitecture() ? DES_Crypt25_x64_SSE2_Nehalem :
+						                                           DES_Crypt25_x64_SSE2          );
 #else
-	char *base = (char *)(context.useAVX ? DES_Crypt25_x86_AVX : DES_Crypt25_x86_SSE2);
+	char *base = (char *)(context.useAVX                         ? DES_Crypt25_x86_AVX          :
+		                  IsCPUBasedOnNehalemMicroarchitecture() ? DES_Crypt25_x86_SSE2_Nehalem :
+						                                           DES_Crypt25_x86_SSE2          );
 #endif
 	char *p;
 	int functionSize = 0;

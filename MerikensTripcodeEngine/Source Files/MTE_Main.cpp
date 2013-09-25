@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 6
+// Meriken's Tripcode Engine 1.1 Alpha 7
 // Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -1017,7 +1017,11 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 
 			printf("CPU\n");
 			printf("===\n");
-			printf("  Processor Info:           0x%06x\n", results[0]);
+			if (IsCPUBasedOnNehalemMicroarchitecture()) {
+				printf("  Processor Info:           0x%06x (Nehalem)\n", results[0]);
+			} else {
+				printf("  Processor Info:           0x%06x\n", results[0]);
+			}
 			printf("  Number of Logical Cores:  %d\n", sysInfo.dwNumberOfProcessors);
 			printf("  Number of Search Threads: %d\n", numCPUSearchThreads);
 			printf("\n");

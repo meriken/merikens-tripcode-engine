@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 6
+// Meriken's Tripcode Engine 1.1 Alpha 7
 // Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -578,7 +578,7 @@ typedef __declspec(align(16)) __m128i vtype;
 #define y(p, q) DES_VECTOR_XOR_FUNC(dataBlocks[p],                    expandedKeySchedule[keyScheduleIndexBase + (q)])
 #define z(r)    (dataBlocks[r])
 
-void CPU_DES_SBoxes1_SSE2(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase)
+void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase)
 {
 	vtype var0;
 	vtype var1;
@@ -611,7 +611,7 @@ void CPU_DES_SBoxes1_SSE2(unsigned char *expansionFunction, __m128i *expandedKey
 	s8(y(27, 42), y(28, 43), y(29, 44), y(30, 45), y(31, 46), y( 0, 47), z(36), z(58), z(46), z(52));
 }
 
-void CPU_DES_SBoxes2_SSE2(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase)
+void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase)
 {
 	vtype var0;
 	vtype var1;

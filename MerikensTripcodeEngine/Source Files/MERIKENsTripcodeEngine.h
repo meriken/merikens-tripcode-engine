@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 6
+// Meriken's Tripcode Engine 1.1 Alpha 7
 // Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -210,18 +210,20 @@ extern void TestNewCode();
 // BITSLICED DES                                                             //
 ///////////////////////////////////////////////////////////////////////////////
 
-extern     void CPU_DES_SBoxes1_SSE2(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase);
-extern     void CPU_DES_SBoxes2_SSE2(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase);
+extern     void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase);
+extern     void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase);
 
 extern "C" void CPU_DES_SBoxes1_asm_x64(void *context, __int64 keyScheduleIndexBase);
 extern "C" void CPU_DES_SBoxes2_asm_x64(void *context, __int64 keyScheduleIndexBase);
 
 #ifdef _M_X64
-extern "C" void DES_Crypt25_x64_SSE2(void *context);
-extern "C" void DES_Crypt25_x64_AVX (void *context);
+extern "C" void DES_Crypt25_x64_SSE2        (void *context);
+extern "C" void DES_Crypt25_x64_SSE2_Nehalem(void *context);
+extern "C" void DES_Crypt25_x64_AVX         (void *context);
 #else
-extern "C" void DES_Crypt25_x86_SSE2(void *context);
-extern "C" void DES_Crypt25_x86_AVX (void *context);
+extern "C" void DES_Crypt25_x86_SSE2        (void *context);
+extern "C" void DES_Crypt25_x86_SSE2_Nehalem(void *context);
+extern "C" void DES_Crypt25_x86_AVX         (void *context);
 #endif
 
 
@@ -273,4 +275,5 @@ extern unsigned char charTableForKagami[256];
 // CPUID                                                                     //
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C" int IsAVXSupported();
+extern "C" int  IsAVXSupported();
+extern     BOOL IsCPUBasedOnNehalemMicroarchitecture();

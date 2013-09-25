@@ -28,8 +28,7 @@
 ; You should have received a copy of the GNU General Public License
 ; along with this program.  If not, see <http:;www.gnu.org/licenses/>.
 
-global _DES_Crypt25_x86_SSE2
-global _TestASM
+global _DES_Crypt25_x86_SSE2_Nehalem
 
 
 
@@ -65,102 +64,102 @@ global _TestASM
 ; This is the original macro.
 %macro prepare_args_for_sbox_x 6
 	movzx  eax,  byte [ecx + %1]
-	movaps xmm0, [data_blocks_address + eax * 8]
+	movdqa xmm0, [data_blocks_address + eax * 8]
 	movzx  eax,  byte [ecx + %2]
-	movaps xmm1, [data_blocks_address + eax * 8]
+	movdqa xmm1, [data_blocks_address + eax * 8]
 	pxor   xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %1 * 16]
 	pxor   xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
 
 	movzx  eax,  byte [ecx + %3]
-	movaps xmm2, [data_blocks_address + eax * 8]
+	movdqa xmm2, [data_blocks_address + eax * 8]
 	movzx  eax,  byte [ecx + %4]
-	movaps xmm3, [data_blocks_address + eax * 8]
+	movdqa xmm3, [data_blocks_address + eax * 8]
 	pxor   xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %3 * 16]
 	pxor   xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
 
 	movzx  eax,  byte [ecx + %5]
-	movaps xmm4, [data_blocks_address + eax * 8]
+	movdqa xmm4, [data_blocks_address + eax * 8]
 	movzx  eax,  byte [ecx + %6]
-	movaps xmm5, [data_blocks_address + eax * 8]
+	movdqa xmm5, [data_blocks_address + eax * 8]
 	pxor   xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %5 * 16]
 	pxor   xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
 %endmacro
 
 ; "0xffffffff" will be rewritten in DES_SetSalt() based on context->expansionFunction[].
 %macro prepare_args_for_sbox_x_with_rewrites 6
-	movaps xmm0, [data_blocks_address + 0xffffffff]
-	movaps xmm1, [data_blocks_address + 0xffffffff]
+	movdqa xmm0, [data_blocks_address + 0xffffffff]
+	movdqa xmm1, [data_blocks_address + 0xffffffff]
 	pxor   xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %1 * 16]
-	movaps xmm2, [data_blocks_address + 0xffffffff]
+	movdqa xmm2, [data_blocks_address + 0xffffffff]
 	pxor   xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
-	movaps xmm3, [data_blocks_address + 0xffffffff]
+	movdqa xmm3, [data_blocks_address + 0xffffffff]
 	pxor   xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %3 * 16]
-	movaps xmm4, [data_blocks_address + 0xffffffff]
+	movdqa xmm4, [data_blocks_address + 0xffffffff]
 	pxor   xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
-	movaps xmm5, [data_blocks_address + 0xffffffff]
+	movdqa xmm5, [data_blocks_address + 0xffffffff]
 	pxor   xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %5 * 16]
 	pxor   xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
 %endmacro
 
 %macro prepare_args_for_sbox_y 12
 	; 12 ops
-	movaps xmm0, [data_blocks_address + %1 * 16]
-	movaps xmm1, [data_blocks_address + %3 * 16]
+	movdqa xmm0, [data_blocks_address + %1 * 16]
+	movdqa xmm1, [data_blocks_address + %3 * 16]
 	pxor   xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
-	movaps xmm2, [data_blocks_address + %5 * 16]
+	movdqa xmm2, [data_blocks_address + %5 * 16]
 	pxor   xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
-	movaps xmm3, [data_blocks_address + %7 * 16]
+	movdqa xmm3, [data_blocks_address + %7 * 16]
 	pxor   xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
-	movaps xmm4, [data_blocks_address + %9 * 16]
+	movdqa xmm4, [data_blocks_address + %9 * 16]
 	pxor   xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %8 * 16]
-	movaps xmm5, [data_blocks_address + %11 * 16]
+	movdqa xmm5, [data_blocks_address + %11 * 16]
 	pxor   xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %10 * 16]
 	pxor   xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %12 * 16]
 %endmacro
 
 %macro sbox1 4
-	movaps tmp_at(1), xmm0
-	movaps xmm7, xmm5
-	movaps tmp_at(4), xmm4
-	movaps xmm6, xmm2
-	movaps tmp_at(2), xmm1
+	movdqa tmp_at(1), xmm0
+	movdqa xmm7, xmm5
+	movdqa tmp_at(4), xmm4
+	movdqa xmm6, xmm2
+	movdqa tmp_at(2), xmm1
 	por xmm7, xmm2
-	movaps tmp_at(3), xmm3
+	movdqa tmp_at(3), xmm3
 	pxor xmm6, xmm0
-	movaps tmp_at(5), xmm7
-	movaps xmm1, xmm6
+	movdqa tmp_at(5), xmm7
+	movdqa xmm1, xmm6
 	pandn xmm4, xmm0
 	pand xmm1, xmm7
-	movaps xmm7, xmm1
+	movdqa xmm7, xmm1
 	por xmm7, xmm5
 	pxor xmm1, xmm3
 	pxor xmm3, xmm4
-	movaps tmp_at(6), xmm1
-	movaps xmm1, xmm3
+	movdqa tmp_at(6), xmm1
+	movdqa xmm1, xmm3
 	pandn xmm3, tmp_at(6)
-	movaps tmp_at(7), xmm3
-	movaps xmm3, xmm5
+	movdqa tmp_at(7), xmm3
+	movdqa xmm3, xmm5
 	por xmm5, xmm0
 	pxor xmm3, tmp_at(4)
-	movaps tmp_at(8), xmm3
-	movaps xmm0, xmm5
+	movdqa tmp_at(8), xmm3
+	movdqa xmm0, xmm5
 	pandn xmm6, xmm3
 	pxor xmm3, xmm2
 	pandn xmm4, xmm2
 	pandn xmm3, xmm1
 	pxor xmm7, xmm3
-	movaps xmm3, tmp_at(7)
+	movdqa xmm3, tmp_at(7)
 	pandn xmm5, tmp_at(3)
 	por xmm0, xmm7
 	pandn xmm3, xmm7
-	movaps tmp_at(9), xmm3
+	movdqa tmp_at(9), xmm3
 	pand xmm7, tmp_at(5)
-	movaps xmm3, tmp_at(6)
-	movaps xmm2, xmm0
+	movdqa xmm3, tmp_at(6)
+	movdqa xmm2, xmm0
 	pxor xmm2, xmm1
 	pandn xmm3, tmp_at(4)
 	pandn xmm4, xmm2
-	movaps xmm2, tmp_at(2)
+	movdqa xmm2, tmp_at(2)
 	pxor xmm7, xmm4
 	pxor xmm4, tmp_at(8)
 	pxor xmm5, xmm3
@@ -169,7 +168,7 @@ global _TestASM
 	pxor xmm3, xmm0
 	pandn xmm2, xmm3
 	pxor xmm0, tmp_at(5)
-	movaps xmm3, tmp_at(7)
+	movdqa xmm3, tmp_at(7)
 	por xmm3, tmp_at(2)
 	pxor xmm7, pnot
 	pxor xmm3, %1
@@ -178,7 +177,7 @@ global _TestASM
 	pxor xmm2, %3
 	pxor xmm7, xmm4
 	pxor xmm3, xmm7
-	movaps %1, xmm3
+	movdqa %1, xmm3
 	por xmm5, xmm6
 	por xmm7, tmp_at(8)
 	por xmm0, xmm5
@@ -186,81 +185,81 @@ global _TestASM
 	pxor xmm0, xmm4
 	pxor xmm7, xmm0
 	por xmm1, tmp_at(4)
-	movaps xmm3, tmp_at(2)
+	movdqa xmm3, tmp_at(2)
 	pand xmm4, tmp_at(9)
 	pandn xmm0, xmm1
 	pxor xmm4, xmm0
 	por xmm3, tmp_at(9)
 	por xmm4, tmp_at(2)
-	movaps %3, xmm2
+	movdqa %3, xmm2
 	pxor xmm7, xmm3
 	pxor xmm4, xmm5
 	pxor xmm4, %4
-	movaps %2, xmm7
-	movaps %4, xmm4
+	movdqa %2, xmm7
+	movdqa %4, xmm4
 %endmacro
 
 %macro sbox2 4
-	movaps tmp_at(2), xmm2
-	movaps tmp_at(1), xmm1
-	movaps xmm2, xmm5
-	movaps tmp_at(4), xmm4
+	movdqa tmp_at(2), xmm2
+	movdqa tmp_at(1), xmm1
+	movdqa xmm2, xmm5
+	movdqa tmp_at(4), xmm4
 	pandn xmm2, xmm0
-	movaps tmp_at(3), xmm3
+	movdqa tmp_at(3), xmm3
 	pandn xmm2, xmm4
-	movaps xmm6, xmm0
-	movaps xmm7, xmm2
+	movdqa xmm6, xmm0
+	movdqa xmm7, xmm2
 	pxor xmm0, pnot
 	por xmm7, xmm1
 	pxor xmm1, xmm4
-	movaps tmp_at(5), xmm7
+	movdqa tmp_at(5), xmm7
 	pand xmm6, xmm1
-	movaps xmm7, xmm5
+	movdqa xmm7, xmm5
 	pxor xmm6, xmm4
 	pandn xmm7, xmm1
-	movaps xmm4, xmm3
+	movdqa xmm4, xmm3
 	pxor xmm2, xmm7
 	pandn xmm7, xmm6
 	pxor xmm1, xmm5
-	movaps tmp_at(7), xmm7
-	movaps xmm7, xmm5
+	movdqa tmp_at(7), xmm7
+	movdqa xmm7, xmm5
 	pand xmm5, tmp_at(2)
 	pand xmm2, tmp_at(5)
-	movaps tmp_at(8), xmm5
+	movdqa tmp_at(8), xmm5
 	pandn xmm5, xmm2
 	pand xmm2, tmp_at(2)
-	movaps xmm7, tmp_at(8)
+	movdqa xmm7, tmp_at(8)
 	pandn xmm5, tmp_at(3)
 	pandn xmm7, xmm1
 	pxor xmm0, xmm2
-	movaps xmm3, xmm7
+	movdqa xmm3, xmm7
 	pxor xmm3, xmm0
 	pxor xmm5, %2
 	pandn xmm7, tmp_at(1)
 	pxor xmm7, xmm6
 	pxor xmm5, xmm3
-	movaps xmm6, xmm7
-	movaps %2, xmm5
-	movaps xmm5, tmp_at(7)
+	movdqa xmm6, xmm7
+	movdqa %2, xmm5
+	movdqa xmm5, tmp_at(7)
 	pandn xmm4, tmp_at(5)
 	pandn xmm6, xmm0
 	pxor xmm3, tmp_at(5)
-	movaps xmm0, xmm1
+	movdqa xmm0, xmm1
 	pxor xmm6, xmm4
 	pxor xmm0, tmp_at(2)
 	pxor xmm6, xmm0
-	movaps xmm4, xmm0
+	movdqa xmm4, xmm0
 	pxor xmm6, %1
 	pandn xmm0, tmp_at(1)
 	pxor xmm2, tmp_at(4)
 	pxor xmm0, xmm3
-	movaps %1, xmm6
+	movdqa %1, xmm6
 	por xmm3, xmm1
 	por xmm0, tmp_at(8)
 	pxor xmm0, xmm4
-	movaps xmm4, xmm0
+	movdqa xmm4, xmm0
 	pandn xmm0, tmp_at(2)
-	movaps xmm6, tmp_at(3)
+	movdqa xmm6, tmp_at(3)
 	pxor xmm0, tmp_at(7)
 	por xmm0, xmm7
 	por xmm5, xmm6
@@ -272,74 +271,74 @@ global _TestASM
 	pxor xmm6, %3
 	pxor xmm7, xmm5
 	pxor xmm7, xmm3
-	movaps %3, xmm6
-	movaps %4, xmm7
+	movdqa %3, xmm6
+	movdqa %4, xmm7
 %endmacro
 
 %macro sbox3 4
-	movaps tmp_at(1), xmm0
-	movaps tmp_at(2), xmm1
-	movaps xmm7, xmm0
+	movdqa tmp_at(1), xmm0
+	movdqa tmp_at(2), xmm1
+	movdqa xmm7, xmm0
 	pandn xmm1, xmm0
-	movaps tmp_at(3), xmm2
-	movaps xmm0, xmm5
+	movdqa tmp_at(3), xmm2
+	movdqa xmm0, xmm5
 	pxor xmm0, xmm2
-	movaps tmp_at(4), xmm4
-	movaps xmm2, xmm5
+	movdqa tmp_at(4), xmm4
+	movdqa xmm2, xmm5
 	por xmm1, xmm0
 	pxor xmm2, xmm3
-	movaps xmm4, xmm0
-	movaps xmm6, xmm5
+	movdqa xmm4, xmm0
+	movdqa xmm6, xmm5
 	pandn xmm7, xmm2
 	pxor xmm4, tmp_at(2)
-	movaps tmp_at(5), xmm7
+	movdqa tmp_at(5), xmm7
 	pxor xmm7, xmm1
 	pandn xmm6, xmm4
-	movaps tmp_at(6), xmm7
+	movdqa tmp_at(6), xmm7
 	pxor xmm1, xmm6
 	pand xmm2, xmm0
-	movaps xmm6, xmm1
-	movaps xmm0, xmm3
+	movdqa xmm6, xmm1
+	movdqa xmm0, xmm3
 	pandn xmm6, xmm7
 	pand xmm7, xmm5
 	pand xmm5, xmm3
 	por xmm7, xmm3
 	pand xmm7, tmp_at(1)
-	movaps xmm3, tmp_at(4)
+	movdqa xmm3, tmp_at(4)
 	pandn xmm3, tmp_at(6)
 	pxor xmm7, xmm4
 	pxor xmm0, tmp_at(1)
-	movaps tmp_at(7), xmm7
+	movdqa tmp_at(7), xmm7
 	pxor xmm7, xmm3
-	movaps xmm3, tmp_at(2)
+	movdqa xmm3, tmp_at(2)
 	pxor xmm7, %4
 	pxor xmm1, xmm0
-	movaps %4, xmm7
-	movaps xmm7, tmp_at(3)
+	movdqa %4, xmm7
+	movdqa xmm7, tmp_at(3)
 	por xmm1, tmp_at(3)
 	pandn xmm2, xmm1
 	por xmm0, tmp_at(5)
-	movaps xmm1, xmm0
+	movdqa xmm1, xmm0
 	pandn xmm3, xmm5
 	pandn xmm1, tmp_at(7)
 	por xmm5, xmm4
 	pxor xmm1, xmm3
 	por xmm7, tmp_at(2)
-	movaps xmm3, tmp_at(3)
+	movdqa xmm3, tmp_at(3)
 	pandn xmm3, xmm1
 	pxor xmm0, xmm4
 	pandn xmm3, xmm5
-	movaps xmm5, tmp_at(4)
+	movdqa xmm5, tmp_at(4)
 	pxor xmm3, tmp_at(1)
 	pand xmm5, xmm2
 	pxor xmm0, pnot
 	pxor xmm3, xmm5
-	movaps xmm5, xmm7
+	movdqa xmm5, xmm7
 	pxor xmm3, %2
 	pandn xmm6, tmp_at(4)
 	pandn xmm7, tmp_at(6)
 	pxor xmm6, xmm0
-	movaps %2, xmm3
+	movdqa %2, xmm3
 	pxor xmm2, tmp_at(1)
 	por xmm1, tmp_at(4)
 	por xmm0, xmm2
@@ -350,42 +349,42 @@ global _TestASM
 	pxor xmm0, tmp_at(7)
 	pxor xmm6, xmm7
 	pxor xmm0, xmm5
-	movaps %1, xmm6
-	movaps %3, xmm0
+	movdqa %1, xmm6
+	movdqa %3, xmm0
 %endmacro
 
 %macro sbox4 4
-	movaps xmm7, xmm1
+	movdqa xmm7, xmm1
 	pxor xmm0, xmm2
 	por xmm1, xmm3
 	pxor xmm2, xmm4
-	movaps tmp_at(2), xmm5
+	movdqa tmp_at(2), xmm5
 	pxor xmm1, xmm4
-	movaps xmm6, xmm7
-	movaps xmm5, xmm7
+	movdqa xmm6, xmm7
+	movdqa xmm5, xmm7
 	pandn xmm7, xmm2
 	pandn xmm1, xmm2
 	por xmm4, xmm7
 	pxor xmm7, xmm3
-	movaps xmm6, xmm7
+	movdqa xmm6, xmm7
 	por xmm7, xmm0
 	pxor xmm3, xmm5
-	movaps tmp_at(3), xmm1
+	movdqa tmp_at(3), xmm1
 	pandn xmm1, xmm7
-	movaps xmm7, xmm1
+	movdqa xmm7, xmm1
 	pxor xmm1, xmm5
 	pand xmm6, xmm1
-	movaps xmm5, xmm6
+	movdqa xmm5, xmm6
 	pxor xmm0, xmm1
 	pandn xmm6, xmm2
 	pandn xmm6, xmm0
 	pxor xmm4, xmm0
-	movaps xmm0, xmm3
+	movdqa xmm0, xmm3
 	pandn xmm3, xmm4
-	movaps xmm2, tmp_at(2)
+	movdqa xmm2, tmp_at(2)
 	pxor xmm3, xmm7
 	pxor xmm6, tmp_at(3)
-	movaps xmm7, xmm6
+	movdqa xmm7, xmm6
 	pandn xmm6, xmm2
 	pxor xmm6, %1
 	pandn xmm2, xmm7
@@ -394,77 +393,77 @@ global _TestASM
 	pxor xmm3, pnot
 	pxor xmm2, xmm3
 	pxor xmm3, xmm7
-	movaps %1, xmm6
+	movdqa %1, xmm6
 	pandn xmm0, xmm3
 	por xmm0, xmm5
-	movaps %2, xmm2
-	movaps xmm3, tmp_at(2)
+	movdqa %2, xmm2
+	movdqa xmm3, tmp_at(2)
 	por xmm3, xmm1
 	pand xmm1, tmp_at(2)
 	pxor xmm0, xmm4
 	pxor xmm3, xmm0
 	pxor xmm3, %3
 	pxor xmm0, xmm1
-	movaps %3, xmm3
+	movdqa %3, xmm3
 	pxor xmm0, %4
-	movaps %4, xmm0
+	movdqa %4, xmm0
 %endmacro
 
 %macro sbox5 4
-	movaps tmp_at(3), xmm2
-	movaps tmp_at(1), xmm0
+	movdqa tmp_at(3), xmm2
+	movdqa tmp_at(1), xmm0
 	por xmm2, xmm0
-	movaps xmm6, xmm5
-	movaps tmp_at(4), xmm2
+	movdqa xmm6, xmm5
+	movdqa tmp_at(4), xmm2
 	pandn xmm5, xmm2
-	movaps xmm7, xmm2
-	movaps xmm2, xmm5
+	movdqa xmm7, xmm2
+	movdqa xmm2, xmm5
 	pxor xmm5, xmm0
-	movaps xmm7, xmm3
-	movaps tmp_at(5), xmm5
+	movdqa xmm7, xmm3
+	movdqa tmp_at(5), xmm5
 	pxor xmm5, tmp_at(3)
-	movaps tmp_at(2), xmm1
+	movdqa tmp_at(2), xmm1
 	por xmm0, xmm5
 	por xmm5, xmm3
 	pandn xmm3, xmm2
 	pxor xmm3, tmp_at(3)
-	movaps tmp_at(6), xmm3
-	movaps xmm1, xmm0
+	movdqa tmp_at(6), xmm3
+	movdqa xmm1, xmm0
 	pand xmm3, xmm4
 	pxor xmm3, xmm0
 	pand xmm0, xmm7
 	pxor xmm3, xmm7
-	movaps tmp_at(3), xmm3
+	movdqa tmp_at(3), xmm3
 	pxor xmm6, xmm3
-	movaps xmm2, xmm6
+	movdqa xmm2, xmm6
 	por xmm6, tmp_at(5)
-	movaps xmm3, xmm6
+	movdqa xmm3, xmm6
 	pand xmm6, xmm4
-	movaps tmp_at(7), xmm6
+	movdqa tmp_at(7), xmm6
 	pxor xmm6, tmp_at(5)
 	pxor xmm0, xmm6
-	movaps xmm6, tmp_at(1)
-	movaps tmp_at(8), xmm0
+	movdqa xmm6, tmp_at(1)
+	movdqa tmp_at(8), xmm0
 	pandn xmm6, xmm3
-	movaps xmm0, tmp_at(2)
-	movaps xmm3, xmm6
+	movdqa xmm0, tmp_at(2)
+	movdqa xmm3, xmm6
 	pxor xmm6, tmp_at(6)
 	pxor xmm4, xmm5
 	pandn xmm6, xmm4
 	pxor xmm6, pnot
 	pandn xmm0, xmm6
 	pxor xmm0, tmp_at(3)
-	movaps xmm6, tmp_at(7)
+	movdqa xmm6, tmp_at(7)
 	pandn xmm6, tmp_at(6)
 	pxor xmm0, %3
 	pxor xmm3, xmm4
-	movaps %3, xmm0
+	movdqa %3, xmm0
 	por xmm3, tmp_at(8)
-	movaps xmm0, tmp_at(6)
+	movdqa xmm0, tmp_at(6)
 	pandn xmm6, xmm3
 	pand xmm1, tmp_at(6)
 	pand xmm2, xmm6
-	movaps xmm3, xmm6
+	movdqa xmm3, xmm6
 	pandn xmm6, xmm5
 	pxor xmm2, xmm4
 	por xmm1, xmm2
@@ -477,7 +476,7 @@ global _TestASM
 	pxor xmm3, xmm7
 	por xmm6, tmp_at(2)
 	pxor xmm1, %4
-	movaps %4, xmm1
+	movdqa %4, xmm1
 	pxor xmm0, xmm5
 	pxor xmm2, tmp_at(5)
 	pxor xmm6, xmm3
@@ -487,61 +486,61 @@ global _TestASM
 	pxor xmm5, %2
 	pxor xmm3, xmm5
 	pxor xmm6, %1
-	movaps %2, xmm3
-	movaps %1, xmm6
+	movdqa %2, xmm3
+	movdqa %1, xmm6
 %endmacro
 
 %macro sbox6 4
-	movaps tmp_at(2), xmm4
+	movdqa tmp_at(2), xmm4
 	pxor xmm4, xmm1
-	movaps tmp_at(3), xmm5
+	movdqa tmp_at(3), xmm5
 	por xmm5, xmm1
-	movaps xmm7, xmm2
+	movdqa xmm7, xmm2
 	pand xmm5, xmm0
 	pxor xmm2, xmm0
-	movaps tmp_at(1), xmm0
+	movdqa tmp_at(1), xmm0
 	pxor xmm4, xmm5
-	movaps tmp_at(4), xmm4
+	movdqa tmp_at(4), xmm4
 	pxor xmm4, tmp_at(3)
-	movaps xmm6, xmm4
+	movdqa xmm6, xmm4
 	pandn xmm4, tmp_at(2)
 	pand xmm6, xmm0
-	movaps tmp_at(5), xmm6
+	movdqa tmp_at(5), xmm6
 	pxor xmm6, xmm1
-	movaps tmp_at(6), xmm6
+	movdqa tmp_at(6), xmm6
 	por xmm6, xmm2
-	movaps tmp_at(7), xmm6
+	movdqa tmp_at(7), xmm6
 	pxor xmm6, tmp_at(4)
-	movaps xmm0, xmm6
+	movdqa xmm0, xmm6
 	pand xmm6, xmm7
-	movaps tmp_at(8), xmm6
-	movaps xmm6, tmp_at(3)
+	movdqa tmp_at(8), xmm6
+	movdqa xmm6, tmp_at(3)
 	por xmm2, xmm1
 	pandn xmm6, tmp_at(8)
-	movaps tmp_at(9), xmm6
-	movaps xmm6, tmp_at(6)
+	movdqa tmp_at(9), xmm6
+	movdqa xmm6, tmp_at(6)
 	por xmm6, xmm4
-	movaps tmp_at(6), xmm6
+	movdqa tmp_at(6), xmm6
 	pxor xmm6, tmp_at(9)
-	movaps tmp_at(10), xmm6
+	movdqa tmp_at(10), xmm6
 	pand xmm6, xmm3
 	pxor xmm6, %4
 	pxor xmm6, xmm0
 	por xmm0, tmp_at(1)
-	movaps %4, xmm6
-	movaps xmm6, tmp_at(7)
+	movdqa %4, xmm6
+	movdqa xmm6, tmp_at(7)
 	pxor xmm6, xmm1
-	movaps xmm1, xmm3
-	movaps tmp_at(7), xmm6
+	movdqa xmm1, xmm3
+	movdqa tmp_at(7), xmm6
 	pandn xmm6, tmp_at(3)
 	pxor xmm6, xmm7
-	movaps xmm7, tmp_at(8)
-	movaps tmp_at(12), xmm6
+	movdqa xmm7, tmp_at(8)
+	movdqa tmp_at(12), xmm6
 	pandn xmm7, tmp_at(2)
 	pand xmm0, tmp_at(6)
 	por xmm7, xmm6
 	pxor xmm0, xmm6
-	movaps xmm6, tmp_at(9)
+	movdqa xmm6, tmp_at(9)
 	por xmm4, xmm3
 	pandn xmm6, xmm0
 	por xmm5, xmm7
@@ -549,14 +548,14 @@ global _TestASM
 	pxor xmm0, tmp_at(4)
 	pxor xmm6, %3
 	pxor xmm5, xmm2
-	movaps %3, xmm6
-	movaps xmm6, tmp_at(5)
+	movdqa %3, xmm6
+	movdqa xmm6, tmp_at(5)
 	pandn xmm0, tmp_at(2)
 	pxor xmm2, pnot
 	pxor xmm2, tmp_at(7)
 	pxor xmm6, tmp_at(3)
 	pxor xmm5, %2
-	movaps xmm4, tmp_at(12)
+	movdqa xmm4, tmp_at(12)
 	pxor xmm0, xmm2
 	pxor xmm4, tmp_at(1)
 	pxor xmm5, tmp_at(10)
@@ -567,33 +566,33 @@ global _TestASM
 	pxor xmm4, tmp_at(8)
 	pxor xmm1, xmm2
 	pxor xmm5, xmm3
-	movaps %2, xmm5
+	movdqa %2, xmm5
 	pxor xmm4, xmm1
-	movaps %1, xmm4
+	movdqa %1, xmm4
 %endmacro
 
 %macro sbox7 4
-	movaps tmp_at(1), xmm0
-	movaps tmp_at(3), xmm4
-	movaps xmm0, xmm4
+	movdqa tmp_at(1), xmm0
+	movdqa tmp_at(3), xmm4
+	movdqa xmm0, xmm4
 	pxor xmm4, xmm3
-	movaps tmp_at(4), xmm5
-	movaps xmm7, xmm4
-	movaps tmp_at(2), xmm3
+	movdqa tmp_at(4), xmm5
+	movdqa xmm7, xmm4
+	movdqa tmp_at(2), xmm3
 	pxor xmm4, xmm2
-	movaps tmp_at(5), xmm4
+	movdqa tmp_at(5), xmm4
 	pand xmm4, xmm5
-	movaps xmm5, xmm7
+	movdqa xmm5, xmm7
 	pxor xmm5, tmp_at(4)
 	pand xmm7, xmm3
-	movaps tmp_at(6), xmm7
-	movaps xmm6, xmm7
+	movdqa tmp_at(6), xmm7
+	movdqa xmm6, xmm7
 	pxor xmm7, xmm1
 	pand xmm6, tmp_at(4)
 	pxor xmm6, xmm2
-	movaps tmp_at(7), xmm7
-	movaps xmm3, tmp_at(1)
-	movaps xmm0, xmm6
+	movdqa tmp_at(7), xmm7
+	movdqa xmm3, tmp_at(1)
+	movdqa xmm0, xmm6
 	por xmm6, xmm7
 	pand xmm7, xmm4
 	pxor xmm6, xmm5
@@ -602,24 +601,24 @@ global _TestASM
 	pxor xmm7, %4
 	pxor xmm4, xmm5
 	pxor xmm7, xmm6
-	movaps %4, xmm7
+	movdqa %4, xmm7
 	pandn xmm4, tmp_at(2)
 	por xmm6, tmp_at(6)
-	movaps xmm7, tmp_at(5)
+	movdqa xmm7, tmp_at(5)
 	pandn xmm7, tmp_at(3)
 	pandn xmm4, tmp_at(7)
-	movaps tmp_at(9), xmm7
+	movdqa tmp_at(9), xmm7
 	por xmm7, tmp_at(7)
 	pandn xmm5, tmp_at(5)
 	pxor xmm7, xmm0
 	pxor xmm0, tmp_at(3)
 	pxor xmm0, xmm4
-	movaps xmm4, tmp_at(1)
+	movdqa xmm4, tmp_at(1)
 	pand xmm2, xmm0
 	por xmm6, xmm2
 	pxor xmm6, xmm5
 	pandn xmm3, xmm6
-	movaps xmm5, xmm6
+	movdqa xmm5, xmm6
 	pxor xmm3, xmm7
 	pxor xmm7, xmm6
 	por xmm6, xmm0
@@ -629,8 +628,8 @@ global _TestASM
 	pand xmm1, xmm6
 	pxor xmm0, %3
 	pxor xmm1, xmm7
-	movaps %1, xmm3
-	movaps xmm3, xmm4
+	movdqa %1, xmm3
+	movdqa xmm3, xmm4
 	pxor xmm7, tmp_at(3)
 	por xmm2, xmm1
 	pxor xmm2, xmm6
@@ -642,47 +641,47 @@ global _TestASM
 	pxor xmm1, %2
 	pandn xmm3, xmm7
 	pxor xmm0, xmm4
-	movaps %3, xmm0
+	movdqa %3, xmm0
 	pxor xmm1, xmm3
-	movaps %2, xmm1
+	movdqa %2, xmm1
 %endmacro
 
 %macro sbox8 4
-	movaps xmm7, xmm2
-	movaps tmp_at(1), xmm1
+	movdqa xmm7, xmm2
+	movdqa tmp_at(1), xmm1
 	pandn xmm1, xmm2
-	movaps tmp_at(2), xmm2
+	movdqa tmp_at(2), xmm2
 	pandn xmm2, xmm4
-	movaps tmp_at(5), xmm5
+	movdqa tmp_at(5), xmm5
 	pxor xmm2, xmm3
-	movaps tmp_at(4), xmm4
-	movaps xmm5, xmm1
-	movaps tmp_at(3), xmm3
-	movaps xmm4, xmm2
-	movaps xmm3, xmm2
+	movdqa tmp_at(4), xmm4
+	movdqa xmm5, xmm1
+	movdqa tmp_at(3), xmm3
+	movdqa xmm4, xmm2
+	movdqa xmm3, xmm2
 	pandn xmm4, tmp_at(1)
 	pand xmm2, xmm0
 	pandn xmm7, tmp_at(1)
 	pandn xmm1, xmm2
 	pxor xmm7, tmp_at(4)
-	movaps xmm6, xmm4
+	movdqa xmm6, xmm4
 	por xmm4, xmm0
-	movaps tmp_at(6), xmm7
+	movdqa tmp_at(6), xmm7
 	pand xmm7, xmm4
 	pxor xmm3, pnot
 	por xmm2, xmm7
 	pxor xmm3, xmm7
 	pandn xmm4, tmp_at(2)
-	movaps xmm7, tmp_at(5)
+	movdqa xmm7, tmp_at(5)
 	pxor xmm3, xmm4
 	por xmm7, xmm1
 	pxor xmm5, xmm3
 	pxor xmm7, xmm5
 	pxor xmm5, xmm0
 	pxor xmm7, %2
-	movaps %2, xmm7
+	movdqa %2, xmm7
 	pxor xmm3, tmp_at(1)
-	movaps xmm4, xmm5
+	movdqa xmm4, xmm5
 	pand xmm5, tmp_at(4)
 	pxor xmm5, xmm3
 	por xmm3, tmp_at(3)
@@ -707,15 +706,15 @@ global _TestASM
 	pxor xmm3, %1
 	pxor xmm2, xmm5
 	pxor xmm3, xmm6
-	movaps %4, xmm0
-	movaps %3, xmm2
-	movaps %1, xmm3
+	movdqa %4, xmm0
+	movdqa %3, xmm2
+	movdqa %1, xmm3
 %endmacro
 
 
 
 section .text
-	_DES_Crypt25_x86_SSE2:
+	_DES_Crypt25_x86_SSE2_Nehalem:
 		push ebp
 		mov ebp, esp
 		; sub  esp, 4
@@ -727,7 +726,7 @@ section .text
 		lea data_blocks_address, [ecx + data_blocks_offset]
 
 		pcmpeqd xmm0, xmm0
-		movaps  pnot, xmm0
+		movdqa  pnot, xmm0
 
 		mov key_schedule_index_base_x2, 0
 		mov rounds_and_swapped, 8
@@ -809,37 +808,6 @@ section .text
 		; ======================================
 
 	exit:
-		pop edi
-		pop esi
-		pop ebx
-		mov esp, ebp
-		pop ebp
-		ret
-		db "THIS_IS_THE_END_OF_THE_FUNCTION",  0x00
-
-
-
-	_TestASM:
-		push ebp
-		mov  ebp, esp
-		; sub  esp, 4
-		push ebx
-		push esi
-		push edi
-
-		; ======================================
-		
-		jmp skip
-		movaps xmm0, [data_blocks_address + 0xffffffff]
-		movaps xmm1, [data_blocks_address + 0xffffffff]
-		movaps xmm2, [data_blocks_address + 0xffffffff]
-		movaps xmm3, [data_blocks_address + 0xffffffff]
-		movaps xmm4, [data_blocks_address + 0xffffffff]
-		movaps xmm0, [data_blocks_address + 0xffffffff]
-	skip:
-
-		; ======================================
-
 		pop edi
 		pop esi
 		pop ebx

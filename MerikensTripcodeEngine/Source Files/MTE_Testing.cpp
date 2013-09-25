@@ -131,7 +131,9 @@ void TestNewCode()
 		if (i % 16 == 16 - 1)
 			printf("\n");
 	}
+#endif
 
+#if FALSE
 	for (int i = 16; i < 80; ++i) {
 		printf("W[%2d] = ROTL(1, W[%2d] ^ W[%2d] ^ W[%2d] ^ W[%2d]); ", i % 16, (i - 3) % 16, (i - 8) % 16, (i - 14) % 16, (i - 16) % 16); 
 		if      (16 <= i && i <= 19) printf("ROUND_16_TO_19(%2d); \\\n", i % 16);

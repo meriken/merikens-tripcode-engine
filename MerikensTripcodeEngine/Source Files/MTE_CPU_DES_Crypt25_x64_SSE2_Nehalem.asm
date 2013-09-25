@@ -28,7 +28,7 @@
 ; You should have received a copy of the GNU General Public License
 ; along with this program.  If not, see <http:;www.gnu.org/licenses/>.
 
-global DES_Crypt25_x64_SSE2
+global DES_Crypt25_x64_SSE2_Nehalem
 
 
 
@@ -65,75 +65,75 @@ global DES_Crypt25_x64_SSE2
 ; This is the original macro.
 %macro prepare_args_for_sbox_x 6
 	movzx r10, byte [rcx + %1]
-	movaps xmm0, [data_blocks_address + r10 * 8]
+	movdqa xmm0, [data_blocks_address + r10 * 8]
 	movzx r10, byte [rcx + %2]
-	movaps xmm1, [data_blocks_address + r10 * 8]
+	movdqa xmm1, [data_blocks_address + r10 * 8]
 	pxor   xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %1 * 16]
 	pxor   xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
 
 	movzx  r10, byte [rcx + %3]
-	movaps xmm2, [data_blocks_address + r10 * 8]
+	movdqa xmm2, [data_blocks_address + r10 * 8]
 	movzx  r10, byte [rcx + %4]
-	movaps xmm3, [data_blocks_address + r10 * 8]
+	movdqa xmm3, [data_blocks_address + r10 * 8]
 	pxor     xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %3 * 16]
 	pxor     xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
 
 	movzx  r10, byte [rcx + %5]
-	movaps xmm4, [data_blocks_address + r10 * 8]
+	movdqa xmm4, [data_blocks_address + r10 * 8]
 	movzx  r10, byte [rcx + %6]
-	movaps xmm5, [data_blocks_address + r10 * 8]
+	movdqa xmm5, [data_blocks_address + r10 * 8]
 	pxor     xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %5 * 16]
 	pxor     xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
 %endmacro
 
 ; "0xffffffff" will be rewritten in DES_SetSalt() based on context->expansionFunction[].
 %macro prepare_args_for_sbox_x_with_rewrites 6
-	movaps xmm0, [data_blocks_address + 0xffffffff]
-	movaps xmm1, [data_blocks_address + 0xffffffff]
+	movdqa xmm0, [data_blocks_address + 0xffffffff]
+	movdqa xmm1, [data_blocks_address + 0xffffffff]
 	pxor     xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %1 * 16]
-	movaps xmm2, [data_blocks_address + 0xffffffff]
+	movdqa xmm2, [data_blocks_address + 0xffffffff]
 	pxor     xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
-	movaps xmm3, [data_blocks_address + 0xffffffff]
+	movdqa xmm3, [data_blocks_address + 0xffffffff]
 	pxor     xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %3 * 16]
-	movaps xmm4, [data_blocks_address + 0xffffffff]
+	movdqa xmm4, [data_blocks_address + 0xffffffff]
 	pxor     xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
-	movaps xmm5, [data_blocks_address + 0xffffffff]
+	movdqa xmm5, [data_blocks_address + 0xffffffff]
 	pxor     xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %5 * 16]
 	pxor     xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
 %endmacro
 
 %macro prepare_args_for_sbox_y 12
 	; 12 ops
-	movaps xmm0, [data_blocks_address + %1 * 16]
-	movaps xmm1, [data_blocks_address + %3 * 16]
+	movdqa xmm0, [data_blocks_address + %1 * 16]
+	movdqa xmm1, [data_blocks_address + %3 * 16]
 	pxor     xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
-	movaps xmm2, [data_blocks_address + %5 * 16]
+	movdqa xmm2, [data_blocks_address + %5 * 16]
 	pxor     xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
-	movaps xmm3, [data_blocks_address + %7 * 16]
+	movdqa xmm3, [data_blocks_address + %7 * 16]
 	pxor     xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
-	movaps xmm4, [data_blocks_address + %9 * 16]
+	movdqa xmm4, [data_blocks_address + %9 * 16]
 	pxor     xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %8 * 16]
-	movaps xmm5, [data_blocks_address + %11 * 16]
+	movdqa xmm5, [data_blocks_address + %11 * 16]
 	pxor     xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %10 * 16]
 	pxor     xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %12 * 16]
 %endmacro
 
 %macro sbox1 4
-	movaps xmm7, xmm4
-	movaps xmm10, xmm5
+	movdqa xmm7, xmm4
+	movdqa xmm10, xmm5
 	pandn  xmm4, xmm0
-	movaps xmm13, xmm2
-	movaps xmm14, xmm4
+	movdqa xmm13, xmm2
+	movdqa xmm14, xmm4
 	por    xmm10, xmm2
-	movaps xmm11, xmm5
+	movdqa xmm11, xmm5
 	pxor   xmm13, xmm0
 	pxor   xmm11, xmm7
 	pxor   xmm14, xmm3
-	movaps xmm12, xmm13
-	movaps xmm15, xmm11
+	movdqa xmm12, xmm13
+	movdqa xmm15, xmm11
 	pand   xmm13, xmm10
-	movaps xmm9, xmm14
-	movaps xmm8, xmm13
+	movdqa xmm9, xmm14
+	movdqa xmm8, xmm13
 	pxor   xmm15, xmm2
 	pxor   xmm8, xmm3
 	pandn  xmm12, xmm11
@@ -142,26 +142,26 @@ global DES_Crypt25_x64_SSE2
 	por    xmm5, xmm0
 	pandn  xmm8, xmm7
 	pandn  xmm15, xmm14
-	movaps xmm6, xmm5
+	movdqa xmm6, xmm5
 	pxor   xmm13, xmm15
-	movaps xmm15, xmm9
+	movdqa xmm15, xmm9
 	por    xmm6, xmm13
 	pandn  xmm5, xmm3
-	movaps xmm3, xmm8
+	movdqa xmm3, xmm8
 	pandn  xmm15, xmm13
 	pxor   xmm8, xmm6
 	pxor   xmm5, xmm3
 	pand   xmm13, xmm10
 	pandn  xmm4, xmm2
-	movaps xmm2, xmm6
+	movdqa xmm2, xmm6
 	pxor   xmm6, xmm10
 	pxor   xmm2, xmm14
 	pandn  xmm4, xmm2
-	movaps xmm2, xmm4
+	movdqa xmm2, xmm4
 	pxor   xmm2, pnot
 	pxor   xmm4, xmm11
 	pxor   xmm13, xmm2
-	movaps xmm2, xmm1
+	movdqa xmm2, xmm1
 	por    xmm4, xmm3
 	pandn  xmm2, xmm8
 	por    xmm14, xmm7
@@ -169,7 +169,7 @@ global DES_Crypt25_x64_SSE2
 	por    xmm9, xmm1
 	pxor   xmm2, xmm13
 	pxor   xmm4, xmm0
-	movaps xmm0, xmm1
+	movdqa xmm0, xmm1
 	pxor   xmm13, xmm4
 	pxor   xmm9, xmm13
 	por    xmm5, xmm12
@@ -177,7 +177,7 @@ global DES_Crypt25_x64_SSE2
 	por    xmm6, xmm5
 	por    xmm13, xmm11
 	pxor   xmm6, xmm4
-	movaps %1, xmm9
+	movdqa %1, xmm9
 	por    xmm0, xmm15
 	pxor   xmm13, xmm6
 	pxor   xmm2, %3
@@ -186,52 +186,52 @@ global DES_Crypt25_x64_SSE2
 	pandn  xmm6, xmm14
 	pxor   xmm13, xmm0
 	pxor   xmm4, xmm6
-	movaps %3, xmm2
+	movdqa %3, xmm2
 	por    xmm4, xmm1
 	pxor   xmm4, xmm5
-	movaps %2, xmm13
+	movdqa %2, xmm13
 	pxor   xmm4, %4
-	movaps %4, xmm4
+	movdqa %4, xmm4
 %endmacro
 
 %macro sbox2 4
-	movaps xmm13, xmm4
-	movaps xmm6, xmm5
+	movdqa xmm13, xmm4
+	movdqa xmm6, xmm5
 	pxor   xmm13, xmm1
-	movaps xmm8, xmm5
+	movdqa xmm8, xmm5
 	pandn  xmm6, xmm0
-	movaps xmm7, xmm13
+	movdqa xmm7, xmm13
 	pandn  xmm6, xmm4
-	movaps xmm9, xmm5
-	movaps xmm14, xmm6
+	movdqa xmm9, xmm5
+	movdqa xmm14, xmm6
 	pandn  xmm8, xmm13
 	pand   xmm7, xmm0
 	pxor   xmm0, pnot
 	por    xmm14, xmm1
-	movaps xmm12, xmm8
+	movdqa xmm12, xmm8
 	pxor   xmm7, xmm4
 	pand   xmm9, xmm2
 	pxor   xmm13, xmm5
 	pxor   xmm6, xmm8
-	movaps xmm10, xmm9
+	movdqa xmm10, xmm9
 	pand   xmm6, xmm14
 	pandn  xmm10, xmm6
 	pand   xmm6, xmm2
 	pandn  xmm12, xmm7
 	pxor   xmm0, xmm6
-	movaps xmm5, xmm9
+	movdqa xmm5, xmm9
 	pandn  xmm10, xmm3
 	pandn  xmm5, xmm13
-	movaps xmm11, xmm5
+	movdqa xmm11, xmm5
 	pandn  xmm5, xmm1
 	pxor   xmm11, xmm0
 	pxor   xmm2, xmm13
 	por    xmm12, xmm3
 	pxor   xmm7, xmm5
-	movaps xmm1, xmm7
+	movdqa xmm1, xmm7
 	pxor   xmm10, %2
 	pandn  xmm1, xmm0
-	movaps xmm0, xmm3
+	movdqa xmm0, xmm3
 	pxor   xmm1, xmm2
 	pandn  xmm0, xmm14
 	pxor   xmm14, xmm11
@@ -251,37 +251,37 @@ global DES_Crypt25_x64_SSE2
 	por    xmm14, xmm13
 	pxor   xmm2, xmm3
 	pandn  xmm7, xmm8
-	movaps %3, xmm2
+	movdqa %3, xmm2
 	pxor   xmm7, %4
-	movaps %2, xmm10
+	movdqa %2, xmm10
 	pxor   xmm7, xmm14
 	pxor   xmm0, %1
 	pxor   xmm7, xmm12
-	movaps %1, xmm0
-	movaps %4, xmm7
+	movdqa %1, xmm0
+	movdqa %4, xmm7
 %endmacro
 
 %macro sbox3 4
-	movaps xmm6, xmm1
-	movaps xmm13, xmm5
+	movdqa xmm6, xmm1
+	movdqa xmm13, xmm5
 	pandn  xmm6, xmm0
-	movaps xmm8, xmm5
+	movdqa xmm8, xmm5
 	pxor   xmm13, xmm2
-	movaps xmm11, xmm0
+	movdqa xmm11, xmm0
 	por    xmm6, xmm13
-	movaps xmm9, xmm13
+	movdqa xmm9, xmm13
 	pxor   xmm8, xmm3
-	movaps xmm15, xmm3
+	movdqa xmm15, xmm3
 	pandn  xmm11, xmm8
 	pxor   xmm9, xmm1
-	movaps xmm10, xmm11
-	movaps xmm12, xmm4
-	movaps xmm14, xmm5
+	movdqa xmm10, xmm11
+	movdqa xmm12, xmm4
+	movdqa xmm14, xmm5
 	pxor   xmm10, xmm6
 	pandn  xmm14, xmm9
-	movaps xmm7, xmm10
+	movdqa xmm7, xmm10
 	pxor   xmm6, xmm14
-	movaps xmm14, xmm6
+	movdqa xmm14, xmm6
 	pand   xmm7, xmm5
 	pand   xmm5, xmm3
 	pandn  xmm14, xmm10
@@ -298,15 +298,15 @@ global DES_Crypt25_x64_SSE2
 	por    xmm6, xmm2
 	por    xmm15, xmm11
 	pandn  xmm8, xmm6
-	movaps xmm6, xmm15
+	movdqa xmm6, xmm15
 	pand   xmm8, xmm4
 	pandn  xmm6, xmm7
-	movaps xmm7, xmm1
+	movdqa xmm7, xmm1
 	pandn  xmm1, xmm10
 	pandn  xmm7, xmm5
 	por    xmm5, xmm9
 	pxor   xmm6, xmm7
-	movaps xmm7, xmm2
+	movdqa xmm7, xmm2
 	pxor   xmm15, xmm9
 	pandn  xmm7, xmm6
 	pandn  xmm2, xmm1
@@ -315,7 +315,7 @@ global DES_Crypt25_x64_SSE2
 	pxor   xmm7, %2
 	pxor   xmm15, xmm2
 	pandn  xmm14, xmm4
-	movaps %4, xmm12
+	movdqa %4, xmm12
 	por    xmm9, xmm15
 	pxor   xmm7, xmm0
 	pandn  xmm13, xmm9
@@ -327,40 +327,40 @@ global DES_Crypt25_x64_SSE2
 	pxor   xmm6, xmm13
 	pxor   xmm14, xmm15
 	pxor   xmm6, %3
-	movaps %2, xmm7
-	movaps %1, xmm14
-	movaps %3, xmm6
+	movdqa %2, xmm7
+	movdqa %1, xmm14
+	movdqa %3, xmm6
 %endmacro
 
 %macro sbox4 4
-	movaps xmm7, xmm3
-	movaps xmm8, xmm1
+	movdqa xmm7, xmm3
+	movdqa xmm8, xmm1
 	pxor   xmm0, xmm2
 	pxor   xmm2, xmm4
 	por    xmm3, xmm1
 	pandn  xmm1, xmm2
 	pxor   xmm3, xmm4
-	movaps xmm10, xmm1
+	movdqa xmm10, xmm1
 	pxor   xmm1, xmm7
 	pandn  xmm3, xmm2
-	movaps xmm11, xmm1
-	movaps xmm6, xmm3
+	movdqa xmm11, xmm1
+	movdqa xmm6, xmm3
 	pxor   xmm7, xmm8
 	por    xmm1, xmm0
 	pandn  xmm3, xmm1
-	movaps xmm1, xmm3
-	movaps xmm12, xmm5
+	movdqa xmm1, xmm3
+	movdqa xmm12, xmm5
 	pxor   xmm3, xmm8
 	pand   xmm11, xmm3
-	movaps xmm9, xmm11
+	movdqa xmm9, xmm11
 	por    xmm10, xmm4
 	pxor   xmm0, xmm3
 	pandn  xmm11, xmm2
 	pandn  xmm11, xmm0
 	pxor   xmm10, xmm0
-	movaps xmm0, xmm7
+	movdqa xmm0, xmm7
 	pxor   xmm6, xmm11
-	movaps xmm4, xmm6
+	movdqa xmm4, xmm6
 	pandn  xmm6, xmm5
 	pandn  xmm7, xmm10
 	pxor   xmm6, %1
@@ -371,67 +371,67 @@ global DES_Crypt25_x64_SSE2
 	pxor   xmm5, xmm7
 	pxor   xmm7, xmm4
 	pxor   xmm5, %2
-	movaps %2, xmm5
+	movdqa %2, xmm5
 	pandn  xmm0, xmm7
-	movaps xmm7, xmm12
+	movdqa xmm7, xmm12
 	por    xmm0, xmm9
-	movaps %1, xmm6
+	movdqa %1, xmm6
 	pxor   xmm0, xmm10
 	por    xmm12, xmm3
 	pxor   xmm12, xmm0
 	pxor   xmm0, %4
 	pand   xmm3, xmm7
 	pxor   xmm12, %3
-	movaps %3, xmm12
+	movdqa %3, xmm12
 	pxor   xmm0, xmm3
-	movaps %4, xmm0
+	movdqa %4, xmm0
 %endmacro
 
 %macro sbox5 4
-	movaps xmm6, xmm2
+	movdqa xmm6, xmm2
 	por    xmm2, xmm0
-	movaps xmm7, xmm5
+	movdqa xmm7, xmm5
 	pandn  xmm5, xmm2
-	movaps xmm14, xmm3
+	movdqa xmm14, xmm3
 	pandn  xmm3, xmm5
 	pxor   xmm5, xmm0
 	pxor   xmm3, xmm6
-	movaps xmm15, xmm5
+	movdqa xmm15, xmm5
 	pxor   xmm5, xmm6
-	movaps xmm10, xmm3
+	movdqa xmm10, xmm3
 	pand   xmm3, xmm4
-	movaps xmm8, xmm5
+	movdqa xmm8, xmm5
 	por    xmm5, xmm0
 	pxor   xmm3, xmm14
 	pxor   xmm3, xmm5
-	movaps xmm12, xmm5
+	movdqa xmm12, xmm5
 	por    xmm8, xmm14
 	pxor   xmm2, xmm0
 	pxor   xmm7, xmm3
 	pand   xmm12, xmm14
-	movaps xmm9, xmm7
+	movdqa xmm9, xmm7
 	por    xmm7, xmm15
 	pxor   xmm12, xmm15
 	pandn  xmm0, xmm7
 	pand   xmm7, xmm4
 	pxor   xmm4, xmm8
 	pxor   xmm12, xmm7
-	movaps xmm6, xmm0
+	movdqa xmm6, xmm0
 	pxor   xmm0, xmm4
 	pxor   xmm6, xmm10
-	movaps xmm13, xmm1
+	movdqa xmm13, xmm1
 	pandn  xmm6, xmm4
 	pand   xmm5, xmm10
 	pxor   xmm6, pnot
 	por    xmm0, xmm12
 	pandn  xmm13, xmm6
-	movaps xmm6, xmm7
+	movdqa xmm6, xmm7
 	pandn  xmm7, xmm10
 	pxor   xmm10, xmm8
 	pandn  xmm7, xmm0
 	pxor   xmm3, xmm13
 	pand   xmm9, xmm7
-	movaps xmm0, xmm7
+	movdqa xmm0, xmm7
 	pxor   xmm9, xmm4
 	pandn  xmm0, xmm8
 	pand   xmm8, xmm1
@@ -452,47 +452,47 @@ global DES_Crypt25_x64_SSE2
 	pxor   xmm5, %4
 	pxor   xmm0, %1
 	pxor   xmm7, %2
-	movaps %3, xmm3
-	movaps %4, xmm5
-	movaps %1, xmm0
-	movaps %2, xmm7
+	movdqa %3, xmm3
+	movdqa %4, xmm5
+	movdqa %1, xmm0
+	movdqa %2, xmm7
 %endmacro
 
 %macro sbox6 4
-	movaps xmm8, xmm5
+	movdqa xmm8, xmm5
 	por    xmm5, xmm1
-	movaps xmm7, xmm4
-	movaps temp1, xmm4
-	movaps xmm11, xmm2
+	movdqa xmm7, xmm4
+	movdqa temp1, xmm4
+	movdqa xmm11, xmm2
 	pxor   xmm4, xmm1
 	pand   xmm5, xmm0
-	movaps xmm15, xmm3
+	movdqa xmm15, xmm3
 	pxor   xmm4, xmm5
-	movaps xmm9, xmm4
+	movdqa xmm9, xmm4
 	pxor   xmm11, xmm0
 	pxor   xmm4, xmm8
-	movaps temp0, xmm0
-	movaps xmm12, xmm4
+	movdqa temp0, xmm0
+	movdqa xmm12, xmm4
 	pand   xmm4, xmm0
-	movaps xmm0, xmm11
+	movdqa xmm0, xmm11
 	pandn  xmm12, xmm7
-	movaps xmm10, xmm4
+	movdqa xmm10, xmm4
 	pxor   xmm4, xmm1
 	por    xmm11, xmm1
 	por    xmm0, xmm4
-	movaps xmm6, xmm0
+	movdqa xmm6, xmm0
 	por    xmm4, xmm12
 	pxor   xmm0, xmm9
 	pxor   xmm6, xmm1
-	movaps xmm14, xmm4
-	movaps xmm7, xmm6
+	movdqa xmm14, xmm4
+	movdqa xmm7, xmm6
 	pandn  xmm6, xmm8
 	pxor   xmm10, xmm8
 	pxor   xmm6, xmm2
 	pand   xmm2, xmm0
-	movaps xmm1, xmm3
+	movdqa xmm1, xmm3
 	pandn  xmm8, xmm2
-	movaps xmm13, xmm2
+	movdqa xmm13, xmm2
 	pxor   xmm14, xmm8
 	pxor   xmm7, xmm11
 	pand   xmm15, xmm14
@@ -523,38 +523,38 @@ global DES_Crypt25_x64_SSE2
 	pxor   xmm14, xmm11
 	pxor   xmm5, %2
 	pxor   xmm5, xmm14
-	movaps %4, xmm15
+	movdqa %4, xmm15
 	pxor   xmm7, %1
-	movaps %3, xmm8
-	movaps %2, xmm5
-	movaps %1, xmm7
+	movdqa %3, xmm8
+	movdqa %2, xmm5
+	movdqa %1, xmm7
 %endmacro
 
 %macro sbox7 4
-	movaps xmm14, xmm4
+	movdqa xmm14, xmm4
 	pxor   xmm4, xmm3
-	movaps xmm11, xmm3
-	movaps xmm12, xmm4
+	movdqa xmm11, xmm3
+	movdqa xmm12, xmm4
 	pand   xmm11, xmm4
 	pxor   xmm4, xmm2
-	movaps xmm6, xmm11
-	movaps xmm7, xmm4
-	movaps xmm15, xmm11
+	movdqa xmm6, xmm11
+	movdqa xmm7, xmm4
+	movdqa xmm15, xmm11
 	pand   xmm6, xmm5
 	pxor   xmm11, xmm1
-	movaps xmm13, xmm7
+	movdqa xmm13, xmm7
 	pand   xmm4, xmm5
-	movaps xmm10, xmm11
+	movdqa xmm10, xmm11
 	pxor   xmm12, xmm5
 	pxor   xmm6, xmm2
-	movaps xmm8, xmm6
+	movdqa xmm8, xmm6
 	por    xmm6, xmm10
 	pand   xmm11, xmm4
 	pandn  xmm11, xmm0
 	pxor   xmm6, xmm12
 	pxor   xmm8, xmm4
 	pandn  xmm7, xmm14
-	movaps xmm9, xmm7
+	movdqa xmm9, xmm7
 	pxor   xmm11, xmm6
 	pxor   xmm4, xmm12
 	por    xmm7, xmm10
@@ -568,9 +568,9 @@ global DES_Crypt25_x64_SSE2
 	por    xmm6, xmm15
 	por    xmm6, xmm2
 	pxor   xmm6, xmm12
-	movaps xmm3, xmm0
+	movdqa xmm3, xmm0
 	pandn  xmm0, xmm6
-	movaps xmm4, xmm6
+	movdqa xmm4, xmm6
 	por    xmm6, xmm8
 	pand   xmm6, xmm5
 	pxor   xmm0, xmm7
@@ -580,7 +580,7 @@ global DES_Crypt25_x64_SSE2
 	pxor   xmm2, xmm6
 	pxor   xmm1, xmm7
 	pxor   xmm7, xmm14
-	movaps xmm5, xmm3
+	movdqa xmm5, xmm3
 	por    xmm7, xmm2
 	pxor   xmm0, %1
 	pand   xmm3, xmm7
@@ -591,51 +591,51 @@ global DES_Crypt25_x64_SSE2
 	pxor   xmm8, xmm3
 	pxor   xmm7, xmm4
 	pandn  xmm5, xmm7
-	movaps %4, xmm11
+	movdqa %4, xmm11
 	pxor   xmm1, %2
-	movaps %1, xmm0
+	movdqa %1, xmm0
 	pxor   xmm1, xmm5
 	pxor   xmm8, %3
-	movaps %3, xmm8
-	movaps %2, xmm1
+	movdqa %3, xmm8
+	movdqa %2, xmm1
 %endmacro
 
 %macro sbox8 4
-	movaps xmm13, xmm1
+	movdqa xmm13, xmm1
 	pandn  xmm1, xmm2
-	movaps xmm11, xmm2
-	movaps xmm8, xmm2
+	movdqa xmm11, xmm2
+	movdqa xmm8, xmm2
 	pandn  xmm2, xmm4
-	movaps xmm6, xmm1
+	movdqa xmm6, xmm1
 	pxor   xmm2, xmm3
 	pandn  xmm11, xmm13
-	movaps xmm9, xmm2
+	movdqa xmm9, xmm2
 	pand   xmm2, xmm0
-	movaps xmm7, xmm9
+	movdqa xmm7, xmm9
 	pandn  xmm1, xmm2
 	pandn  xmm9, xmm13
 	pxor   xmm11, xmm4
-	movaps xmm12, xmm9
+	movdqa xmm12, xmm9
 	por    xmm9, xmm0
-	movaps xmm10, xmm11
+	movdqa xmm10, xmm11
 	pand   xmm11, xmm9
 	pxor   xmm7, pnot
 	por    xmm2, xmm11
 	pxor   xmm7, xmm11
 	pandn  xmm9, xmm8
-	movaps xmm15, xmm5
+	movdqa xmm15, xmm5
 	pxor   xmm7, xmm9
 	por    xmm5, xmm1
 	pxor   xmm6, xmm7
 	pxor   xmm5, xmm6
 	pxor   xmm6, xmm0
-	movaps xmm14, xmm6
+	movdqa xmm14, xmm6
 	pxor   xmm7, xmm13
 	pand   xmm6, xmm4
 	pxor   xmm5, %2
 	pxor   xmm6, xmm7
 	pxor   xmm12, xmm6
-	movaps %2, xmm5
+	movdqa %2, xmm5
 	pxor   xmm6, xmm2
 	pxor   xmm14, xmm4
 	por    xmm6, xmm13
@@ -653,19 +653,19 @@ global DES_Crypt25_x64_SSE2
 	pxor   xmm7, xmm6
 	pxor   xmm7, xmm1
 	pxor   xmm0, %4
-	movaps %3, xmm2
+	movdqa %3, xmm2
 	por    xmm7, xmm15
 	pxor   xmm7, %1
 	pxor   xmm0, xmm12
 	pxor   xmm7, xmm12
-	movaps %4, xmm0
-	movaps %1, xmm7
+	movdqa %4, xmm0
+	movdqa %1, xmm7
 %endmacro
 
 
 
 section .text
-	PROC_FRAME DES_Crypt25_x64_SSE2
+	PROC_FRAME DES_Crypt25_x64_SSE2_Nehalem
 		alloc_stack 0xb8
 		save_xmm128 xmm6,  0x00
 		save_xmm128 xmm7,  0x10
@@ -687,7 +687,7 @@ section .text
 		; rcx: DES_Context *context
 
 		pcmpeqd xmm0, xmm0
-		movaps  pnot, xmm0
+		movdqa  pnot, xmm0
 
 		lea data_blocks_address, [rcx + data_blocks_offset]
 
@@ -773,16 +773,16 @@ section .text
 
 
 	exit:
-		movaps  xmm6,  [rsp+0x00]
-		movaps  xmm7,  [rsp+0x10]
-		movaps  xmm8,  [rsp+0x20]
-		movaps  xmm9,  [rsp+0x30]
-		movaps  xmm10, [rsp+0x40]
-		movaps  xmm11, [rsp+0x50]
-		movaps  xmm12, [rsp+0x60]
-		movaps  xmm13, [rsp+0x70]
-		movaps  xmm14, [rsp+0x80]
-		movaps  xmm15, [rsp+0x90]
+		movdqa  xmm6,  [rsp+0x00]
+		movdqa  xmm7,  [rsp+0x10]
+		movdqa  xmm8,  [rsp+0x20]
+		movdqa  xmm9,  [rsp+0x30]
+		movdqa  xmm10, [rsp+0x40]
+		movdqa  xmm11, [rsp+0x50]
+		movdqa  xmm12, [rsp+0x60]
+		movdqa  xmm13, [rsp+0x70]
+		movdqa  xmm14, [rsp+0x80]
+		movdqa  xmm15, [rsp+0x90]
 		mov     rbx,   [rsp+0xa0]
 		mov     rsi,   [rsp+0xa8]
 		mov     rdi,   [rsp+0xb0]
