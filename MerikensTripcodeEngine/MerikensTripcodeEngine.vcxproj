@@ -20,19 +20,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source Files\MERIKENsTripcodeEngine.h" />
-    <ClInclude Include="Source Files\MTE_Constants.h" />
-    <ClInclude Include="Source Files\MTE_Macros.h" />
-    <ClInclude Include="Source Files\MTE_Types.h" />
+    <ClInclude Include="Source Files\Constants.h" />
+    <ClInclude Include="Source Files\Macros.h" />
+    <ClInclude Include="Source Files\Types.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source Files\MTE_CPU_DES.cpp">
+    <ClCompile Include="Source Files\CPU10.cpp">
       <FileType>Document</FileType>
     </ClCompile>
-    <ClCompile Include="Source Files\MTE_CPU_DES_SSE2Intrinsics_S-Boxes.cpp">
+    <ClCompile Include="Source Files\CPU10_SSE2Intrinsics.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source Files\MTE_CPU_SHA-1_SSE2Intrinsics.cpp">
+    <ClCompile Include="Source Files\CPU12_SSE2Intrinsics.cpp">
       <InlineFunctionExpansion Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IntrinsicFunctions>
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Speed</FavorSizeOrSpeed>
@@ -55,14 +55,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source Files\MTE_CPU_SHA-1.cpp" />
-    <ClCompile Include="Source Files\MTE_OpenCL_DES.cpp" />
-    <ClCompile Include="Source Files\MTE_OpenCL_SHA-1.cpp" />
-    <ClCompile Include="Source Files\MTE_Patterns.cpp" />
-    <ClCompile Include="Source Files\MTE_Verification_DES.cpp" />
-    <ClCompile Include="Source Files\MTE_Verification_Duplicates.cpp" />
-    <ClCompile Include="Source Files\MTE_Verification_SHA-1.cpp" />
-    <CudaCompile Include="Source Files\MTE_CUDA_DES.cu">
+    <ClCompile Include="Source Files\CPU12.cpp" />
+    <ClCompile Include="Source Files\OpenCL10.cpp" />
+    <ClCompile Include="Source Files\OpenCL12.cpp" />
+    <ClCompile Include="Source Files\Patterns.cpp" />
+    <ClCompile Include="Source Files\Verification_DES.cpp" />
+    <ClCompile Include="Source Files\Verification_Duplicates.cpp" />
+    <ClCompile Include="Source Files\Verification_SHA-1.cpp" />
+    <CudaCompile Include="Source Files\CUDA10.cu">
       <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </MaxRegCount>
       <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -74,63 +74,58 @@
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_10,sm_10;compute_20,sm_20;compute_20,sm_21;compute_30,sm_30;compute_35,sm_35;</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_10,sm_10;compute_20,sm_20;compute_20,sm_21;compute_30,sm_30;compute_35,sm_35;</CodeGeneration>
     </CudaCompile>
-    <CudaCompile Include="Source Files\MTE_CUDA_SHA-1.cu" />
-    <ClCompile Include="Source Files\MTE_Main.cpp">
+    <CudaCompile Include="Source Files\CUDA12.cu" />
+    <ClCompile Include="Source Files\Main.cpp">
       <FileType>Document</FileType>
     </ClCompile>
-    <CudaCompile Include="Source Files\MTE_Testing.cpp" />
+    <CudaCompile Include="Source Files\Testing.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\MERIKENsTripcodeTools\Release\OpenCL\MTE_OpenCL_DES.cl" />
-    <None Include="..\MERIKENsTripcodeTools\Release\OpenCL\MTE_OpenCL_SHA-1.cl" />
-    <None Include="..\MERIKENsTripcodeTools\Release\OpenCL\MTE_OpenCL_SHA-1_AMD_pre-GCN.cl" />
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="Source Files\MTE_CPU_DES_Crypt25_x64_AVX.asm">
+    <YASM Include="Source Files\CPU10_x64_AVX.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_DES_Crypt25_x64_SSE2.asm">
+    <YASM Include="Source Files\CPU10_x64_SSE2.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_DES_Crypt25_x64_SSE2_Nehalem.asm">
+    <YASM Include="Source Files\CPU10_x64_SSE2_Nehalem.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_DES_Crypt25_x86_AVX.asm">
+    <YASM Include="Source Files\CPU10_x86_AVX.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_DES_Crypt25_x86_SSE2.asm">
+    <YASM Include="Source Files\CPU10_x86_SSE2.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_DES_Crypt25_x86_SSE2_Nehalem.asm">
+    <YASM Include="Source Files\CPU10_x86_SSE2_Nehalem.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_SHA-1_x64_GenerateTripcodes_AVX.asm">
+    <YASM Include="Source Files\CPU12_x64_AVX.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_SHA-1_x64_GenerateTripcodes_SSE2.asm">
+    <YASM Include="Source Files\CPU12_x64_SSE2.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_SHA-1_x64_GenerateTripcodes_SSE2_Nehalem.asm">
+    <YASM Include="Source Files\CPU12_x64_SSE2_Nehalem.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_SHA-1_x86_GenerateTripcodes_AVX.asm">
+    <YASM Include="Source Files\CPU12_x86_AVX.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_SHA-1_x86_GenerateTripcodes_SSE2.asm">
+    <YASM Include="Source Files\CPU12_x86_SSE2.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>
-    <YASM Include="Source Files\MTE_CPU_SHA-1_x86_GenerateTripcodes_SSE2_Nehalem.asm">
+    <YASM Include="Source Files\CPU12_x86_Nehalem.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>

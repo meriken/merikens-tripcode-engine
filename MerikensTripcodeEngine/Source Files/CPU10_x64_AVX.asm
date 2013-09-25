@@ -61,6 +61,7 @@ global IsAVXSupported
 %define pnot                  [rcx + temp_offset + 0 * 16]
 %define temp0                 [rcx + temp_offset + 1 * 16]
 %define temp1                 [rcx + temp_offset + 2 * 16]
+%define temp2                 [rcx + temp_offset + 3 * 16]
 %define data_blocks(i)        [rcx + data_blocks_offset + (i) * 16]
 
 ; This is the original macro.
@@ -400,67 +401,72 @@ global IsAVXSupported
 %endmacro
 
 %macro sbox6 4
-	vmovdqa xmm8,  xmm5         ; [X]
-	vpor    xmm5,  xmm1
-	vmovdqa xmm7,  xmm4         ; [X]
-	vmovdqa temp1, xmm4         ; [X]
-	vpxor   xmm4,  xmm1
-	vpand   xmm5,  xmm0
-	vpxor   xmm4,  xmm5
-	vpxor   xmm11, xmm2,  xmm0
-	vmovdqa xmm9,  xmm4         ; [X]
-	vpxor   xmm4,  xmm8
-	vpandn  xmm12, xmm4,  xmm7
-	vpand   xmm4,  xmm0
-	vpxor   xmm10, xmm4,  xmm8
-	vpxor   xmm4,  xmm1
-	vmovdqa temp0, xmm0         ; [X]
-	vpor    xmm0,  xmm11, xmm4
-	vpor    xmm11, xmm1
-	vpxor   xmm6,  xmm0,  xmm1
-	vpor    xmm4,  xmm12
-	vpxor   xmm0,  xmm9
-	vpxor   xmm7,  xmm6,  xmm11
-	vpandn  xmm6,  xmm8
-	vpxor   xmm6,  xmm2
-	vpand   xmm2,  xmm0
-	vpandn  xmm8,  xmm2
-	vpxor   xmm14, xmm4,  xmm8
-	vpand   xmm15, xmm3,  xmm14
-	vmovdqa xmm13, xmm2         ; [X]
-	vpandn  xmm2,  temp1
-	vpxor   xmm15, xmm0
-	vpor    xmm0,  temp0
-	vpxor   xmm15, %4
-	vpand   xmm0,  xmm4
-	vpor    xmm2,  xmm6
-	vpxor   xmm0,  xmm6
-	vpxor   xmm7,  pnot
-	vpandn  xmm8,  xmm0
-	vpxor   xmm0,  xmm9
-	vpor    xmm12, xmm3
-	vpandn  xmm0,  temp1
-	vpor    xmm5,  xmm2
-	vpxor   xmm0,  xmm7
-	vpxor   xmm6,  temp0
-	vpandn  xmm1,  xmm3,  xmm0
-	vpandn  xmm3,  xmm2
-	vpand   xmm6,  xmm10
-	vpxor   xmm7,  xmm3
-	vpxor   xmm8,  %3
-	vpxor   xmm7,  xmm6
-	vpxor   xmm8,  xmm12
-	vpxor   xmm5,  xmm1
-	vpxor   xmm7,  xmm13
-	vpxor   xmm14, xmm11
-	vpxor   xmm5,  %2
-	vpxor   xmm5,  xmm14
+	vpxor xmm6, xmm1, xmm4
+	vpor xmm7, xmm1, xmm5
+	vpand xmm8, xmm0, xmm7
+	vpxor xmm7, xmm6, xmm8
+	vpxor xmm6, xmm5, xmm7
+	vpandn xmm9, xmm6, xmm4
 
-	vmovdqa %4,    xmm15
-	vpxor   xmm7,  %1
-	vmovdqa %3,    xmm8
-	vmovdqa %2,    xmm5
-	vmovdqa %1,    xmm7
+	; vpand var10, xmm0, xmm6
+	vpand xmm6, xmm0, xmm6
+	vmovdqa temp2, xmm6
+
+	vpxor xmm6, xmm1
+
+	; vpxor var11, xmm0, xmm2
+	vpxor xmm10, xmm0, xmm2
+	vmovdqa temp1, xmm10
+
+	vpor xmm10, xmm6
+	vpxor xmm11, xmm7, xmm10
+	vpand xmm12, xmm2, xmm11
+	vpandn xmm13, xmm5, xmm12
+
+	; vpor var16, xmm9, xmm6
+	vpor xmm6, xmm9, xmm6
+	vmovdqa temp0, xmm6
+		
+	vpxor xmm6, xmm13
+	vpand xmm14, xmm6, xmm3
+	vpxor xmm15, xmm14, xmm11
+	vpxor xmm15, %4
+	vmovdqa %4, xmm15
+	vpxor xmm14, xmm1, xmm10
+	vpandn xmm10, xmm14, xmm5
+	vpxor xmm15, xmm2, xmm10
+	vpandn xmm2, xmm12, xmm4
+	vpor xmm10, xmm15, xmm2
+	vpor xmm2, xmm0, xmm11
+	vpand xmm11, xmm2, temp0
+	vpxor xmm2, xmm15, xmm11
+	vpandn xmm11, xmm13, xmm2
+	vpor xmm13, xmm9, xmm3
+	vpxor xmm9, xmm13, xmm11
+	vpxor xmm9, %3
+	vmovdqa %3, xmm9
+	vpor xmm9, xmm1, temp1
+	vpxor xmm1, xmm6, xmm9
+	vpor xmm6, xmm8, xmm10
+	vpxor xmm8, xmm1, xmm6
+	vpxor xmm1, xmm7, xmm2
+	vpandn xmm2, xmm1, xmm4
+	vpandn xmm1, xmm14, pnot
+	vpxor xmm4, xmm9, xmm1
+	vpxor xmm1, xmm2, xmm4
+	vpandn xmm2, xmm3, xmm1
+	vpxor xmm1, xmm2, xmm8
+	vpxor xmm1, %2
+	vmovdqa %2, xmm1
+	vpxor xmm1, xmm5, temp2
+	vpxor xmm2, xmm0, xmm15
+	vpand xmm0, xmm1, xmm2
+	vpxor xmm1, xmm12, xmm4
+	vpxor xmm2, xmm0, xmm1
+	vpandn xmm0, xmm3, xmm10
+	vpxor xmm1, xmm0, xmm2
+	vpxor xmm1, %1
+	vmovdqa %1, xmm1
 %endmacro
 
 %macro sbox7 4

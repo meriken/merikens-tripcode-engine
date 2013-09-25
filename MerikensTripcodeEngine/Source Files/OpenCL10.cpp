@@ -191,7 +191,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	sprintf(buildOption_localWorkSize, " -DOPENCL_DES_LOCAL_WORK_SIZE=%d ", (int)localWorkSize);
 	strcat(buildOptions, buildOption_localWorkSize);
 #ifdef DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
-	strcat(buildOptions, " -save-temps=MTE_OpenCL_DES.cl ");
+	strcat(buildOptions, " -save-temps=OpenCL10.cl ");
 #endif
 	openCLError = clBuildProgram(program, 1, &deviceID, buildOptions, NULL, NULL);
 	if (openCLError != CL_SUCCESS && !options.redirection) {

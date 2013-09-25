@@ -66,14 +66,14 @@
 #include "mpir.h"
 
 //
-#include "MTE_Constants.h"
-#include "MTE_Types.h"
-#include "MTE_Macros.h"
+#include "Constants.h"
+#include "Types.h"
+#include "Macros.h"
 
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// MTE_Main.cu                                                           //
+// Main.cu                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
 // Options
@@ -176,7 +176,7 @@ BOOL IsFirstByteSJIS(unsigned char ch);
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// MTE_Patterns.cu                                                       //
+// Patterns.cu                                                       //
 ///////////////////////////////////////////////////////////////////////////////
 
 extern void LoadTargetPatterns(BOOL displayProgress);
@@ -199,7 +199,7 @@ extern BOOL             searchForSpecialPatternsOnCPU;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// MTE_Testing.cu                                                            //
+// Testing.cu                                                            //
 ///////////////////////////////////////////////////////////////////////////////
 
 extern void TestNewCode();

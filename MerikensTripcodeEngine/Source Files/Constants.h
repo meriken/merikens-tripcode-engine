@@ -174,11 +174,11 @@
 #define OPENCL_VENDOR_NVIDIA                    "NVIDIA Corporation"
 #define OPENCL_VENDOR_INTEL                     "Intel(R) Corporation"
 #define OPENCL_MAX_SIZE_SOURCE_CODE             (1024 * 1024)
-#define OPENCL_SHA1_DEFAULT_SOURCE_FILE         "OpenCL\\MTE_OpenCL_SHA-1.cl"
+#define OPENCL_SHA1_DEFAULT_SOURCE_FILE         "OpenCL\\OpenCL12.cl"
 #define OPENCL_SHA1_DEFAULT_NUM_WORK_GROUPS_PER_COMPUTE_UNIT 256
 #define OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS      32
 #define OPENCL_SHA1_MAX_PASS_COUNT              2048
-#define OPENCL_DES_DEFAULT_SOURCE_FILE          "OpenCL\\MTE_OpenCL_DES.cl"
+#define OPENCL_DES_DEFAULT_SOURCE_FILE          "OpenCL\\OpenCL10.cl"
 #define OPENCL_DES_MAX_LEN_BUILD_OPTIONS        4096
 #define OPENCL_SIMPLE_SEARCH_THRESHOLD          4
 #define OPENCL_MIN_WORK_GROUPS_PER_CU           1
