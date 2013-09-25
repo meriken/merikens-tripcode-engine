@@ -1,9 +1,9 @@
 // Meriken's Tripcode Engine 1.1 Alpha 7
-// Copyright (c) 2011-2013 ŸMeriken//XXX <meriken.2ch@gmail.com>
+// Copyright (c) 2011-2013 ï¿½ï¿½Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
-// Copyright (c) 2009 ŸHoro/.IBXjcg
+// Copyright (c) 2009 ï¿½ï¿½Horo/.IBXjcg
 // 
 // The code that deals with DES decryption is partially adopted from:
 // John the Ripper password cracker
