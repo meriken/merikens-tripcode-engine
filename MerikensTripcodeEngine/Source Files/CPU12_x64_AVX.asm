@@ -1,4 +1,4 @@
-; Meriken's Tripcode Engine 1.1 Alpha 7
+; Meriken's Tripcode Engine 1.1 Alpha 8
 ; Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 ;
 ; The initial versions of this software were based on:
@@ -632,6 +632,7 @@ section .text
 
 	ENDPROC_FRAME
 		db "THIS_IS_THE_END_OF_THE_FUNCTION",  0x00
+
 
 
 	PROC_FRAME SHA1_GenerateTripcodesWithOptimization_x64_AVX

@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 7
+// Meriken's Tripcode Engine 1.1 Alpha 8
 // Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -99,6 +99,7 @@ struct Options {
 	BOOL isAVXEnabled;
 	BOOL useOnlyASCIICharactersForKeys;
 	BOOL maximizeKeySpace;
+	BOOL isAVX2Enabled;
 };
 
 struct CUDADeviceSearchThreadInfo {

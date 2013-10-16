@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 7
+// Meriken's Tripcode Engine 1.1 Alpha 8
 // Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -110,6 +110,7 @@
 #define DEFAULT_OPTION_IS_AVX_ENABLED                   TRUE
 #define DEFAULT_OPTION_USE_ONLY_ASCII_CHARACTERS_FOR_KEYS FALSE
 #define DEFAULT_OPTION_MAXIMIZE_KEY_SPACE                 FALSE
+#define DEFAULT_OPTION_IS_AVX2_ENABLED                  TRUE
 
 // For dynamic arrays
 #define MIN_SIZE_ARRAY  256
@@ -140,7 +141,7 @@
 #define MAX_NUM_DEPTHS_IN_REGEX_PATTERN         (10 + 1)
 
 // For screen output
-#define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1 Alpha 7"
+#define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1 Alpha 8"
 #define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10
@@ -153,7 +154,6 @@
 // CPU
 #define CPU_SHA1_MAX_INDEX_FOR_KEYS         63
 #define CPU_DES_MAX_INDEX_FOR_KEYS          31
-#define CPU_DES_BS_DEPTH                    128
 
 // CUDA
 #define CUDA_MIN_NUM_BLOCKS_PER_SM          1

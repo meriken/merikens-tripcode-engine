@@ -1,4 +1,4 @@
-; Meriken's Tripcode Engine 1.1 Alpha 7
+; Meriken's Tripcode Engine 1.1 Alpha 8
 ; Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 ;
 ; The initial versions of this software were based on:
@@ -45,8 +45,8 @@ global SHA1_GenerateTripcodesWithOptimization_x64_SSE2_Nehalem
 %define D xmm3
 %define E xmm4
 
-%define W0_6___W0_4 xmm10
-%define W0_8___W0_4 xmm11
+%define W0_6___W0_4        xmm10
+%define W0_8___W0_4        xmm11
 %define W0_6___W0_4___W0_7 xmm12
 %define W0_8___W012        xmm13
 

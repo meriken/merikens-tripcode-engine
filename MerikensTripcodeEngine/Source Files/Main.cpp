@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 7
+// Meriken's Tripcode Engine 1.1 Alpha 8
 // Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -68,6 +68,7 @@ Options options = {
 	DEFAULT_OPTION_IS_AVX_ENABLED,
 	DEFAULT_OPTION_USE_ONLY_ASCII_CHARACTERS_FOR_KEYS,
 	DEFAULT_OPTION_MAXIMIZE_KEY_SPACE,
+	DEFAULT_OPTION_IS_AVX2_ENABLED,
 };
 
 // Search Parameters
@@ -1213,6 +1214,9 @@ void ObtainOptions(int argCount, char **arguments)
 
 		} else if (strcmp(arguments[indexArg], "--disable-avx") == 0) {
 			options.isAVXEnabled = FALSE;
+
+		} else if (strcmp(arguments[indexArg], "--disable-avx2") == 0) {
+			options.isAVX2Enabled = FALSE;
 
 		} else if (strcmp(arguments[indexArg], "--use-one-byte-characters-for-keys") == 0) {
 			options.useOneByteCharactersForKeys = TRUE;

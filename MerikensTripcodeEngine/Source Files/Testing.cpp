@@ -106,7 +106,7 @@ const unsigned char keySchedule[0x300] = {
 
 void TestNewCode()
 {
-#if FALSE
+#if TRUE
 
 	unsigned char *p = (unsigned char *)TestASM;
 	int i;
@@ -142,6 +142,10 @@ void TestNewCode()
 		else if (60 <= i && i <= 79) printf("ROUND_60_TO_79(%2d); \\\n", i % 16);
 
 	}
+#endif
+
+#if FALSE
+	printf("IsAVX2Supported(): %d\n", IsAVX2Supported());
 #endif
 
 	// printf("IsCPUBasedOnNehalemMicroarchitecture(): %d\n", IsCPUBasedOnNehalemMicroarchitecture());

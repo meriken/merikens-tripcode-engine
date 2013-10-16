@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source Files\CPU10.h" />
     <ClInclude Include="Source Files\MERIKENsTripcodeEngine.h" />
     <ClInclude Include="Source Files\Constants.h" />
     <ClInclude Include="Source Files\Macros.h" />
@@ -28,9 +29,12 @@
     <ClCompile Include="Source Files\CPU10.cpp">
       <FileType>Document</FileType>
     </ClCompile>
+    <ClCompile Include="Source Files\CPU10_AVX2.cpp" />
     <ClCompile Include="Source Files\CPU10_SSE2Intrinsics.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source Files\CPU12_SSE2Intrinsics.cpp">
       <InlineFunctionExpansion Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AnySuitable</InlineFunctionExpansion>
@@ -85,6 +89,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
+    <YASM Include="Source Files\CPU10_x64_AVX2.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </YASM>
     <YASM Include="Source Files\CPU10_x64_SSE2.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -94,6 +102,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
     <YASM Include="Source Files\CPU10_x86_AVX.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </YASM>
+    <YASM Include="Source Files\CPU10_x86_AVX2.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>
@@ -109,6 +121,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </YASM>
+    <YASM Include="Source Files\CPU12_x64_AVX2.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </YASM>
     <YASM Include="Source Files\CPU12_x64_SSE2.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -121,6 +137,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>
+    <YASM Include="Source Files\CPU12_x86_AVX2.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </YASM>
     <YASM Include="Source Files\CPU12_x86_SSE2.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -129,6 +149,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Release\OpenCL\OpenCL10.cl" />
+    <None Include="Release\OpenCL\OpenCL12.cl" />
+    <None Include="Release\OpenCL\OpenCL12_AMD_pre-GCN.cl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD13A840-16DE-4D22-9D2C-069440A352D6}</ProjectGuid>
@@ -228,6 +253,9 @@
       <PtxAsOptionV>true</PtxAsOptionV>
       <Optimization>Od</Optimization>
     </CudaCompile>
+    <YASM>
+      <ListFile>$(IntDir)$(TargetName).lst</ListFile>
+    </YASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -257,6 +285,9 @@
       <Optimization>Od</Optimization>
       <TargetMachinePlatform>64</TargetMachinePlatform>
     </CudaCompile>
+    <YASM>
+      <ListFile>$(IntDir)$(TargetName).lst</ListFile>
+    </YASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -288,6 +319,9 @@
       <PtxAsOptionV>true</PtxAsOptionV>
       <Optimization>O3</Optimization>
     </CudaCompile>
+    <YASM>
+      <ListFile>$(IntDir)$(TargetName).lst</ListFile>
+    </YASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -320,6 +354,9 @@
       <Optimization>O3</Optimization>
       <TargetMachinePlatform>64</TargetMachinePlatform>
     </CudaCompile>
+    <YASM>
+      <ListFile>$(IntDir)$(TargetName).lst</ListFile>
+    </YASM>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

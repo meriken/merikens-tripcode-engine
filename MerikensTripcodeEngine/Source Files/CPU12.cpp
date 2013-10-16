@@ -64,11 +64,14 @@ inline void ConvertRaw12CharTripcodeIntoDisplayFormat(unsigned int *rawTripcodeA
 	tripcode[11] = base64CharTable[(rawTripcodeArray[2] >> 24                            ) & 0x3f];
 }
 
-#define LOOK_FOR_POSSIBLE_MATCH                                                                                                                             \
-	for (int wordIndex = 0; wordIndex < 4; ++wordIndex) {                                                                                                   \
+#define LOOK_FOR_POSSIBLE_MATCH(numWordsInVector)                                                                                                           \
+	unsigned int   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];                                                            \
+	int            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);                                     \
+                                                                                                                                                            \
+	for (int wordIndex = 0; wordIndex < (numWordsInVector); ++wordIndex) {                                                                                  \
 		BOOL found = FALSE;                                                                                                                                 \
 		                                                                                                                                                    \
-		key[0] = ((key[0] & 0xfc) | wordIndex);                                                                                                             \
+		key[0] = ((key[0] & 0xf8) | wordIndex);                                                                                                             \
 		                                                                                                                                                    \
 		if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {                                                                                                   \
 			generatedTripcodeChunkArray[0] =   rawTripcodeArray[wordIndex][0] >>  2;                                                                        \
@@ -224,10 +227,12 @@ inline void ConvertRaw12CharTripcodeIntoDisplayFormat(unsigned int *rawTripcodeA
 extern "C" void SHA1_GenerateTripcodesWithOptimization_x64_AVX         (void *W0, void *PW, void *W0Shifted, void *ABC);
 extern "C" void SHA1_GenerateTripcodesWithOptimization_x64_SSE2        (void *W0, void *PW, void *W0Shifted, void *ABC);
 extern "C" void SHA1_GenerateTripcodesWithOptimization_x64_SSE2_Nehalem(void *W0, void *PW, void *W0Shifted, void *ABC);
+extern "C" void SHA1_GenerateTripcodesWithOptimization_x64_AVX2        (void *W0, void *PW, void *W0Shifted, void *ABC);
 #else
 extern "C" void SHA1_GenerateTripcodesWithOptimization_x86_AVX         (void *W0, void *PW, void *W0Shifted, void *ABC);
 extern "C" void SHA1_GenerateTripcodesWithOptimization_x86_SSE2        (void *W0, void *PW, void *W0Shifted, void *ABC);
 extern "C" void SHA1_GenerateTripcodesWithOptimization_x86_SSE2_Nehalem(void *W0, void *PW, void *W0Shifted, void *ABC);
+extern "C" void SHA1_GenerateTripcodesWithOptimization_x86_AVX2        (void *W0, void *PW, void *W0Shifted, void *ABC);
 #endif
 
 BOOL IsCPUBasedOnNehalemMicroarchitecture()
@@ -259,9 +264,7 @@ BOOL IsCPUBasedOnNehalemMicroarchitecture()
 static unsigned int SearchForTripcodesWithOptimization()
 {
 	unsigned char  tripcode[MAX_LEN_TRIPCODE + 1], key[MAX_LEN_TRIPCODE_KEY + 1];
-	unsigned int   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
 	unsigned int   numGeneratedTripcodes = 0;
-	int            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);
 	unsigned int   rawTripcodeArray[4][3];
 
 #ifdef _M_X64
@@ -289,6 +292,14 @@ static unsigned int SearchForTripcodesWithOptimization()
 	}
 
 	__declspec(align(16)) __m128i PW[80], W0Shifted[23];
+	unsigned char keyCharTable_FirstByte_local           [SIZE_KEY_CHAR_TABLE];
+	unsigned char keyCharTable_SecondByteAndOneByte_local[SIZE_KEY_CHAR_TABLE];
+
+	for (int i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
+		keyCharTable_FirstByte_local[i]            = keyCharTable_FirstByte[i];
+		keyCharTable_SecondByteAndOneByte_local[i] = keyCharTable_SecondByteAndOneByte[i];
+	}
+
 	PW[0]  = _mm_set1_epi32(0);
 	PW[1]  = _mm_set1_epi32((key[4] << 24) | (key[5] << 16) | (key[ 6] << 8) | key[ 7]);
 	PW[2]  = _mm_set1_epi32((key[8] << 24) | (key[9] << 16) | (key[10] << 8) | key[11]);
@@ -310,13 +321,13 @@ static unsigned int SearchForTripcodesWithOptimization()
 		PW[t] = ROTL(1, _mm_xor_si128(_mm_xor_si128(_mm_xor_si128(PW[(t) - 3], PW[(t) - 8]), PW[(t) - 14]), PW[(t) - 16]));
 
 	for (int indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
-		key[1] = keyCharTable_SecondByteAndOneByte[indexKey1];
+		key[1] = keyCharTable_SecondByteAndOneByte_local[indexKey1];
 
 		for (int indexKey2 = 0; indexKey2 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey2) {
-			key[2] = keyCharTable_FirstByte[indexKey2];
+			key[2] = keyCharTable_FirstByte_local[indexKey2];
 
 			for (int indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
-				key[3] = keyCharTable_SecondByteAndOneByte[indexKey3];
+				key[3] = keyCharTable_SecondByteAndOneByte_local[indexKey3];
 				
 				__declspec(align(16)) __m128i W0, ABC[3];
 				W0.m128i_u32[0] = (((key[0] & 0xfc) | 0x00) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
@@ -344,7 +355,127 @@ static unsigned int SearchForTripcodesWithOptimization()
 
 				numGeneratedTripcodes += 4;
 			
-				LOOK_FOR_POSSIBLE_MATCH
+				LOOK_FOR_POSSIBLE_MATCH(4)
+			}
+		}
+	}
+
+	return numGeneratedTripcodes;
+}
+
+static unsigned int SearchForTripcodesWithOptimization_AVX2()
+{
+	unsigned char  tripcode[MAX_LEN_TRIPCODE + 1], key[MAX_LEN_TRIPCODE_KEY + 1];
+	unsigned int   numGeneratedTripcodes = 0;
+	unsigned int   rawTripcodeArray[8][3];
+
+	tripcode[lenTripcode]    = '\0';
+	key     [lenTripcodeKey] = '\0';
+
+	SetCharactersInTripcodeKeyForSHA1Tripcode(key);
+	while (TRUE) {
+		key[0] = ((key[0] & 0xf8) | 0x00); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
+		key[0] = ((key[0] & 0xf8) | 0x01); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
+		key[0] = ((key[0] & 0xf8) | 0x02); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
+		key[0] = ((key[0] & 0xf8) | 0x03); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
+		key[0] = ((key[0] & 0xf8) | 0x04); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
+		key[0] = ((key[0] & 0xf8) | 0x05); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
+		key[0] = ((key[0] & 0xf8) | 0x06); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
+		key[0] = ((key[0] & 0xf8) | 0x07); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
+		break;
+	}
+
+	__declspec(align(32)) struct {
+		__m128i lower, upper; 
+	} PW[80], W0Shifted[23], W0, ABC[3];
+	unsigned char keyCharTable_FirstByte_local           [SIZE_KEY_CHAR_TABLE];
+	unsigned char keyCharTable_SecondByteAndOneByte_local[SIZE_KEY_CHAR_TABLE];
+
+	for (int i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
+		keyCharTable_FirstByte_local[i]            = keyCharTable_FirstByte[i];
+		keyCharTable_SecondByteAndOneByte_local[i] = keyCharTable_SecondByteAndOneByte[i];
+	}
+
+	PW[0].lower  = PW[0].upper  = _mm_set1_epi32(0);
+	PW[1].lower  = PW[1].upper  = _mm_set1_epi32((key[4] << 24) | (key[5] << 16) | (key[ 6] << 8) | key[ 7]);
+	PW[2].lower  = PW[2].upper  = _mm_set1_epi32((key[8] << 24) | (key[9] << 16) | (key[10] << 8) | key[11]);
+	PW[3].lower  = PW[3].upper  = _mm_set1_epi32(0x80000000);
+	PW[4].lower  = PW[4].upper  = _mm_set1_epi32(0);
+	PW[5].lower  = PW[5].upper  = _mm_set1_epi32(0);
+	PW[6].lower  = PW[6].upper  = _mm_set1_epi32(0);
+	PW[7].lower  = PW[7].upper  = _mm_set1_epi32(0);
+	PW[8].lower  = PW[8].upper  = _mm_set1_epi32(0);
+	PW[9].lower  = PW[9].upper  = _mm_set1_epi32(0);
+	PW[10].lower = PW[10].upper = _mm_set1_epi32(0);
+	PW[11].lower = PW[11].upper = _mm_set1_epi32(0);
+	PW[12].lower = PW[12].upper = _mm_set1_epi32(0);
+	PW[13].lower = PW[13].upper = _mm_set1_epi32(0);
+	PW[14].lower = PW[14].upper = _mm_set1_epi32(0);
+	PW[15].lower = PW[15].upper = _mm_set1_epi32(12 * 8);
+	PW[16].lower = PW[16].upper = ROTL(1, _mm_xor_si128(_mm_xor_si128(PW[16 - 3].lower, PW[16 - 8].lower), PW[16 - 14].lower));
+	for (int t = 17; t < 80; ++t)
+		PW[t].lower = PW[t].upper = ROTL(1, _mm_xor_si128(_mm_xor_si128(_mm_xor_si128(PW[(t) - 3].lower, PW[(t) - 8].lower), PW[(t) - 14].lower), PW[(t) - 16].lower));
+
+	for (int indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
+		key[1] = keyCharTable_SecondByteAndOneByte_local[indexKey1];
+
+		for (int indexKey2 = 0; indexKey2 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey2) {
+			key[2] = keyCharTable_FirstByte_local[indexKey2];
+
+			for (int indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
+				key[3] = keyCharTable_SecondByteAndOneByte_local[indexKey3];
+				
+				W0.lower.m128i_u32[0] = (((key[0] & 0xf8) | 0x00) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+				W0.lower.m128i_u32[1] = (((key[0] & 0xf8) | 0x01) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+				W0.lower.m128i_u32[2] = (((key[0] & 0xf8) | 0x02) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+				W0.lower.m128i_u32[3] = (((key[0] & 0xf8) | 0x03) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+
+				W0.upper.m128i_u32[0] = (((key[0] & 0xf8) | 0x04) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+				W0.upper.m128i_u32[1] = (((key[0] & 0xf8) | 0x05) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+				W0.upper.m128i_u32[2] = (((key[0] & 0xf8) | 0x06) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+				W0.upper.m128i_u32[3] = (((key[0] & 0xf8) | 0x07) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+
+#ifdef _M_X64
+				SHA1_GenerateTripcodesWithOptimization_x64_AVX2(&W0, PW, W0Shifted, ABC);
+#else
+				SHA1_GenerateTripcodesWithOptimization_x86_AVX2(&W0, PW, W0Shifted, ABC);
+#endif
+
+				rawTripcodeArray[0][0] = ABC[0].lower.m128i_u32[0];
+				rawTripcodeArray[0][1] = ABC[1].lower.m128i_u32[0];
+				rawTripcodeArray[0][2] = ABC[2].lower.m128i_u32[0];
+
+				rawTripcodeArray[1][0] = ABC[0].lower.m128i_u32[1];
+				rawTripcodeArray[1][1] = ABC[1].lower.m128i_u32[1];
+				rawTripcodeArray[1][2] = ABC[2].lower.m128i_u32[1];
+
+				rawTripcodeArray[2][0] = ABC[0].lower.m128i_u32[2];
+				rawTripcodeArray[2][1] = ABC[1].lower.m128i_u32[2];
+				rawTripcodeArray[2][2] = ABC[2].lower.m128i_u32[2];
+
+				rawTripcodeArray[3][0] = ABC[0].lower.m128i_u32[3];
+				rawTripcodeArray[3][1] = ABC[1].lower.m128i_u32[3];
+				rawTripcodeArray[3][2] = ABC[2].lower.m128i_u32[3];
+
+				rawTripcodeArray[4][0] = ABC[0].upper.m128i_u32[0];
+				rawTripcodeArray[4][1] = ABC[1].upper.m128i_u32[0];
+				rawTripcodeArray[4][2] = ABC[2].upper.m128i_u32[0];
+
+				rawTripcodeArray[5][0] = ABC[0].upper.m128i_u32[1];
+				rawTripcodeArray[5][1] = ABC[1].upper.m128i_u32[1];
+				rawTripcodeArray[5][2] = ABC[2].upper.m128i_u32[1];
+
+				rawTripcodeArray[6][0] = ABC[0].upper.m128i_u32[2];
+				rawTripcodeArray[6][1] = ABC[1].upper.m128i_u32[2];
+				rawTripcodeArray[6][2] = ABC[2].upper.m128i_u32[2];
+
+				rawTripcodeArray[7][0] = ABC[0].upper.m128i_u32[3];
+				rawTripcodeArray[7][1] = ABC[1].upper.m128i_u32[3];
+				rawTripcodeArray[7][2] = ABC[2].upper.m128i_u32[3];
+
+				numGeneratedTripcodes += 8;
+			
+				LOOK_FOR_POSSIBLE_MATCH(8)
 			}
 		}
 	}
@@ -446,15 +577,72 @@ static unsigned int SearchForTripcodesWithoutOptimization()
 
 #endif
 
+#include <stdint.h>
+#include <intrin.h>
+
+void run_cpuid(uint32_t eax, uint32_t ecx, int *abcd)
+{
+    __cpuidex(abcd, eax, ecx);
+}     
+
+int check_xcr0_ymm() 
+{
+    uint32_t xcr0;
+    xcr0 = (uint32_t)_xgetbv(0);  /* min VS2010 SP1 compiler is required */
+    return ((xcr0 & 6) == 6); /* checking if xmm and ymm state are enabled in XCR0 */
+}
+
+int check_4th_gen_intel_core_features()
+{
+    int abcd[4];
+    uint32_t fma_movbe_osxsave_mask = ((1 << 12) | (1 << 22) | (1 << 27));
+    uint32_t avx2_bmi12_mask = (1 << 5) | (1 << 3) | (1 << 8);
+ 
+    /* CPUID.(EAX=01H, ECX=0H):ECX.FMA[bit 12]==1   && 
+       CPUID.(EAX=01H, ECX=0H):ECX.MOVBE[bit 22]==1 && 
+       CPUID.(EAX=01H, ECX=0H):ECX.OSXSAVE[bit 27]==1 */
+    run_cpuid( 1, 0, abcd );
+    if ( (abcd[2] & fma_movbe_osxsave_mask) != fma_movbe_osxsave_mask ) 
+        return 0;
+ 
+    if ( ! check_xcr0_ymm() )
+        return 0;
+ 
+    /*  CPUID.(EAX=07H, ECX=0H):EBX.AVX2[bit 5]==1  &&
+        CPUID.(EAX=07H, ECX=0H):EBX.BMI1[bit 3]==1  &&
+        CPUID.(EAX=07H, ECX=0H):EBX.BMI2[bit 8]==1  */
+    run_cpuid( 7, 0, abcd );
+    if ( (abcd[1] & avx2_bmi12_mask) != avx2_bmi12_mask ) 
+        return 0;
+ 
+    /* CPUID.(EAX=80000001H):ECX.LZCNT[bit 5]==1 */
+    run_cpuid( 0x80000001, 0, abcd );
+    if ( (abcd[2] & (1 << 5)) == 0)
+        return 0;
+ 
+    return 1;
+}
+
+int IsAVX2Supported()
+{
+    static int the_4th_gen_features_available = -1;
+    /* test is performed once */
+    if (the_4th_gen_features_available < 0 )
+        the_4th_gen_features_available = check_4th_gen_intel_core_features();
+ 
+    return the_4th_gen_features_available;
+}
+
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
 {
-	BOOL useSSE2Intrinsics = IsCPUBasedOnNehalemMicroarchitecture();
+	BOOL useAVX2 = options.isAVX2Enabled && IsAVX2Supported();
 
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
 
-		unsigned int numGeneratedTripcodes = SearchForTripcodesWithOptimization();
+		unsigned int numGeneratedTripcodes = (useAVX2) ? SearchForTripcodesWithOptimization_AVX2()
+			                                           : SearchForTripcodesWithOptimization();
 		AddToNumGeneratedTripcodesByCPU(numGeneratedTripcodes);
 	}
 	return 0;
