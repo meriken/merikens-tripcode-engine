@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 8
+// Meriken's Tripcode Engine 1.1 Beta 1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -204,7 +204,7 @@ static unsigned char finalPermutationTable[] = {
 
 static void DES_RewriteCrypt25(DES_Context *context)
 {
-	// Rewrite the assembler function.
+	// Rewrite the assembly function.
 #define SKIP 0x100
 	int rewriteTable[] = {
 		0,    1,    2,    3,    4,    5,
@@ -280,9 +280,9 @@ static void DES_RewriteCrypt25(DES_Context *context)
 		p += 4;
 	}
 }
-static void DES_RewriteCrypt25_x64_AVX_AVX2(DES_Context *context)
+static void DES_RewriteCrypt25_x64_AVX2(DES_Context *context)
 {
-	// Rewrite the assembler function.
+	// Rewrite the assembly function.
 #define SKIP 0x100
 	int rewriteTable[] = {
 		0,    1,    2,    3,    4,    5,
@@ -388,8 +388,8 @@ static void DES_SetSalt(DES_Context *context, int salt)
 	}
 
 #ifdef USE_ASSEMBLY_FUNCTION
-	if (context->useAVX || context->useAVX2) {
-		DES_RewriteCrypt25_x64_AVX_AVX2(context);
+	if (context->useAVX2) {
+		DES_RewriteCrypt25_x64_AVX2(context);
 	} else {
 		DES_RewriteCrypt25(context);
 	}
@@ -443,7 +443,7 @@ next:
 
 static void DES_Crypt(DES_Context *context)
 {
-	if (!context->useAVX && !context->useAVX2) {
+	if (!context->useAVX2) {
 		for (int i = 0; i < 0x300; ++i)
 			context->expandedKeySchedule[i] = context->keys[keySchedule[i]];
 	}
@@ -682,9 +682,8 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 			CLEAR_KEYS(6);
 			CLEAR_KEYS(7);
 
-			for (tripcodeIndex = 0; tripcodeIndex < BITSLICE_DES_DEPTH; ++tripcodeIndex) {
-
 #if FALSE
+			for (tripcodeIndex = 0; tripcodeIndex < BITSLICE_DES_DEPTH; ++tripcodeIndex) {
 				key[6] = tableForKey6[(int)randomByteKey6 + (tripcodeIndex >> 5)];
 				tableForKey7 = (!isKey6SecondByte && IS_FIRST_BYTE_SJIS_FULL(key[6])) ? (context->keyCharTable_SecondByte) : (context->keyCharTable_FirstByte);	
 				SET_BIT_FOR_KEY(42, 6, 0);
@@ -694,19 +693,6 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 				SET_BIT_FOR_KEY(46, 6, 4);
 				SET_BIT_FOR_KEY(47, 6, 5);
 				SET_BIT_FOR_KEY(48, 6, 6);
-#else
-				if ((tripcodeIndex & 0x1f) == 0) {
-					key[6] = tableForKey6[(int)randomByteKey6 + (tripcodeIndex >> 5)];
-					tableForKey7 = (!isKey6SecondByte && IS_FIRST_BYTE_SJIS_FULL(key[6])) ? (context->keyCharTable_SecondByte) : (context->keyCharTable_FirstByte);	
-					if (key[6] & ((0x1 << 0))) context->keys[42].VECTOR_ELEMENTS[tripcodeIndex >> 5] = 0xffffffff;
-					if (key[6] & ((0x1 << 1))) context->keys[43].VECTOR_ELEMENTS[tripcodeIndex >> 5] = 0xffffffff;
-					if (key[6] & ((0x1 << 2))) context->keys[44].VECTOR_ELEMENTS[tripcodeIndex >> 5] = 0xffffffff;
-					if (key[6] & ((0x1 << 3))) context->keys[45].VECTOR_ELEMENTS[tripcodeIndex >> 5] = 0xffffffff;
-					if (key[6] & ((0x1 << 4))) context->keys[46].VECTOR_ELEMENTS[tripcodeIndex >> 5] = 0xffffffff;
-					if (key[6] & ((0x1 << 5))) context->keys[47].VECTOR_ELEMENTS[tripcodeIndex >> 5] = 0xffffffff;
-					if (key[6] & ((0x1 << 6))) context->keys[48].VECTOR_ELEMENTS[tripcodeIndex >> 5] = 0xffffffff;
-				}
-#endif
 
 				key[7] = tableForKey7[(int)randomByteKey7 + (tripcodeIndex & 0x1f)];
 				SET_BIT_FOR_KEY(49, 7, 0);
@@ -716,9 +702,32 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 				SET_BIT_FOR_KEY(53, 7, 4);
 				SET_BIT_FOR_KEY(54, 7, 5);
 				SET_BIT_FOR_KEY(55, 7, 6);
-
-				// if (tripcodeIndex == 0) printf("key[]      = \"%s\"\n", key);
 			}
+#else
+			for (int tripcodeIndexUpper = 0; tripcodeIndexUpper < (BITSLICE_DES_DEPTH >> 5); ++tripcodeIndexUpper) {
+				key[6] = tableForKey6[(int)randomByteKey6 + tripcodeIndexUpper];
+				tableForKey7 = (!isKey6SecondByte && IS_FIRST_BYTE_SJIS_FULL(key[6])) ? (context->keyCharTable_SecondByte) : (context->keyCharTable_FirstByte);	
+				if (key[6] & ((0x1 << 0))) context->keys[42].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
+				if (key[6] & ((0x1 << 1))) context->keys[43].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
+				if (key[6] & ((0x1 << 2))) context->keys[44].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
+				if (key[6] & ((0x1 << 3))) context->keys[45].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
+				if (key[6] & ((0x1 << 4))) context->keys[46].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
+				if (key[6] & ((0x1 << 5))) context->keys[47].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
+				if (key[6] & ((0x1 << 6))) context->keys[48].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
+
+#pragma unroll
+				for (int tripcodeIndexLower = 0; tripcodeIndexLower < 32; ++tripcodeIndexLower) {
+					key[7] = tableForKey7[(int)randomByteKey7 + tripcodeIndexLower];
+					if (key[7] & ((0x1 << 0))) context->keys[49].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
+					if (key[7] & ((0x1 << 1))) context->keys[50].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
+					if (key[7] & ((0x1 << 2))) context->keys[51].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
+					if (key[7] & ((0x1 << 3))) context->keys[52].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
+					if (key[7] & ((0x1 << 4))) context->keys[53].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
+					if (key[7] & ((0x1 << 5))) context->keys[54].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
+					if (key[7] & ((0x1 << 6))) context->keys[55].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
+				}
+			}
+#endif
 #endif
 
 		 	DES_Crypt(context);

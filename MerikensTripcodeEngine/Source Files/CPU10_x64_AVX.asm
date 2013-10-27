@@ -1,15 +1,15 @@
 ; Meriken's Tripcode Engine 1.1 Alpha 6
-; Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
+; Copyright (c) 2011-2013 ÅüMeriken//XXX <meriken.2ch@gmail.com>
 ;
 ; The initial versions of this software were based on:
 ; CUDA SHA-1 Tripper 0.2.1
-; Copyright (c) 2009 Horo/.IBXjcg
+; Copyright (c) 2009 ÅüHoro/.IBXjcg
 ; 
 ; The code that deals with DES decryption is partially adopted from:
 ; John the Ripper password cracker
 ; Copyright (c) 1996-2002, 2005, 2010 by Solar Designer
 ;
-; The code that deals with SHA-1 hash generati8on is partially adopted from:
+; The code that deals with SHA-1 hash generation is partially adopted from:
 ; sha_digest-2.2
 ; Copyright (C) 2009 Jens Thoms Toerring <jt@toerring.de>
 ; VecTripper 
@@ -31,6 +31,7 @@
 global DES_Crypt25_x64_AVX
 global IsAVXSupported
 global _xgetbv
+global TestASM
 
 
 
@@ -38,23 +39,88 @@ global _xgetbv
 ; Macros ;
 ;;;;;;;;;;
 
-%define iterations                           rsi
+%define expanded_key_schedule_address (rcx + expanded_key_schedule_offset)
+%define data_blocks_address           rbx
+%define key_schedule_index_base_x2    rdx
 
-%define data_blocks_source_address           rbx
-%define data_blocks_destination_address      rdx
+%define iterations                    rsi
+%define rounds_and_swapped            rdi
 
-%define expanded_key_schedule_address        (rcx + expanded_key_schedule_offset)
-
-%define vector_size 16
+; typedef struct {
+; 	unsigned char expansionFunction[96];
+; 	DES_Vector    expandedKeySchedule[0x300];
+; 	DES_Vector    dataBlocks[NUM_DATA_BLOCKS];
+; 	DES_Vector    temp[1 + 12];
+; 	DES_Vector    keys[DES_NUM_KEYS];
+; 	void          (*crypt25)(void *);
+; } DES_Context;
 
 %define expansion_function_offset    0
-%define expanded_key_schedule_offset (expansion_function_offset    + 96)
-%define data_blocks_offset           (expanded_key_schedule_offset + 0x300 * vector_size)
-%define temp_offset                  (data_blocks_offset           + 64    * vector_size)
-%define keys_offset                  (temp_offset                  + 13    * vector_size)
+%define expanded_key_schedule_offset 96
+%define data_blocks_offset           12384
+%define temp_offset                  13408
 
-%define data_blocks_destination(i) [data_blocks_destination_address + (i) * vector_size]
-%define keys(i)                    [rcx + keys_offset               + (i) * vector_size]
+%define pnot                  [rcx + temp_offset + 0 * 16]
+%define temp0                 [rcx + temp_offset + 1 * 16]
+%define temp1                 [rcx + temp_offset + 2 * 16]
+%define data_blocks(i)        [rcx + data_blocks_offset + (i) * 16]
+
+; This is the original macro.
+%macro prepare_args_for_sbox_x 6
+	movzx   eax,  byte [rcx + %1]
+	vmovdqa xmm0, [data_blocks_address + eax * 8]
+	movzx   eax,  byte [rcx + %2]
+	vmovdqa xmm1, [data_blocks_address + eax * 8]
+	vpxor   xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %1 * 16]
+	vpxor   xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
+
+	movzx   eax,  byte [rcx + %3]
+	vmovdqa xmm2, [data_blocks_address + eax * 8]
+	movzx   eax,  byte [rcx + %4]
+	vmovdqa xmm3, [data_blocks_address + eax * 8]
+	vpxor   xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %3 * 16]
+	vpxor   xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
+
+	movzx   eax,  byte [rcx + %5]
+	vmovdqa xmm4, [data_blocks_address + eax * 8]
+	movzx   eax,  byte [rcx + %6]
+	vmovdqa xmm5, [data_blocks_address + eax * 8]
+	vpxor   xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %5 * 16]
+	vpxor   xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
+%endmacro
+
+; "0xffffffff" will be rewritten in DES_SetSalt() based on context->expansionFunction[].
+%macro prepare_args_for_sbox_x_with_rewrites 6
+	vmovdqa xmm0, [data_blocks_address + 0xffffffff]
+	vmovdqa xmm1, [data_blocks_address + 0xffffffff]
+	vmovdqa xmm2, [data_blocks_address + 0xffffffff]
+	vmovdqa xmm3, [data_blocks_address + 0xffffffff]
+	vmovdqa xmm4, [data_blocks_address + 0xffffffff]
+	vmovdqa xmm5, [data_blocks_address + 0xffffffff]
+
+	vpxor   xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %1 * 16]
+	vpxor   xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
+	vpxor   xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %3 * 16]
+	vpxor   xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
+	vpxor   xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %5 * 16]
+	vpxor   xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
+%endmacro
+
+%macro prepare_args_for_sbox_y 12
+	vmovdqa xmm0, [data_blocks_address + %1 * 16]
+	vmovdqa xmm1, [data_blocks_address + %3 * 16]
+	vmovdqa xmm2, [data_blocks_address + %5 * 16]
+	vmovdqa xmm3, [data_blocks_address + %7 * 16]
+	vmovdqa xmm4, [data_blocks_address + %9 * 16]
+	vmovdqa xmm5, [data_blocks_address + %11 * 16]
+
+	vpxor   xmm0, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %2 * 16]
+	vpxor   xmm1, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %4 * 16]
+	vpxor   xmm2, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %6 * 16]
+	vpxor   xmm3, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %8 * 16]
+	vpxor   xmm4, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %10 * 16]
+	vpxor   xmm5, [expanded_key_schedule_address + key_schedule_index_base_x2 * 8 + %12 * 16]
+%endmacro
 
 %macro sbox1 4
 	; From STF
@@ -176,6 +242,8 @@ global _xgetbv
 %endmacro
 
 %macro sbox3 4
+    vmovdqa xmm11, xmm1
+
 	; From STF
     vpandn  xmm7, xmm11, xmm0
     vpxor   xmm15, xmm2, xmm5
@@ -281,6 +349,8 @@ global _xgetbv
 %endmacro
 
 %macro sbox5 4
+	vmovdqa xmm10, xmm0
+
 	; From STF
     vpor    xmm0, xmm10, xmm2
     vpandn  xmm7, xmm5, xmm0
@@ -401,6 +471,8 @@ global _xgetbv
 %endmacro
 
 %macro sbox7 4
+	vmovdqa xmm12, xmm2
+	
 	; From STF
     vpxor   xmm10, xmm3, xmm4
     vpand   xmm9, xmm10, xmm3
@@ -513,131 +585,110 @@ global _xgetbv
     vmovdqa %1, xmm5
 %endmacro
 
-%macro round 48
-	vmovdqa xmm0, keys(%1)
-	vmovdqa xmm1, keys(%2)
-	vmovdqa xmm2, keys(%3)
-	vmovdqa xmm3, keys(%4)
-	vmovdqa xmm4, keys(%5)
-	vmovdqa xmm5, keys(%6)
-	call sbox1_func
-
-	vmovdqa xmm0, keys(%7)
-	vmovdqa xmm1, keys(%8)
-	vmovdqa xmm2, keys(%9)
-	vmovdqa xmm3, keys(%10)
-	vmovdqa xmm4, keys(%11)
-	vmovdqa xmm5, keys(%12)
-	call sbox2_func
-
-	vmovdqa xmm0, keys(%13)
-	vmovdqa xmm11, keys(%14)
-	vmovdqa xmm2, keys(%15)
-	vmovdqa xmm3, keys(%16)
-	vmovdqa xmm4, keys(%17)
-	vmovdqa xmm5, keys(%18)
-	call sbox3_func
-
-	vmovdqa xmm0, keys(%19)
-	vmovdqa xmm1, keys(%20)
-	vmovdqa xmm2, keys(%21)
-	vmovdqa xmm3, keys(%22)
-	vmovdqa xmm4, keys(%23)
-	vmovdqa xmm5, keys(%24)
-	call sbox4_func
-
-	vmovdqa xmm10, keys(%25)
-	vmovdqa xmm1, keys(%26)
-	vmovdqa xmm2, keys(%27)
-	vmovdqa xmm3, keys(%28)
-	vmovdqa xmm4, keys(%29)
-	vmovdqa xmm5, keys(%30)
-	call sbox5_func
-
-	vmovdqa xmm0, keys(%31)
-	vmovdqa xmm1, keys(%32)
-	vmovdqa xmm2, keys(%33)
-	vmovdqa xmm3, keys(%34)
-	vmovdqa xmm4, keys(%35)
-	vmovdqa xmm5, keys(%36)
-	call sbox6_func
-
-	vmovdqa xmm0,  keys(%37)
-	vmovdqa xmm1,  keys(%38)
-	vmovdqa xmm12, keys(%39)
-	vmovdqa xmm3,  keys(%40)
-	vmovdqa xmm4,  keys(%41)
-	vmovdqa xmm5,  keys(%42)
-	call sbox7_func
-
-	vmovdqa xmm0, keys(%43)
-	vmovdqa xmm1, keys(%44)
-	vmovdqa xmm2, keys(%45)
-	vmovdqa xmm3, keys(%46)
-	vmovdqa xmm4, keys(%47)
-	vmovdqa xmm5, keys(%48)
-	call sbox8_func
-
-	xchg data_blocks_source_address, data_blocks_destination_address
-%endmacro
-
-
-
-%macro save_xmm128_with_vmovdqa 2
-	[savexmm128 %1, %2]
-	vmovdqa [rsp + %2], %1
-%endmacro
-
 
 
 section .text
 	PROC_FRAME DES_Crypt25_x64_AVX
 		alloc_stack 0xb8
-		save_xmm128_with_vmovdqa xmm6,  0x00
-		save_xmm128_with_vmovdqa xmm7,  0x10
-		save_xmm128_with_vmovdqa xmm8,  0x20
-		save_xmm128_with_vmovdqa xmm9,  0x30
-		save_xmm128_with_vmovdqa xmm10, 0x40
-		save_xmm128_with_vmovdqa xmm11, 0x50
-		save_xmm128_with_vmovdqa xmm12, 0x60
-		save_xmm128_with_vmovdqa xmm13, 0x70
-		save_xmm128_with_vmovdqa xmm14, 0x80
-		save_xmm128_with_vmovdqa xmm15, 0x90
+		save_xmm128 xmm6,  0x00
+		save_xmm128 xmm7,  0x10
+		save_xmm128 xmm8,  0x20
+		save_xmm128 xmm9,  0x30
+		save_xmm128 xmm10, 0x40
+		save_xmm128 xmm11, 0x50
+		save_xmm128 xmm12, 0x60
+		save_xmm128 xmm13, 0x70
+		save_xmm128 xmm14, 0x80
+		save_xmm128 xmm15, 0x90
 		save_reg rbx, 0xa0
 		save_reg rsi, 0xa8
 		save_reg rdi, 0xb0
-	END_PROLOGUE	
+	END_PROLOGUE
 
 		; ======================================
 
 		; rcx: DES_Context *context
 
-		lea data_blocks_source_address,      [rcx + data_blocks_offset]
-		lea data_blocks_destination_address, [rcx + data_blocks_offset + 32 * vector_size]
+		pcmpeqd xmm0, xmm0
+		vmovdqa pnot, xmm0
 
+		lea data_blocks_address, [rcx + data_blocks_offset]
+
+		mov key_schedule_index_base_x2, 0
+		mov rounds_and_swapped, 8
 		mov iterations, 25
 
 	start:
-		round 12, 46, 33, 52, 48, 20, 34, 55,  5, 13, 18, 40,  4, 32, 26, 27, 38, 54, 53,  6, 31, 25, 19, 41, 15, 24, 28, 43, 30,  3, 35, 22,  2, 44, 14, 23, 51, 16, 29, 49,  7, 17, 37,  8,  9, 50, 42, 21
-		round  5, 39, 26, 45, 41, 13, 27, 48, 53,  6, 11, 33, 52, 25, 19, 20, 31, 47, 46, 54, 55, 18, 12, 34,  8, 17, 21, 36, 23, 49, 28, 15, 24, 37,  7, 16, 44,  9, 22, 42,  0, 10, 30,  1,  2, 43, 35, 14
-		round 46, 25, 12, 31, 27, 54, 13, 34, 39, 47, 52, 19, 38, 11,  5,  6, 48, 33, 32, 40, 41,  4, 53, 20, 51,  3,  7, 22,  9, 35, 14,  1, 10, 23, 50,  2, 30, 24,  8, 28, 43, 49, 16, 44, 17, 29, 21,  0
-		round 32, 11, 53, 48, 13, 40, 54, 20, 25, 33, 38,  5, 55, 52, 46, 47, 34, 19, 18, 26, 27, 45, 39,  6, 37, 42, 50,  8, 24, 21,  0, 44, 49,  9, 36, 17, 16, 10, 51, 14, 29, 35,  2, 30,  3, 15,  7, 43
-		round 18, 52, 39, 34, 54, 26, 40,  6, 11, 19, 55, 46, 41, 38, 32, 33, 20,  5,  4, 12, 13, 31, 25, 47, 23, 28, 36, 51, 10,  7, 43, 30, 35, 24, 22,  3,  2, 49, 37,  0, 15, 21, 17, 16, 42,  1, 50, 29
-		round  4, 38, 25, 20, 40, 12, 26, 47, 52,  5, 41, 32, 27, 55, 18, 19,  6, 46, 45, 53, 54, 48, 11, 33,  9, 14, 22, 37, 49, 50, 29, 16, 21, 10,  8, 42, 17, 35, 23, 43,  1,  7,  3,  2, 28, 44, 36, 15
-		round 45, 55, 11,  6, 26, 53, 12, 33, 38, 46, 27, 18, 13, 41,  4,  5, 47, 32, 31, 39, 40, 34, 52, 19, 24,  0,  8, 23, 35, 36, 15,  2,  7, 49, 51, 28,  3, 21,  9, 29, 44, 50, 42, 17, 14, 30, 22,  1
-		round 31, 41, 52, 47, 12, 39, 53, 19, 55, 32, 13,  4, 54, 27, 45, 46, 33, 18, 48, 25, 26, 20, 38,  5, 10, 43, 51,  9, 21, 22,  1, 17, 50, 35, 37, 14, 42,  7, 24, 15, 30, 36, 28,  3,  0, 16,  8, 44
-		round 55, 34, 45, 40,  5, 32, 46, 12, 48, 25,  6, 52, 47, 20, 38, 39, 26, 11, 41, 18, 19, 13, 31, 53,  3, 36, 44,  2, 14, 15, 51, 10, 43, 28, 30,  7, 35,  0, 17,  8, 23, 29, 21, 49, 50,  9,  1, 37
-		round 41, 20, 31, 26, 46, 18, 32, 53, 34, 11, 47, 38, 33,  6, 55, 25, 12, 52, 27,  4,  5, 54, 48, 39, 42, 22, 30, 17,  0,  1, 37, 49, 29, 14, 16, 50, 21, 43,  3, 51,  9, 15,  7, 35, 36, 24, 44, 23
-		round 27,  6, 48, 12, 32,  4, 18, 39, 20, 52, 33, 55, 19, 47, 41, 11, 53, 38, 13, 45, 46, 40, 34, 25, 28,  8, 16,  3, 43, 44, 23, 35, 15,  0,  2, 36,  7, 29, 42, 37, 24,  1, 50, 21, 22, 10, 30,  9
-		round 13, 47, 34, 53, 18, 45,  4, 25,  6, 38, 19, 41,  5, 33, 27, 52, 39, 55, 54, 31, 32, 26, 20, 11, 14, 51,  2, 42, 29, 30,  9, 21,  1, 43, 17, 22, 50, 15, 28, 23, 10, 44, 36,  7,  8, 49, 16, 24
-		round 54, 33, 20, 39,  4, 31, 45, 11, 47, 55,  5, 27, 46, 19, 13, 38, 25, 41, 40, 48, 18, 12,  6, 52,  0, 37, 17, 28, 15, 16, 24,  7, 44, 29,  3,  8, 36,  1, 14,  9, 49, 30, 22, 50, 51, 35,  2, 10
-		round 40, 19,  6, 25, 45, 48, 31, 52, 33, 41, 46, 13, 32,  5, 54, 55, 11, 27, 26, 34,  4, 53, 47, 38, 43, 23,  3, 14,  1,  2, 10, 50, 30, 15, 42, 51, 22, 44,  0, 24, 35, 16,  8, 36, 37, 21, 17, 49
-		round 26,  5, 47, 11, 31, 34, 48, 38, 19, 27, 32, 54, 18, 46, 40, 41, 52, 13, 12, 20, 45, 39, 33, 55, 29,  9, 42,  0, 44, 17, 49, 36, 16,  1, 28, 37,  8, 30, 43, 10, 21,  2, 51, 22, 23,  7,  3, 35
-		round 19, 53, 40,  4, 55, 27, 41, 31, 12, 20, 25, 47, 11, 39, 33, 34, 45,  6,  5, 13, 38, 32, 26, 48, 22,  2, 35, 50, 37, 10, 42, 29,  9, 51, 21, 30,  1, 23, 36,  3, 14, 24, 44, 15, 16,  0, 49, 28
+		prepare_args_for_sbox_x_with_rewrites 0, 1, 2, 3, 4, 5
+		sbox1 data_blocks(40), data_blocks(48), data_blocks(54), data_blocks(62)
 
-		xchg data_blocks_source_address, data_blocks_destination_address
+		prepare_args_for_sbox_x_with_rewrites 6, 7, 8, 9, 10, 11
+		sbox2 data_blocks(44), data_blocks(59), data_blocks(33), data_blocks(49)
+
+		prepare_args_for_sbox_y 7, 12, 8, 13, 9, 14, 10, 15, 11, 16, 12, 17
+		sbox3 data_blocks(55), data_blocks(47), data_blocks(61), data_blocks(37)
+
+		prepare_args_for_sbox_y 11, 18, 12, 19, 13, 20, 14, 21, 15, 22, 16, 23
+		sbox4 data_blocks(57), data_blocks(51), data_blocks(41), data_blocks(32)
+
+		prepare_args_for_sbox_x_with_rewrites 24, 25, 26, 27, 28, 29
+		sbox5 data_blocks(39), data_blocks(45), data_blocks(56), data_blocks(34)
+
+		prepare_args_for_sbox_x_with_rewrites 30, 31, 32, 33, 34, 35
+		sbox6 data_blocks(35), data_blocks(60), data_blocks(42), data_blocks(50)
+
+		prepare_args_for_sbox_y 23, 36, 24, 37, 25, 38, 26, 39, 27, 40, 28, 41
+		sbox7 data_blocks(63), data_blocks(43), data_blocks(53), data_blocks(38)
+
+		prepare_args_for_sbox_y 27, 42, 28, 43, 29, 44, 30, 45, 31, 46, 0, 47
+		sbox8 data_blocks(36), data_blocks(58), data_blocks(46), data_blocks(52)
+
+		cmp rounds_and_swapped, 0x100
+		je next
+
+	swap:
+		prepare_args_for_sbox_x_with_rewrites 48, 49, 50, 51, 52, 53
+		sbox1 data_blocks(8), data_blocks(16), data_blocks(22), data_blocks(30)
+
+		prepare_args_for_sbox_x_with_rewrites 54, 55, 56, 57, 58, 59
+		sbox2 data_blocks(12), data_blocks(27), data_blocks(1), data_blocks(17)
+
+		prepare_args_for_sbox_y 39, 60, 40, 61, 41, 62, 42, 63, 43, 64, 44, 65
+		sbox3 data_blocks(23), data_blocks(15), data_blocks(29), data_blocks(5)
+
+		prepare_args_for_sbox_y 43, 66, 44, 67, 45, 68, 46, 69, 47, 70, 48, 71
+		sbox4 data_blocks(25), data_blocks(19), data_blocks(9), data_blocks(0)
+
+		prepare_args_for_sbox_x_with_rewrites 72, 73, 74, 75, 76, 77
+		sbox5 data_blocks(7), data_blocks(13), data_blocks(24), data_blocks(2)
+
+		prepare_args_for_sbox_x_with_rewrites 78, 79, 80, 81, 82, 83
+		sbox6 data_blocks(3), data_blocks(28), data_blocks(10), data_blocks(18)
+
+		prepare_args_for_sbox_y 55, 84, 56, 85, 57, 86, 58, 87, 59, 88, 60, 89
+		sbox7 data_blocks(31), data_blocks(11), data_blocks(21), data_blocks(6)
+
+		prepare_args_for_sbox_y 59, 90, 60, 91, 61, 92, 62, 93, 63, 94, 32, 95
+		sbox8 data_blocks(4), data_blocks(26), data_blocks(14), data_blocks(20)
+
+		add key_schedule_index_base_x2, 96 * 2
+
+		sub rounds_and_swapped, 1
+		jnz start
+
+		sub key_schedule_index_base_x2, (0x300 + 48) * 2
+		mov rounds_and_swapped, 0x108
 
 		sub iterations, 1
+		jnz swap
+
+		jmp exit
+
+	next:
+		sub key_schedule_index_base_x2, (0x300 - 48) * 2
+		mov rounds_and_swapped, 8
+		sub iterations, 1
+
 		jnz start
 
 		; ======================================
@@ -659,97 +710,7 @@ section .text
 		add     rsp, 0xb8
 		ret
 
-	align 16
-	sbox1_func:
-		vpxor   xmm0, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm1, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm2, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm3, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm4, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm5, [data_blocks_source_address + 0xffffffff]
-		sbox1 data_blocks_destination(8), data_blocks_destination(16), data_blocks_destination(22), data_blocks_destination(30)
-		ret
-
-	align 16
-	sbox2_func:
-		vpxor   xmm0, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm1, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm2, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm3, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm4, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm5, [data_blocks_source_address + 0xffffffff]
-		sbox2 data_blocks_destination(12), data_blocks_destination(27), data_blocks_destination(1), data_blocks_destination(17)
-		ret
-
-	align 16
-	sbox5_func:
-		vpxor   xmm10, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm1, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm2, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm3, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm4, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm5, [data_blocks_source_address + 0xffffffff]
-		sbox5 data_blocks_destination(7), data_blocks_destination(13), data_blocks_destination(24), data_blocks_destination(2)
-		ret
-
-	align 16
-	sbox6_func:
-		vpxor   xmm0, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm1, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm2, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm3, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm4, [data_blocks_source_address + 0xffffffff]
-		vpxor   xmm5, [data_blocks_source_address + 0xffffffff]
-		sbox6 data_blocks_destination(3), data_blocks_destination(28), data_blocks_destination(10), data_blocks_destination(18)
-		ret
-
-	align 16
-	sbox3_func:
-		vpxor   xmm0, [data_blocks_source_address + 7 * vector_size]
-		vpxor   xmm11, [data_blocks_source_address + 8 * vector_size]
-		vpxor   xmm2, [data_blocks_source_address + 9 * vector_size]
-		vpxor   xmm3, [data_blocks_source_address + 10 * vector_size]
-		vpxor   xmm4, [data_blocks_source_address + 11 * vector_size]
-		vpxor   xmm5, [data_blocks_source_address + 12 * vector_size]
-		sbox3 data_blocks_destination(23), data_blocks_destination(15), data_blocks_destination(29), data_blocks_destination(5)
-		ret
-
-	align 16
-	sbox4_func:
-		vpxor   xmm0, [data_blocks_source_address + 11 * vector_size]
-		vpxor   xmm1, [data_blocks_source_address + 12 * vector_size]
-		vpxor   xmm2, [data_blocks_source_address + 13 * vector_size]
-		vpxor   xmm3, [data_blocks_source_address + 14 * vector_size]
-		vpxor   xmm4, [data_blocks_source_address + 15 * vector_size]
-		vpxor   xmm5, [data_blocks_source_address + 16 * vector_size]
-		sbox4 data_blocks_destination(25), data_blocks_destination(19), data_blocks_destination(9), data_blocks_destination(0)
-		ret
-
-	align 16
-	sbox7_func:
-		vpxor   xmm0,  [data_blocks_source_address + 23 * vector_size]
-		vpxor   xmm1,  [data_blocks_source_address + 24 * vector_size]
-		vpxor   xmm12, [data_blocks_source_address + 25 * vector_size]
-		vpxor   xmm3,  [data_blocks_source_address + 26 * vector_size]
-		vpxor   xmm4,  [data_blocks_source_address + 27 * vector_size]
-		vpxor   xmm5,  [data_blocks_source_address + 28 * vector_size]
-		sbox7 data_blocks_destination(31), data_blocks_destination(11), data_blocks_destination(21), data_blocks_destination(6)
-		ret
-
-	align 16
-	sbox8_func:
-		vpxor   xmm0, [data_blocks_source_address + 27 * vector_size]
-		vpxor   xmm1, [data_blocks_source_address + 28 * vector_size]
-		vpxor   xmm2, [data_blocks_source_address + 29 * vector_size]
-		vpxor   xmm3, [data_blocks_source_address + 30 * vector_size]
-		vpxor   xmm4, [data_blocks_source_address + 31 * vector_size]
-		vpxor   xmm5, [data_blocks_source_address +  0 * vector_size]
-		sbox8 data_blocks_destination(4), data_blocks_destination(26), data_blocks_destination(14), data_blocks_destination(20)
-		ret
-
 	ENDPROC_FRAME
-	
-	align 16
 		db "THIS_IS_THE_END_OF_THE_FUNCTION",  0x00
 
 
@@ -788,7 +749,6 @@ section .text
 
 
 
-	global TestASM
 	PROC_FRAME TestASM
 		alloc_stack 0xe8
 		save_xmm128 xmm6,  0x00
@@ -816,22 +776,12 @@ section .text
 		; ======================================
 		
 		 	jmp skip
-		 	vpxor ymm0, [data_blocks_source_address + 0xffffffff]
-		 	vpxor ymm1, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm2, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm3, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm4, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm5, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm6, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm7, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm8, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm9, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm10, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm11, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm12, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm13, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm14, [data_blocks_source_address + 0xffffffff]
-			vpxor ymm15, [data_blocks_source_address + 0xffffffff]
+		 	vmovdqa xmm0, [data_blocks_address + 0xffff0000]
+		 	vmovdqa xmm0, [data_blocks_address + 0xffff0000]
+			vmovdqa xmm0, [data_blocks_address + 0xffff0000]
+			vmovdqa xmm0, [data_blocks_address + 0xffff0000]
+			vmovdqa xmm0, [data_blocks_address + 0xffff0000]
+			vmovdqa xmm0, [data_blocks_address + 0xffff0000]
 		skip:
 
 		; ======================================
@@ -856,4 +806,4 @@ section .text
 
 	ENDPROC_FRAME
 
-		db "THIS_IS_THE_END_OF_THE_FUNCTION",  0x00
+		db "This is the end of DES_Crypt25_x64()",  0x00

@@ -1,4 +1,4 @@
-﻿// Meriken's Tripcode Engine 1.1 Alpha 8
+﻿// Meriken's Tripcode Engine 1.1 Beta 1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -109,6 +109,8 @@ extern void CPU_DES_MainLoop_AVX2();
 
 unsigned WINAPI Thread_SearchForDESTripcodesOnCPU(LPVOID threadParams)
 {
+	ERROR0(!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL), ERROR_SEARCH_THREAD, "SetThreadPriority() failed.");
+
 	if (options.isAVX2Enabled && IsAVX2Supported()) {
 		CPU_DES_MainLoop_AVX2();
 	} else {
