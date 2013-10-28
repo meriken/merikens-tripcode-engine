@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Beta 1
+// Meriken's Tripcode Engine 1.1 Beta 2
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -12,6 +12,8 @@
 // The code that deals with SHA-1 hash generation is partially adopted from:
 // sha_digest-2.2
 // Copyright (C) 2009 Jens Thoms Toerring <jt@toerring.de>
+// VecTripper 
+// Copyright (C) 2011 tmkk <tmkk@smoug.net>
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
