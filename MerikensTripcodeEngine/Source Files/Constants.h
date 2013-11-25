@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Beta 2
+// Meriken's Tripcode Engine 1.1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -143,7 +143,7 @@
 #define MAX_NUM_DEPTHS_IN_REGEX_PATTERN         (10 + 1)
 
 // For screen output
-#define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1 Beta 2"
+#define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1"
 #define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10
@@ -217,5 +217,5 @@
 // #define DEBUG_ONE_CPU_SEARCH_THREAD
 // #define DEBUG_PRINT_INVALID_KEY_INFO
 
-#define MTF_FREE_EDITION FALSE
+#define MTF_FREE_EDITION TRUE
 // #define ENGLISH_VERSION  TRUE

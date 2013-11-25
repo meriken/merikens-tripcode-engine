@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Beta 2
+// Meriken's Tripcode Engine 1.1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -49,40 +49,40 @@ static CRITICAL_SECTION criticalSection_VerifyDESTripcode;
 
 BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-	if (!wasCriticalSectionInitialized) {
-		InitializeCriticalSection(&criticalSection_VerifyDESTripcode);
-		wasCriticalSectionInitialized = TRUE;
-	}
-	EnterCriticalSection(&criticalSection_VerifyDESTripcode);
+        if (!wasCriticalSectionInitialized) {
+                InitializeCriticalSection(&criticalSection_VerifyDESTripcode);
+                wasCriticalSectionInitialized = TRUE;
+        }
+        EnterCriticalSection(&criticalSection_VerifyDESTripcode);
 
-	if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
-		return FALSE;
-	
-	char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
-	BOOL fillRestWithZero = FALSE;
-	
-	strcpy(actualKey, (char *)key);
-	for (int i = 0; i < lenTripcodeKey; ++i) {
-		if (fillRestWithZero) {
-			actualKey[i] = 0x00;
-		} else if (actualKey[i] == 0x80) {
-			fillRestWithZero = TRUE;
-		}
-	}
-	BOOL result = strcmp((char *)tripcode, crypt((char *)actualKey, (char *)(actualKey + 1)) + 3) == 0;
+        if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
+                return FALSE;
+        
+        char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
+        BOOL fillRestWithZero = FALSE;
+        
+        strcpy(actualKey, (char *)key);
+        for (int i = 0; i < lenTripcodeKey; ++i) {
+                if (fillRestWithZero) {
+                        actualKey[i] = 0x00;
+                } else if (actualKey[i] == 0x80) {
+                        fillRestWithZero = TRUE;
+                }
+        }
+        BOOL result = strcmp((char *)tripcode, crypt((char *)actualKey, (char *)(actualKey + 1)) + 3) == 0;
 
 #if TRUE
-	if (!result) {
-		printf("actualKey: `%s'\n", actualKey);
-		printf("tripcode:  `%s'\n", tripcode);
-		printf("crypt((char *)actualKey, (char *)(actualKey + 1)): `%s'\n", crypt((char *)actualKey, (char *)(actualKey + 1)));
-	}
-	fflush(stdout);
+        if (!result) {
+                printf("actualKey: `%s'\n", actualKey);
+                printf("tripcode:  `%s'\n", tripcode);
+                printf("crypt((char *)actualKey, (char *)(actualKey + 1)): `%s'\n", crypt((char *)actualKey, (char *)(actualKey + 1)));
+        }
+        fflush(stdout);
 #endif
 
-	LeaveCriticalSection(&criticalSection_VerifyDESTripcode);
+        LeaveCriticalSection(&criticalSection_VerifyDESTripcode);
 
-	return result;
+        return result;
 }
 
 
@@ -116,7 +116,7 @@ typedef unsigned long32;
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * @(#)crypt_util.c	2.31 02/08/92
+ * @(#)crypt_util.c        2.31 02/08/92
  *
  * Support routines
  *
@@ -367,8 +367,8 @@ pr_bits(a, n)
     for(i = 0; i < n; i++) {
       tmp=0;
       for(j = 0; j < 8; j++) {
-	t=8*i+j;
-	tmp|=(a[t/24] & BITMASK(t % 24))?bytemask[j]:0;
+        t=8*i+j;
+        tmp|=(a[t/24] & BITMASK(t % 24))?bytemask[j]:0;
       }
       (void)printf("%02x ",tmp);
     }
@@ -382,7 +382,7 @@ static set_bits(v, b)
     *b = 0;
     for(i = 0; i < 24; i++) {
       if(v & longmask[8 + i])
-	*b |= BITMASK(i);
+        *b |= BITMASK(i);
     }
   }
 
@@ -426,8 +426,8 @@ void init_des()
       mask1 = bytemask[comes_from_bit % 8 + 1];
       mask2 = longmask[bit % 28 + 4];
       for(j = 0; j < 128; j++) {
-	if(j & mask1) 
-	  do_pc1[comes_from_bit / 8][bit / 28][j] |= mask2;
+        if(j & mask1) 
+          do_pc1[comes_from_bit / 8][bit / 28][j] |= mask2;
       }
     }
 
@@ -441,8 +441,8 @@ void init_des()
       mask1 = bytemask[comes_from_bit % 7 + 1];
       mask2 = BITMASK(bit % 24);
       for(j = 0; j < 128; j++) {
-	if(j & mask1)
-	  do_pc2[comes_from_bit / 7][j] |= mask2;
+        if(j & mask1)
+          do_pc2[comes_from_bit / 7][j] |= mask2;
       }
     }
 
@@ -462,13 +462,13 @@ void init_des()
 
     for(bit = 0; bit < 48; bit++) {
       ufc_long mask1,comes_from;
-	
+        
       comes_from = perm32[esel[bit]-1]-1;
       mask1      = bytemask[comes_from % 8];
-	
+        
       for(j = 256; j--;) {
-	if(j & mask1)
-	  eperm32tab[comes_from / 8][j][bit / 24] |= BITMASK(bit % 24);
+        if(j & mask1)
+          eperm32tab[comes_from / 8][j][bit / 24] |= BITMASK(bit % 24);
       }
     }
     
@@ -489,40 +489,40 @@ void init_des()
       int s1, s2;
     
       for(j1 = 0; j1 < 64; j1++) {
-	s1 = s_lookup(2 * sg, j1);
-	for(j2 = 0; j2 < 64; j2++) {
-	  ufc_long to_permute, inx;
+        s1 = s_lookup(2 * sg, j1);
+        for(j2 = 0; j2 < 64; j2++) {
+          ufc_long to_permute, inx;
     
-	  s2         = s_lookup(2 * sg + 1, j2);
-	  to_permute = ((s1 << 4)  | s2) << (24 - 8 * sg);
+          s2         = s_lookup(2 * sg + 1, j2);
+          to_permute = ((s1 << 4)  | s2) << (24 - 8 * sg);
 
 #ifdef _UFC_32_
-	  inx = ((j1 << 6)  | j2) << 1;
-	  sb[sg][inx  ]  = eperm32tab[0][(to_permute >> 24) & 0xff][0];
-	  sb[sg][inx+1]  = eperm32tab[0][(to_permute >> 24) & 0xff][1];
-	  sb[sg][inx  ] |= eperm32tab[1][(to_permute >> 16) & 0xff][0];
-	  sb[sg][inx+1] |= eperm32tab[1][(to_permute >> 16) & 0xff][1];
-  	  sb[sg][inx  ] |= eperm32tab[2][(to_permute >>  8) & 0xff][0];
-	  sb[sg][inx+1] |= eperm32tab[2][(to_permute >>  8) & 0xff][1];
-	  sb[sg][inx  ] |= eperm32tab[3][(to_permute)       & 0xff][0];
-	  sb[sg][inx+1] |= eperm32tab[3][(to_permute)       & 0xff][1];
+          inx = ((j1 << 6)  | j2) << 1;
+          sb[sg][inx  ]  = eperm32tab[0][(to_permute >> 24) & 0xff][0];
+          sb[sg][inx+1]  = eperm32tab[0][(to_permute >> 24) & 0xff][1];
+          sb[sg][inx  ] |= eperm32tab[1][(to_permute >> 16) & 0xff][0];
+          sb[sg][inx+1] |= eperm32tab[1][(to_permute >> 16) & 0xff][1];
+            sb[sg][inx  ] |= eperm32tab[2][(to_permute >>  8) & 0xff][0];
+          sb[sg][inx+1] |= eperm32tab[2][(to_permute >>  8) & 0xff][1];
+          sb[sg][inx  ] |= eperm32tab[3][(to_permute)       & 0xff][0];
+          sb[sg][inx+1] |= eperm32tab[3][(to_permute)       & 0xff][1];
 #endif
 #ifdef _UFC_64_
-	  inx = ((j1 << 6)  | j2);
-	  sb[sg][inx]  = 
-	    ((long64)eperm32tab[0][(to_permute >> 24) & 0xff][0] << 32) |
-	     (long64)eperm32tab[0][(to_permute >> 24) & 0xff][1];
-	  sb[sg][inx] |=
-	    ((long64)eperm32tab[1][(to_permute >> 16) & 0xff][0] << 32) |
-	     (long64)eperm32tab[1][(to_permute >> 16) & 0xff][1];
-  	  sb[sg][inx] |= 
-	    ((long64)eperm32tab[2][(to_permute >>  8) & 0xff][0] << 32) |
-	     (long64)eperm32tab[2][(to_permute >>  8) & 0xff][1];
-	  sb[sg][inx] |=
-	    ((long64)eperm32tab[3][(to_permute)       & 0xff][0] << 32) |
-	     (long64)eperm32tab[3][(to_permute)       & 0xff][1];
+          inx = ((j1 << 6)  | j2);
+          sb[sg][inx]  = 
+            ((long64)eperm32tab[0][(to_permute >> 24) & 0xff][0] << 32) |
+             (long64)eperm32tab[0][(to_permute >> 24) & 0xff][1];
+          sb[sg][inx] |=
+            ((long64)eperm32tab[1][(to_permute >> 16) & 0xff][0] << 32) |
+             (long64)eperm32tab[1][(to_permute >> 16) & 0xff][1];
+            sb[sg][inx] |= 
+            ((long64)eperm32tab[2][(to_permute >>  8) & 0xff][0] << 32) |
+             (long64)eperm32tab[2][(to_permute >>  8) & 0xff][1];
+          sb[sg][inx] |=
+            ((long64)eperm32tab[3][(to_permute)       & 0xff][0] << 32) |
+             (long64)eperm32tab[3][(to_permute)       & 0xff][1];
 #endif
-	}
+        }
       }
     }  
 
@@ -566,8 +566,8 @@ void init_des()
       mask2 = longmask[o_bit];
 
       for(word_value = 64; word_value--;) {
-	if(word_value & mask1)
-	  efp[comes_from_word][word_value][o_long] |= mask2;
+        if(word_value & mask1)
+          efp[comes_from_word][word_value][o_long] |= mask2;
       }
     }
     initialized++;
@@ -631,10 +631,10 @@ STATIC void setup_salt(char *s)
     for(i = 0; i < 2; i++) {
       long c=ascii_to_bin(s[i]);
       if(c < 0 || c > 63)
-	c = 0;
+        c = 0;
       for(j = 0; j < 6; j++) {
-	if((c >> j) & 0x1)
-	  saltbits |= BITMASK(6 * i + j);
+        if((c >> j) & 0x1)
+          saltbits |= BITMASK(6 * i + j);
       }
     }
 
@@ -786,7 +786,7 @@ char *crypt(char *key, char *salt)
      * Go for the 25 DES encryptions
      */
     s = _ufc_doit((ufc_long)0, (ufc_long)0, 
-		  (ufc_long)0, (ufc_long)0, (ufc_long)25);
+                  (ufc_long)0, (ufc_long)0, (ufc_long)25);
 
     /*
      * And convert back to 6 bit ASCII
@@ -825,20 +825,20 @@ void encrypt(char *block, int edflag)
     if((edflag == 0) != (direction == 0)) {
       for(i = 0; i < 8; i++) {
 #ifdef _UFC_32_
-	long32 x;
-	x = _ufc_keytab[15-i][0]; 
+        long32 x;
+        x = _ufc_keytab[15-i][0]; 
         _ufc_keytab[15-i][0] = _ufc_keytab[i][0]; 
         _ufc_keytab[i][0] = x;
 
-	x = _ufc_keytab[15-i][1]; 
+        x = _ufc_keytab[15-i][1]; 
         _ufc_keytab[15-i][1] = _ufc_keytab[i][1]; 
         _ufc_keytab[i][1] = x;
 #endif
 #ifdef _UFC_64_
-	long64 x;
-	x = _ufc_keytab[15-i];
-	_ufc_keytab[15-i] = _ufc_keytab[i];
-	_ufc_keytab[i] = x;
+        long64 x;
+        x = _ufc_keytab[15-i];
+        _ufc_keytab[15-i] = _ufc_keytab[i];
+        _ufc_keytab[i] = x;
 #endif
       }
       direction = edflag;
@@ -850,21 +850,21 @@ void encrypt(char *block, int edflag)
     i = 0;
     for(l1 = 0; i < 24; i++) {
       if(block[initial_perm[esel[i]-1]-1])
-	l1 |= BITMASK(i);
+        l1 |= BITMASK(i);
     }
     for(l2 = 0; i < 48; i++) {
       if(block[initial_perm[esel[i]-1]-1])
-	l2 |= BITMASK(i-24);
+        l2 |= BITMASK(i-24);
     }
 
     i = 0;
     for(r1 = 0; i < 24; i++) {
       if(block[initial_perm[esel[i]-1+32]-1])
-	r1 |= BITMASK(i);
+        r1 |= BITMASK(i);
     }
     for(r2 = 0; i < 48; i++) {
       if(block[initial_perm[esel[i]-1+32]-1])
-	r2 |= BITMASK(i-24);
+        r2 |= BITMASK(i-24);
     }
 
     /*
@@ -899,7 +899,7 @@ void setkey(char *key)
 
     for(i = 0; i < 8; i++) {
       for(j = 0, c = 0; j < 8; j++)
-	c = c << 1 | *key++;
+        c = c << 1 | *key++;
       ktab[i] = c >> 1;
     }
     
@@ -925,7 +925,7 @@ void setkey(char *key)
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * @(#)crypt.c	2.17 2/22/92
+ * @(#)crypt.c        2.17 2/22/92
  *
  * Semiportable C version
  *
@@ -953,8 +953,8 @@ ufc_long *_ufc_doit(ufc_long l1, ufc_long l2, ufc_long r1, ufc_long r2, ufc_long
     while(itr--) {
       k = &_ufc_keytab[0][0];
       for(i=8; i--; ) {
-	s = *k++ ^ r1;
-	l1 ^= SBA(_ufc_sb1, s & 0xffff); l2 ^= SBA(_ufc_sb1, (s & 0xffff)+4);  
+        s = *k++ ^ r1;
+        l1 ^= SBA(_ufc_sb1, s & 0xffff); l2 ^= SBA(_ufc_sb1, (s & 0xffff)+4);  
         l1 ^= SBA(_ufc_sb0, s >>= 16);   l2 ^= SBA(_ufc_sb0, (s)         +4); 
         s = *k++ ^ r2; 
         l1 ^= SBA(_ufc_sb3, s & 0xffff); l2 ^= SBA(_ufc_sb3, (s & 0xffff)+4);
@@ -996,14 +996,14 @@ ufc_long *_ufc_doit(l1, l2, r1, r2, itr)
     while(itr--) {
       k = &_ufc_keytab[0];
       for(i=8; i--; ) {
-	s = *k++ ^ r;
-	l ^= SBA(_ufc_sb3, (s >>  0) & 0xffff);
+        s = *k++ ^ r;
+        l ^= SBA(_ufc_sb3, (s >>  0) & 0xffff);
         l ^= SBA(_ufc_sb2, (s >> 16) & 0xffff);
         l ^= SBA(_ufc_sb1, (s >> 32) & 0xffff);
         l ^= SBA(_ufc_sb0, (s >> 48) & 0xffff);
 
-	s = *k++ ^ l;
-	r ^= SBA(_ufc_sb3, (s >>  0) & 0xffff);
+        s = *k++ ^ l;
+        r ^= SBA(_ufc_sb3, (s >>  0) & 0xffff);
         r ^= SBA(_ufc_sb2, (s >> 16) & 0xffff);
         r ^= SBA(_ufc_sb1, (s >> 32) & 0xffff);
         r ^= SBA(_ufc_sb0, (s >> 48) & 0xffff);
