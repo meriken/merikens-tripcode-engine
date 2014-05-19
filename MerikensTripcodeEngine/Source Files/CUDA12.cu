@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1 Alpha 2
+// Meriken's Tripcode Engine 1.1.1 Alpha 2
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:

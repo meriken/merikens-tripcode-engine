@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1
+// Meriken's Tripcode Engine 1.1.1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -161,7 +161,6 @@ extern BOOL GetTerminationState();
 //
 extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, BOOL isOptimizationInProgress, char *status);
 extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status);
-extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, unsigned int numDiscardedTripcodes);
 
 //
 extern void ShowCursor();

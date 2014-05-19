@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1
+// Meriken's Tripcode Engine 1.1.1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -99,7 +99,6 @@
 #define DEFAULT_OPTION_OPENCL_NUM_WORK_GROUPS_PER_CU    OPENCL_NUM_WORK_GROUPS_PER_CU_NIL
 #define DEFAULT_OPTION_OPENCL_NUM_WORK_ITEMS_PER_WG     OPENCL_NUM_WORK_ITEMS_PER_WG_NIL
 #define DEFAULT_OPTION_OPENCL_NUM_THREADS_PER_AMD_GPU   2
-#define DEFAULT_OPTION_OPENCL_RUN_CHILD_PROCESSES_FOR_MULTIPLE_DEVICES TRUE
 #define DEFAULT_OPTION_OPENCL_NUM_PROCESSES_PER_AMD_GPU 1
 #define DEFAULT_OPTION_USE_ONE_BYTE_CHARACTERS_FOR_KEYS FALSE
 #define DEFAULT_OPTION_SEARCH_FOR_HISEKI_ON_CPU         FALSE
@@ -143,7 +142,7 @@
 #define MAX_NUM_DEPTHS_IN_REGEX_PATTERN         (10 + 1)
 
 // For screen output
-#define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1"
+#define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1.1"
 #define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10
@@ -188,8 +187,6 @@
 #define OPENCL_MAX_NUM_WORK_ITEMS_PER_WG        256
 #define OPENCL_MIN_NUM_THREADS_PER_AMD_GPU      1
 #define OPENCL_MAX_NUM_THREADS_PER_AMD_GPU      32
-#define OPENCL_MIN_NUM_PROCESSES_PER_AMD_GPU    1
-#define OPENCL_MAX_NUM_PROCESSES_PER_AMD_GPU    4
 #define OPENCL_NUM_PROCESSES_PER_GPU            3
 #define OPENCL_ENABLE_10CHAR_TRIPCODE_SEARCH
 

@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1
+// Meriken's Tripcode Engine 1.1.1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -88,8 +88,6 @@ struct Options {
 	int  openCLNumWorkGroupsPerCU;
 	int  openCLNumWorkItemsPerWG;
 	int  openCLNumThreads;
-	BOOL openCLRunChildProcesses;
-	int  openCLNumProcesses;
 	BOOL useOneByteCharactersForKeys;
 	BOOL searchForHisekiOnCPU;
 	BOOL searchForKakuhiOnCPU;
@@ -116,7 +114,6 @@ struct OpenCLDeviceSearchThreadInfo {
 	int          subindex;
 	char         status[LEN_LINE_BUFFER_FOR_SCREEN];
 	//
-	BOOL         runChildProcess;
 	int          deviceNo;
 	double       currentSpeed;
 	double       averageSpeed;

@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1
+// Meriken's Tripcode Engine 1.1.1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -182,7 +182,7 @@
 	(   (0x40 <= (c) && (c) <= 0x7e)  \
 	 || (0x81 <= (c) && (c) <= 0xfc))
 
-// 0x81f0 is excluded here because it does not work well with Chrome.
+// 0x81f0 is excluded here because it does not work well with Google Chrome.
 // See: http://anago.2ch.net/test/read.cgi/software/1362648003/942-946n
 #define IS_VALID_SJIS_CHAR(b1, b2)                            \
 	(   IS_FIRST_BYTE_SJIS_FULL(b1)                           \

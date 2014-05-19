@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1
+// Meriken's Tripcode Engine 1.1.1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -55,8 +55,6 @@ Options options = {
 	DEFAULT_OPTION_OPENCL_NUM_WORK_GROUPS_PER_CU,   // int  openCLNumWorkGroupsPerCU;
 	DEFAULT_OPTION_OPENCL_NUM_WORK_ITEMS_PER_WG,    // int  openCLNumWorkItemsPerWG;
 	DEFAULT_OPTION_OPENCL_NUM_THREADS_PER_AMD_GPU,  // int  openCLNumThreads;
-	DEFAULT_OPTION_OPENCL_RUN_CHILD_PROCESSES_FOR_MULTIPLE_DEVICES, // BOOL openCLRunChildProcesses;
-	DEFAULT_OPTION_OPENCL_NUM_PROCESSES_PER_AMD_GPU, // int  openCLNumProcesses;
 	DEFAULT_OPTION_USE_ONE_BYTE_CHARACTERS_FOR_KEYS, // BOOL useOneByteCharactersForKeys;
 	DEFAULT_OPTION_SEARCH_FOR_HISEKI_ON_CPU,
 	DEFAULT_OPTION_SEARCH_FOR_KAKUHI_ON_CPU,
@@ -116,7 +114,7 @@ char base64CharTable[64] = {
 double       matchingProb,     numAverageTrialsForOneMatch;
 mpf_t        matchingProb_mpf, numAverageTrialsForOneMatch_mpf;
 double       totalTime = 0;
-double       currentSpeed_thisProcess = 0, currentSpeed_thisProcess_GPU = 0, currentSpeed_CPU = 0, maximumSpeed = 0;
+double       currentSpeed = 0, currentSpeed_GPU = 0, currentSpeed_CPU = 0, maximumSpeed = 0;
 unsigned int     numValidTripcodes = 0,     numDiscardedTripcodes = 0;
 unsigned int prevNumValidTripcodes = 0, prevNumDiscardedTripcodes = 0;
 double           totalNumGeneratedTripcodes = 0;
@@ -143,7 +141,6 @@ struct OpenCLDeviceSearchThreadInfo *openCLDeviceSearchThreadInfoArray = NULL;
 HANDLE                              *openCLDeviceSearchThreadArray     = NULL;
 int                                  numCPUSearchThreads               = 0;
 HANDLE                              *CPUSearchThreadArray              = NULL;
-BOOL                                 openCLRunChildProcesses = FALSE;
 CRITICAL_SECTION criticalSection_numGeneratedTripcodes;
 CRITICAL_SECTION criticalSection_ProcessTripcodePair;
 CRITICAL_SECTION criticalSection_currentState;
@@ -456,20 +453,7 @@ void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, BOOL isOpti
 void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status)
 {
 	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
-	ASSERT(!info->runChildProcess);
 	strcpy(info->status, status);
-	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
-}
-
-void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, unsigned int numDiscardedTripcodes)
-{
-	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
-	ASSERT(info->runChildProcess);
-	strcpy(info->status, status);
-	info->currentSpeed = currentSpeed;
-	info->averageSpeed = averageSpeed;
-	info->totalNumGeneratedTripcodes = totalNumGeneratedTripcodes;
-	info->numDiscardedTripcodes = numDiscardedTripcodes;
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
 
@@ -557,22 +541,7 @@ void PrintStatus()
 		sprintf(NEXT_LINE, "      [optimization in progress]");
 #endif
 
-	double currentSpeed_childProcesses = 0;
-	double averageSpeed_childProcesses = 0;
-	double totalNumGeneratedTripcodes_childProcesses = 0;
-	unsigned int numDiscardedTripcodes_childProcesses = 0;
 	// printf("numOpenCLDeviceSearchThreads = %d\n", numOpenCLDeviceSearchThreads);
-	if (openCLDeviceSearchThreadInfoArray && openCLRunChildProcesses) {
-		for (int i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			// printf("deviceNo = %d\n", openCLDeviceSearchThreadInfoArray[i].deviceNo);
-			if (!(openCLDeviceSearchThreadInfoArray[i].runChildProcess))
-				continue;
-			currentSpeed_childProcesses               += openCLDeviceSearchThreadInfoArray[i].currentSpeed;
-			averageSpeed_childProcesses               += openCLDeviceSearchThreadInfoArray[i].averageSpeed;
-			totalNumGeneratedTripcodes_childProcesses += openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes;
-			numDiscardedTripcodes_childProcesses      += openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes;
-		}
-	}
 
 	double averageSpeed;
 	double averageSpeed_GPU;
@@ -589,21 +558,21 @@ void PrintStatus()
 		
 		sprintf(NEXT_LINE, "");
 		sprintf(NEXT_LINE, "  %.3lfT tripcodes were generated in %dd %dh %dm %02ds at:",
-				(prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses) * 0.000000000001,
+				prevTotalNumGeneratedTripcodes * 0.000000000001,
 				totalTimeDays,
 				totalTimeHours,
 				totalTimeMinutes,
 				totalTimeSeconds);
-		sprintf(NEXT_LINE, "      %3.2lfM tripcode/s (current)", (currentSpeed_thisProcess + currentSpeed_childProcesses) / 1000000);
+		sprintf(NEXT_LINE, "      %3.2lfM tripcode/s (current)", currentSpeed / 1000000);
 		if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU) {
-			sprintf(NEXT_LINE, "          GPU: %7.2lfM tripcode/s", (currentSpeed_thisProcess_GPU + currentSpeed_childProcesses) / 1000000);
+			sprintf(NEXT_LINE, "          GPU: %7.2lfM tripcode/s", currentSpeed_GPU / 1000000);
 			sprintf(NEXT_LINE, "          CPU: %7.2lfM tripcode/s", currentSpeed_CPU / 1000000);
 		}
 #ifdef DISPLAY_MAXIMUM_SPEED
 		sprintf(NEXT_LINE, "      %3.2lfM tripcode/s (maximum)", maximumSpeed);
 #endif
-		averageSpeed     = prevTotalNumGeneratedTripcodes     / totalTime + averageSpeed_childProcesses;
-		averageSpeed_GPU = prevTotalNumGeneratedTripcodes_GPU / totalTime + averageSpeed_childProcesses;
+		averageSpeed     = prevTotalNumGeneratedTripcodes     / totalTime;
+		averageSpeed_GPU = prevTotalNumGeneratedTripcodes_GPU / totalTime;
 		averageSpeed_CPU = prevTotalNumGeneratedTripcodes_CPU / totalTime;
 		sprintf(NEXT_LINE, "      %3.2lfM tripcode/s (average)",  averageSpeed / 1000000);
 		if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU) {
@@ -638,9 +607,9 @@ void PrintStatus()
 						prevNumValidTripcodes,
 						(prevNumValidTripcodes == 1) ? "" : "es",
 						prevNumValidTripcodes / (totalTime / 3600),
-						(double)(prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses) / prevNumValidTripcodes * 0.000000001);
+						(double)prevTotalNumGeneratedTripcodes / prevNumValidTripcodes * 0.000000001);
 			}
-			actualMatchingProb = (prevNumValidTripcodes + prevNumDiscardedTripcodes + numDiscardedTripcodes_childProcesses) / (prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses);
+			actualMatchingProb = (prevNumValidTripcodes + prevNumDiscardedTripcodes) / prevTotalNumGeneratedTripcodes;
 			matchingProbDiff = (actualMatchingProb - matchingProb) / matchingProb;
 #ifdef DEBUG_DISPLAY_MATCHING_PROBABILITY
 			sprintf(NEXT_LINE, "  The theoretical matching probability is %0.20lf%%.", matchingProb);
@@ -655,7 +624,7 @@ void PrintStatus()
 					sprintf(NEXT_LINE, "  The actual matching probability is about the same as expected.");
 				}
 			}
-			if (!openCLRunChildProcesses && prevNumValidTripcodes + prevNumDiscardedTripcodes > 0) {
+			if (prevNumValidTripcodes + prevNumDiscardedTripcodes > 0) {
 				double invalidTripcodeRatio = ((double)(prevNumDiscardedTripcodes) / (prevNumValidTripcodes + prevNumDiscardedTripcodes));
 				sprintf(NEXT_LINE, "  %.0f%% of matching tripcodes were invalid.",
 						invalidTripcodeRatio * 100);
@@ -671,14 +640,14 @@ void PrintStatus()
 		if (totalTime > 0 && !searchForSpecialPatternsOnCPU) {
 			printf("[status],%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,%.1lf,%s%d%%,%.0lf,%ld,%d,%.0lf,%.0lf,%u\n",
 			       totalTime,
-				   currentSpeed_thisProcess     + currentSpeed_childProcesses,
-				   currentSpeed_thisProcess_GPU + currentSpeed_childProcesses,
+				   currentSpeed,
+				   currentSpeed_GPU,
 				   currentSpeed_CPU,
 				   averageSpeed,
 				   timeForOneMatch,
 				   ((int)(matchingProbDiff * 100) > 0) ? "+" : "", // All I want to do here is to avoid "-0%" and "+0%".
 				    (int)(matchingProbDiff * 100),
-				   prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses,
+				   prevTotalNumGeneratedTripcodes,
 				   prevNumValidTripcodes,
 				   IsCUDADeviceOptimizationInProgress(),
 				   averageSpeed_GPU,
@@ -687,11 +656,11 @@ void PrintStatus()
 		} else if (totalTime > 0) {
 			printf("[status],%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,-,-,%.0lf,%ld,%d,%.0lf,%.0lf,%u\n",
 			       totalTime,
-				   currentSpeed_thisProcess     + currentSpeed_childProcesses,
-				   currentSpeed_thisProcess_GPU + currentSpeed_childProcesses,
+				   currentSpeed,
+				   currentSpeed_GPU,
 				   currentSpeed_CPU,
 				   averageSpeed,
-				   prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses,
+				   prevTotalNumGeneratedTripcodes,
 				   prevNumValidTripcodes,
 				   IsCUDADeviceOptimizationInProgress(),
 				   averageSpeed_GPU,
@@ -944,12 +913,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			printf("OPENCL DEVICE\n");
 			printf("=============\n");
 		}
-		openCLRunChildProcesses =    (   options.openCLRunChildProcesses
-		                              && (openCLDeviceCount > 1)
-			                          && (options.GPUIndex == GPU_INDEX_ALL))
-								  || options.openCLNumProcesses > 1;
-													
-		// printf("openCLRunChildProcesses = %d\n", openCLRunChildProcesses);
+
 		for (i = ((options.GPUIndex == GPU_INDEX_ALL) ? CUDADeviceCount                     : (options.GPUIndex    ));
 		     i < ((options.GPUIndex == GPU_INDEX_ALL) ? CUDADeviceCount + openCLDeviceCount : (options.GPUIndex + 1));
 			 ++i) {
@@ -986,11 +950,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 				printf(    "  Driver Version:           %s\n",        driverVersion);
 				printf("\n");
 			}
-			if (openCLRunChildProcesses) {
-				numOpenCLDeviceSearchThreads += options.openCLNumProcesses;
-			} else {
-				numOpenCLDeviceSearchThreads += options.openCLNumThreads;
-			}
+			numOpenCLDeviceSearchThreads += options.openCLNumThreads;
 		}
 	}
 
@@ -1118,15 +1078,6 @@ void ObtainOptions(int argCount, char **arguments)
 			ERROR1(options.openCLNumThreads > OPENCL_MAX_NUM_THREADS_PER_AMD_GPU,
 			       ERROR_INVALID_OPTION,
 				   "The number of threads per AMD GPU cannot exceed %d.",    OPENCL_MAX_NUM_THREADS_PER_AMD_GPU);
-
-		} else if (strcmp(arguments[indexArg], "-b") == 0 && indexArg + 1 < argCount) {
-			options.openCLNumProcesses = atoi(arguments[++indexArg]);
-			ERROR1(options.openCLNumProcesses < OPENCL_MIN_NUM_PROCESSES_PER_AMD_GPU,
-			       ERROR_INVALID_OPTION,
-				   "The number of processes per AMD GPU must be at least %d.", OPENCL_MIN_NUM_PROCESSES_PER_AMD_GPU);
-			ERROR1(options.openCLNumProcesses > OPENCL_MAX_NUM_PROCESSES_PER_AMD_GPU,
-			       ERROR_INVALID_OPTION,
-				   "The number of processes per AMD GPU cannot exceed %d.",    OPENCL_MAX_NUM_PROCESSES_PER_AMD_GPU);
 
 		} else if (strcmp(arguments[indexArg], "-l") == 0 && indexArg + 1 < argCount) {
 			lenTripcode    = atoi(arguments[++indexArg]);
@@ -1504,12 +1455,11 @@ double UpdateCurrentStatus(DWORD startingTime)
 	totalNumGeneratedTripcodes_GPU += numGeneratedTripcodes_GPU;
 	totalNumGeneratedTripcodes_CPU += numGeneratedTripcodes_CPU;
 	totalTime += deltaTime;
-	currentSpeed_thisProcess  = ((double)(  numGeneratedTripcodes_GPU
-	                          + numGeneratedTripcodes_CPU) / deltaTime);
-	currentSpeed_thisProcess_GPU = ((double)numGeneratedTripcodes_GPU / deltaTime);
-	currentSpeed_CPU        = ((double)numGeneratedTripcodes_CPU        / deltaTime);
-	if (maximumSpeed < currentSpeed_thisProcess)
-		maximumSpeed = currentSpeed_thisProcess;
+	currentSpeed     = ((double)(  numGeneratedTripcodes_GPU + numGeneratedTripcodes_CPU) / deltaTime);
+	currentSpeed_GPU = ((double)   numGeneratedTripcodes_GPU                              / deltaTime);
+	currentSpeed_CPU = ((double)   numGeneratedTripcodes_CPU                              / deltaTime);
+	if (maximumSpeed < currentSpeed)
+		maximumSpeed = currentSpeed;
 	prevTotalNumGeneratedTripcodes     = totalNumGeneratedTripcodes;
 	prevTotalNumGeneratedTripcodes_GPU = totalNumGeneratedTripcodes_GPU;
 	prevTotalNumGeneratedTripcodes_CPU = totalNumGeneratedTripcodes_CPU;
@@ -1664,43 +1614,21 @@ void StartOpenCLDeviceSearchThreads()
 			openCLDeviceSearchThreadInfoArray[i].index           = openCLDeviceIDArrayIndex;
 			openCLDeviceSearchThreadInfoArray[i].subindex        = -1;
 			openCLDeviceSearchThreadInfoArray[i].status[0]       = '\0';
-			openCLDeviceSearchThreadInfoArray[i].runChildProcess = openCLRunChildProcesses;
 			//
 			openCLDeviceSearchThreadInfoArray[i].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 			openCLDeviceSearchThreadInfoArray[i].currentSpeed               = 0;
 			openCLDeviceSearchThreadInfoArray[i].averageSpeed               = 0;
 			openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
 			openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
-			if (!openCLRunChildProcesses) {
-				openCLDeviceSearchThreadInfoArray[i].subindex       = 0;
-				for (j = 1; j < options.openCLNumThreads; ++j) {
-					++i;
-					ASSERT(i < numOpenCLDeviceSearchThreads);
-					ASSERT(openCLDeviceIDArrayIndex < openCLDeviceCount);
-					openCLDeviceSearchThreadInfoArray[i].openCLDeviceID = openCLDeviceIDArray[openCLDeviceIDArrayIndex];
-					openCLDeviceSearchThreadInfoArray[i].index          = openCLDeviceIDArrayIndex;
-					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
-					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
-					openCLDeviceSearchThreadInfoArray[i].runChildProcess = FALSE;
-				}
-			} else {
-				openCLDeviceSearchThreadInfoArray[i].subindex       = 0;
-				for (j = 1; j < options.openCLNumProcesses; ++j) {
-					++i;
-					ASSERT(i < numOpenCLDeviceSearchThreads);
-					ASSERT(openCLDeviceIDArrayIndex < openCLDeviceCount);
-					openCLDeviceSearchThreadInfoArray[i].openCLDeviceID = openCLDeviceIDArray[openCLDeviceIDArrayIndex];
-					openCLDeviceSearchThreadInfoArray[i].index          = openCLDeviceIDArrayIndex;
-					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
-					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
-					openCLDeviceSearchThreadInfoArray[i].runChildProcess = TRUE;
-					//
-					openCLDeviceSearchThreadInfoArray[i].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
-					openCLDeviceSearchThreadInfoArray[i].currentSpeed               = 0;
-					openCLDeviceSearchThreadInfoArray[i].averageSpeed               = 0;
-					openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
-					openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
-				}
+			openCLDeviceSearchThreadInfoArray[i].subindex       = 0;
+			for (j = 1; j < options.openCLNumThreads; ++j) {
+				++i;
+				ASSERT(i < numOpenCLDeviceSearchThreads);
+				ASSERT(openCLDeviceIDArrayIndex < openCLDeviceCount);
+				openCLDeviceSearchThreadInfoArray[i].openCLDeviceID = openCLDeviceIDArray[openCLDeviceIDArrayIndex];
+				openCLDeviceSearchThreadInfoArray[i].index          = openCLDeviceIDArrayIndex;
+				openCLDeviceSearchThreadInfoArray[i].subindex       = j;
+				openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 			}
 			++openCLDeviceIDArrayIndex;
 		}
@@ -1712,39 +1640,20 @@ void StartOpenCLDeviceSearchThreads()
 		openCLDeviceSearchThreadInfoArray[0].index           = 0;
 		openCLDeviceSearchThreadInfoArray[0].subindex        = -1;
 		openCLDeviceSearchThreadInfoArray[0].status[0]       = '\0';
-		openCLDeviceSearchThreadInfoArray[0].runChildProcess = openCLRunChildProcesses;
 		//
 		openCLDeviceSearchThreadInfoArray[0].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 		openCLDeviceSearchThreadInfoArray[0].currentSpeed               = 0;
 		openCLDeviceSearchThreadInfoArray[0].averageSpeed               = 0;
 		openCLDeviceSearchThreadInfoArray[0].totalNumGeneratedTripcodes = 0;
 		openCLDeviceSearchThreadInfoArray[0].numDiscardedTripcodes      = 0;
-		if (!openCLRunChildProcesses) {
-			ASSERT(numOpenCLDeviceSearchThreads == options.openCLNumThreads);
-			openCLDeviceSearchThreadInfoArray[0].subindex       = 0;
-			for (j = 1; j < options.openCLNumThreads; ++j) {
-				openCLDeviceSearchThreadInfoArray[j].openCLDeviceID  = openCLDeviceIDArray[openCLDeviceIDArrayIndex];
-				openCLDeviceSearchThreadInfoArray[j].index           = 0;
-				openCLDeviceSearchThreadInfoArray[j].subindex        = j;
-				openCLDeviceSearchThreadInfoArray[j].status[0]       = '\0';
-				openCLDeviceSearchThreadInfoArray[j].runChildProcess = FALSE;
-			}
-		} else {
-			openCLDeviceSearchThreadInfoArray[0].subindex = 0;
-			for (j = 1; j < options.openCLNumProcesses; ++j) {
-				ASSERT(openCLDeviceIDArrayIndex < openCLDeviceCount);
-				openCLDeviceSearchThreadInfoArray[j].openCLDeviceID = openCLDeviceIDArray[openCLDeviceIDArrayIndex];
-				openCLDeviceSearchThreadInfoArray[j].index          = 0;
-				openCLDeviceSearchThreadInfoArray[j].subindex       = j;
-				openCLDeviceSearchThreadInfoArray[j].status[0]      = '\0';
-				openCLDeviceSearchThreadInfoArray[j].runChildProcess = TRUE;
-				//
-				openCLDeviceSearchThreadInfoArray[j].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
-				openCLDeviceSearchThreadInfoArray[j].currentSpeed               = 0;
-				openCLDeviceSearchThreadInfoArray[j].averageSpeed               = 0;
-				openCLDeviceSearchThreadInfoArray[j].totalNumGeneratedTripcodes = 0;
-				openCLDeviceSearchThreadInfoArray[j].numDiscardedTripcodes      = 0;
-			}	
+		//
+		ASSERT(numOpenCLDeviceSearchThreads == options.openCLNumThreads);
+		openCLDeviceSearchThreadInfoArray[0].subindex       = 0;
+		for (j = 1; j < options.openCLNumThreads; ++j) {
+			openCLDeviceSearchThreadInfoArray[j].openCLDeviceID  = openCLDeviceIDArray[openCLDeviceIDArrayIndex];
+			openCLDeviceSearchThreadInfoArray[j].index           = 0;
+			openCLDeviceSearchThreadInfoArray[j].subindex        = j;
+			openCLDeviceSearchThreadInfoArray[j].status[0]       = '\0';
 		}
 	}
 
@@ -1966,7 +1875,7 @@ int main(int argc, char **argv)
 		PrintStatus();
 		
 		// Warn the user if the speed drops suddenly.
-		if (!options.redirection && options.warnSpeedDrop && currentSpeed_thisProcess < maximumSpeed * SPEED_DROP_WARNING_THRESHOLD)
+		if (!options.redirection && options.warnSpeedDrop && currentSpeed < maximumSpeed * SPEED_DROP_WARNING_THRESHOLD)
 			printf("\a");
 	}
 

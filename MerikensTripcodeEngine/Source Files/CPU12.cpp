@@ -71,7 +71,9 @@ inline void ConvertRaw12CharTripcodeIntoDisplayFormat(unsigned int *rawTripcodeA
 	for (int wordIndex = 0; wordIndex < (numWordsInVector); ++wordIndex) {                                                                                  \
 		BOOL found = FALSE;                                                                                                                                 \
 		                                                                                                                                                    \
-		key[0] = ((key[0] & 0xf8) | wordIndex);                                                                                                             \
+		key[0] = (numWordsInVector == 4)                                                                                                                    \
+                   ? ((key[0] & 0xfc) | wordIndex)                                                                                                          \
+				   : ((key[0] & 0xf8) | wordIndex);                                                                                                         \
 		                                                                                                                                                    \
 		if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {                                                                                                   \
 			generatedTripcodeChunkArray[0] =   rawTripcodeArray[wordIndex][0] >>  2;                                                                        \
@@ -328,7 +330,7 @@ static unsigned int SearchForTripcodesWithOptimization()
 
 			for (int indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
 				key[3] = keyCharTable_SecondByteAndOneByte_local[indexKey3];
-				
+
 				__declspec(align(16)) __m128i W0, ABC[3];
 				W0.m128i_u32[0] = (((key[0] & 0xfc) | 0x00) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
 				W0.m128i_u32[1] = (((key[0] & 0xfc) | 0x01) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];

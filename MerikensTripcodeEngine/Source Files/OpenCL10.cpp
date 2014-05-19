@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 1.1
+// Meriken's Tripcode Engine 1.1.1
 // Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -77,11 +77,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	unsigned char  expansionFunction[96];
 
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
-	
-	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
-		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
-		return 0;
-	}
 
 	// Determine the sizes of local and global work items.
 	size_t  numThreadsPerComputeUnit;
@@ -182,7 +177,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
     fclose(sourceFile);
 	
     // Create an OpenCL kernel from the source code.
-	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Building an OpenCL program...");
+	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "Building an OpenCL program...");
 	if (options.maximizeKeySpace)
 		strcat(buildOptions, " -D MAXIMIZE_KEY_SPACE ");
 	// printf("clCreateProgramWithSource()\n");
@@ -224,7 +219,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	}
 	// printf("nameKernelFunction = %s\n", nameKernelFunction);
 	// printf("clCreateKernel()\n");
-	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL kernel...");
+	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "Creating an OpenCL kernel...");
     cl_kernel kernel = clCreateKernel(program, nameKernelFunction, &openCLError);
 	// printf("clCreateKernel(): done\n");
    	OPENCL_ERROR(openCLError);
@@ -248,7 +243,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyBitmap,            CL_TRUE, 0, KEY_BITMAP_SIZE,                         keyBitmap,            0, NULL, NULL));
 
 	// The main loop of the thread.
-	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Starting a tripcode search...");
+	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "Starting a tripcode search...");
 	double       timeElapsed = 0;
 	double       numGeneratedTripcodes = 0;
 	double       averageSpeed = 0;
@@ -311,7 +306,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		
 		// Update the current status.
 		sprintf(status,
-			    "[thread] %.1lfM TPS, %d work-groups/CU, %d work-items/WG",
+			    "%.1lfM TPS, %d work-groups/CU, %d work-items/WG",
 				averageSpeed / 1000000,
 				numThreadsPerComputeUnit,
 				localWorkSize);
