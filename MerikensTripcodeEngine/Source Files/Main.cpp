@@ -1,5 +1,5 @@
-// Meriken's Tripcode Engine 1.1.1
-// Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
+// Meriken's Tripcode Engine 1.1.2
+// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -432,9 +432,9 @@ void DisplayCopyrights()
 	printf("%s\n", PRODUCT_NAME);
 	printf("[compiled at %s on %s (PST)]\n", __TIME__, __DATE__);
 #ifdef ENGLISH_VERSION
-	printf("Copyright (C) 2013 Meriken <meriken.2ch@gmail.com>\n");
+	printf("Copyright (C) 2014 Meriken <meriken.2ch@gmail.com>\n");
 #else
-	printf("Copyright (C) 2011-13 %c%cMeriken//XXX <meriken.2ch@gmail.com>\n", 0x81, 0x9f);
+	printf("Copyright (C) 2011-2014 %c%cMeriken//XXX <meriken.2ch@gmail.com>\n", 0x81, 0x9f);
 #endif
 	printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to redistribute it\n");
@@ -1057,6 +1057,9 @@ void ObtainOptions(int argCount, char **arguments)
 			ERROR1(options.openCLNumWorkGroupsPerCU < OPENCL_MIN_WORK_GROUPS_PER_CU,
 			       ERROR_INVALID_OPTION,
 				   "The number of work groups per CU must be at least %d.", OPENCL_MIN_WORK_GROUPS_PER_CU);
+			ERROR1(options.openCLNumWorkGroupsPerCU > OPENCL_MAX_WORK_GROUPS_PER_CU,
+			       ERROR_INVALID_OPTION,
+				   "The number of work groups per CU cannot exceed %d.", OPENCL_MAX_WORK_GROUPS_PER_CU);
 
 		} else if (strcmp(arguments[indexArg], "-z") == 0 && indexArg + 1 < argCount) {
 			options.openCLNumWorkItemsPerWG = atoi(arguments[++indexArg]);

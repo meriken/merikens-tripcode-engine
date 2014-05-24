@@ -1,5 +1,5 @@
-// Meriken's Tripcode Engine 1.1.1
-// Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
+// Meriken's Tripcode Engine 1.1.2
+// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -144,8 +144,8 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
 	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"}, // measured
 
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",            32768, 128, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"}, // measured
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",            32768, 128, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"}, // measured
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"}, // measured
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"}, // measured
 
 	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
 	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
@@ -156,7 +156,7 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Trinity",                   -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
 	{OPENCL_VENDOR_AMD,    "Devastator",                -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
 
-	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
+	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
 
 	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",16384, 128, ""},
 

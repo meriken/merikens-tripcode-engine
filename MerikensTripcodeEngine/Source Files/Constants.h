@@ -1,5 +1,5 @@
-// Meriken's Tripcode Engine 1.1.1
-// Copyright (c) 2011-2013 Meriken//XXX <meriken.2ch@gmail.com>
+// Meriken's Tripcode Engine 1.1.2
+// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -142,7 +142,7 @@
 #define MAX_NUM_DEPTHS_IN_REGEX_PATTERN         (10 + 1)
 
 // For screen output
-#define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1.1"
+#define PRODUCT_NAME                 "Meriken's Tripcode Engine 1.1.2"
 #define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10
@@ -183,6 +183,7 @@
 #define OPENCL_DES_MAX_LEN_BUILD_OPTIONS        4096
 #define OPENCL_SIMPLE_SEARCH_THRESHOLD          4
 #define OPENCL_MIN_WORK_GROUPS_PER_CU           1
+#define OPENCL_MAX_WORK_GROUPS_PER_CU           16384
 #define OPENCL_MIN_NUM_WORK_ITEMS_PER_WG        1
 #define OPENCL_MAX_NUM_WORK_ITEMS_PER_WG        256
 #define OPENCL_MIN_NUM_THREADS_PER_AMD_GPU      1
