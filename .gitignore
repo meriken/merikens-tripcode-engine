@@ -1,0 +1,16 @@
+*.tlog
+*.log
+MerikensTripcodeEngine/Debug
+*.obj
+*.lst
+*.pdb
+*.cache
+*.deps
+MerikensTripcodeEngine/Release/*.asm
+MerikensTripcodeEngine/x64/Release/*.asm
+*.lastbuildstate
+*.manifest
+*.sdf
+*.suo
+*.ipch
+*.exe
