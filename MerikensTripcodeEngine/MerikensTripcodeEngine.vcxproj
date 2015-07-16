@@ -63,9 +63,9 @@
     <ClCompile Include="Source Files\OpenCL10.cpp" />
     <ClCompile Include="Source Files\OpenCL12.cpp" />
     <ClCompile Include="Source Files\Patterns.cpp" />
-    <ClCompile Include="Source Files\Verification_DES.cpp" />
-    <ClCompile Include="Source Files\Verification_Duplicates.cpp" />
-    <ClCompile Include="Source Files\Verification_SHA-1.cpp" />
+    <ClCompile Include="Source Files\Verification10.cpp" />
+    <ClCompile Include="Source Files\VerificationDuplicates.cpp" />
+    <ClCompile Include="Source Files\Verification12.cpp" />
     <CudaCompile Include="Source Files\CUDA10.cu">
       <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </MaxRegCount>

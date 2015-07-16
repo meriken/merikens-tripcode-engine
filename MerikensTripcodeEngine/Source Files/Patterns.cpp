@@ -1348,7 +1348,7 @@ void ProcessMatch(unsigned char *tripcode, unsigned char *key)
 	       || (lenTripcode == 10 && !VerifyDESTripcode (tripcode, key)),
 			ERROR_TRIPCODE_VERIFICATION_FAILED,
 			"A generated tripcode was corrupt.");
-	if (!IsTripcodeDuplicate(tripcode) && IsValidKey((unsigned char *)key)) {
+	if (!options.checkTripcodes || (!IsTripcodeDuplicate(tripcode) && IsValidKey((unsigned char *)key))) {
 		ProcessValidTripcodePair(tripcode, key);
 	} else {
 		ProcessInvalidTripcodePair(tripcode, key);

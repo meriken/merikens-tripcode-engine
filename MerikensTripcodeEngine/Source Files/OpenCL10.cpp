@@ -136,7 +136,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	cl_mem openCL_keyInfo              = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(keyInfo),                         NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_tripcodeChunkArray   = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(unsigned int) * numTripcodeChunk, NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyCharTable_OneByte = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
-	cl_mem openCL_keyCharTable_FirstByte   = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
+	cl_mem openCL_keyCharTableForKey7   = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyCharTable_SecondByte  = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_smallKeyBitmap       = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_KEY_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyBitmap            = clCreateBuffer(context, CL_MEM_READ_ONLY,  KEY_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
@@ -227,15 +227,13 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	OPENCL_ERROR(clSetKernelArg(kernel, 1, sizeof(cl_mem),       (void *)&openCL_keyInfo));
 	OPENCL_ERROR(clSetKernelArg(kernel, 2, sizeof(cl_mem),       (void *)&openCL_tripcodeChunkArray));
 	OPENCL_ERROR(clSetKernelArg(kernel, 3, sizeof(unsigned int), (void *)&numTripcodeChunk));
-	OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_keyCharTable_FirstByte));
+	OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_keyCharTableForKey7));
 	OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_smallKeyBitmap));
 	OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_keyBitmap));
 	OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),       (void *)&openCL_partialKeyFrom3To6Array));
 	OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(unsigned int) * 29 * localWorkSize, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,   CL_TRUE, 0, sizeof(unsigned int) * numTripcodeChunk, tripcodeChunkArray,   0, NULL, NULL));
-	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_OneByte, CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_OneByte, 0, NULL, NULL));
-	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_FirstByte,   CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_FirstByte,   0, NULL, NULL));
-	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_SecondByte,  CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_SecondByte,  0, NULL, NULL));
+	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTableForKey7,  CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_OneByte,   0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_smallKeyBitmap,       CL_TRUE, 0, SMALL_KEY_BITMAP_SIZE,                   smallKeyBitmap,       0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyBitmap,            CL_TRUE, 0, KEY_BITMAP_SIZE,                         keyBitmap,            0, NULL, NULL));
 
@@ -288,7 +286,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 			partialKeyFrom3To6Array[i].partialKeyFrom3To6[0] = keyInfo.partialKeyAndRandomBytes[3];
 			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[1], isSecondByte, keyCharTable_FirstByte, keyInfo.partialKeyAndRandomBytes[4] + ((i >> 10) & 0x1f));
 			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[2], isSecondByte, keyCharTable_FirstByte, keyInfo.partialKeyAndRandomBytes[5] + ((i >>  5) & 0x1f));
-			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[3], isSecondByte, keyCharTable_OneByte,   keyInfo.partialKeyAndRandomBytes[6] + ((i >>  0) & 0x1f));
+			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[3], isSecondByte, keyCharTable_SecondByteAndOneByte, keyInfo.partialKeyAndRandomBytes[6] + ((i >>  0) & 0x1f));
 		}
 
 		// Execute the OpenCL kernel
@@ -346,7 +344,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
     OPENCL_ERROR(clReleaseMemObject(openCL_keyInfo));
     OPENCL_ERROR(clReleaseMemObject(openCL_tripcodeChunkArray));
     OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTable_OneByte));
-    OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTable_FirstByte));
+    OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTableForKey7));
     OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTable_SecondByte));
     OPENCL_ERROR(clReleaseMemObject(openCL_smallKeyBitmap));
 	OPENCL_ERROR(clReleaseMemObject(openCL_partialKeyFrom3To6Array));

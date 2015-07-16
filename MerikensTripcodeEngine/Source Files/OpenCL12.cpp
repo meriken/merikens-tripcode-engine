@@ -108,11 +108,11 @@ struct {
 	char   *productName;
 
 	char   *sourceFile_SHA1;
-	size_t  numWorkGroupsPerComputeUnit_SHA1;
+	size_t  numWorkItemsPerComputeUnit_SHA1;
 	size_t  localWorkSize_SHA1;
 
 	char   *sourceFile_DES;
-	size_t  numWorkGroupsPerComputeUnit_DES;
+	size_t  numWorkItemsPerComputeUnit_DES;
 	size_t  localWorkSize_DES;
 	char   *buildOptions_DES;
 } static deviceSettingsArray[] = {
@@ -188,8 +188,8 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 {
 	cl_uint numComputeUnits;
 
-	*numWorkItemsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_GROUPS_PER_COMPUTE_UNIT;
-	*localWorkSize               = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS;
+	*numWorkItemsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_COMPUTE_UNIT;
+	*localWorkSize               = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_WORK_GROUP;
 	if (sourceFile && lenTripcode == 12) {
 		strcpy(sourceFile, OPENCL_SHA1_DEFAULT_SOURCE_FILE);
 	} else if (sourceFile && lenTripcode == 10) {
@@ -218,7 +218,7 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 			}
 			if (buildOptions && lenTripcode == 10)
 				strcpy(buildOptions, deviceSettingsArray[i].buildOptions_DES);
-			*numWorkItemsPerComputeUnit = (lenTripcode == 12) ? (deviceSettingsArray[i].numWorkGroupsPerComputeUnit_SHA1) : (deviceSettingsArray[i].numWorkGroupsPerComputeUnit_DES);
+			*numWorkItemsPerComputeUnit = (lenTripcode == 12) ? (deviceSettingsArray[i].numWorkItemsPerComputeUnit_SHA1) : (deviceSettingsArray[i].numWorkItemsPerComputeUnit_DES);
 			*localWorkSize               = (lenTripcode == 12) ? (deviceSettingsArray[i].localWorkSize_SHA1              ) : (deviceSettingsArray[i].localWorkSize_DES              );
 			break;
 		}
@@ -233,13 +233,13 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
 	char   status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 
-	size_t  numWorkItemsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_GROUPS_PER_COMPUTE_UNIT;
-	size_t  localWorkSize = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS;
+	size_t  numWorkItemsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_COMPUTE_UNIT;
+	size_t  localWorkSize = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_WORK_GROUP;
 	GetParametersForOpenCLDevice(info->openCLDeviceID, NULL, &numWorkItemsPerComputeUnit, &localWorkSize, NULL);
 
 	char commandLine[MAX_LEN_COMMAND_LINE + 1];
 	sprintf(commandLine,
-	        "\"%s\" --output-for-redirection -l %d -g -d %d -y %d -z %d -a %d -b 1",
+	        "\"%s\" --output-for-redirection --disable-tripcode-checks -l %d -g -d %d -y %d -z %d -a %d -b 1",
 			applicationPath,
 			lenTripcode,
 			info->deviceNo,
@@ -340,7 +340,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 				tripcode[i] = lpBuffer[j];
 			for (i = 0, j = 10 + 1 + 2 + lenTripcodeKey + 1 + 1; i < lenTripcodeKey; ++i, ++j)
 				key[i] = lpBuffer[j];
-			ProcessValidTripcodePair(tripcode, key);
+			ProcessPossibleMatch(tripcode, key);
 		} else if (strncmp(lpBuffer, "[status],", strlen("[status],")) == 0) {
 			double       currentSpeed, averageSpeed, totalNumGeneratedTripcodes;
 			unsigned int numDiscardedTripcodes;
@@ -360,7 +360,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 			currentToken = strtok(NULL, delimiter);                                                           // 	   averageSpeed_CPU);
 			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%u",  &numDiscardedTripcodes);      // 	   numDiscardedTripcodes
 			sprintf(status,
-					"[process] %.1lfM TPS, %d work-groups/CU, %d work-items/WG",
+					"[process] %.1lfM TPS, %d WI/CU, %d WI/WG",
 					averageSpeed / 1000000,
 					numWorkItemsPerComputeUnit,
 					localWorkSize);

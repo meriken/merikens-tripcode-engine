@@ -237,7 +237,7 @@ extern "C" void DES_Crypt25_x86_AVX2        (void *context);
 ///////////////////////////////////////////////////////////////////////////////
 
 extern char           *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numComputeUnits);
-extern void            GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_t *numWorkGroupsPerComputeUnit, size_t *localWorkSize, char *options);
+extern void            GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_t *numWorkItemsPerComputeUnit, size_t *localWorkSize, char *options);
 extern char           *ConvertOpenCLErrorCodeToString(cl_int openCLError);
 extern void __stdcall  OnOpenCLError(const char *errorInfo, const void *privateInfo, size_t sizePrivateInfo, void *userData);
 extern void            Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);

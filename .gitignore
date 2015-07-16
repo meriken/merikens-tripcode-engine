@@ -25,3 +25,4 @@ MerikensTripcodeEngine/x64/Release/*.i
 *.lnk
 *.opensdf
 tripcodes.txt
+*.unsuccessfulbuild

@@ -69,6 +69,7 @@ Options options = {
 	DEFAULT_OPTION_IS_AVX2_ENABLED,
 	DEFAULT_OPTION_OPENCL_RUN_CHILD_PROCESSES_FOR_MULTIPLE_DEVICES, // BOOL openCLRunChildProcesses;
 	DEFAULT_OPTION_OPENCL_NUM_PROCESSES_PER_AMD_GPU, // int  openCLNumProcesses;
+	DEFAULT_OPTION_CHECK_TRIPCODES,               // BOOL checkTripcodes;
 };
 
 // Search Parameters
@@ -658,7 +659,7 @@ void PrintStatus()
 					sprintf(NEXT_LINE, "  The actual matching probability is about the same as expected.");
 				}
 			}
-			if (!openCLRunChildProcesses && prevNumValidTripcodes + prevNumDiscardedTripcodes > 0) {
+			if (prevNumValidTripcodes + prevNumDiscardedTripcodes > 0) {
 				sprintf(NEXT_LINE, "  %.0f%% of matching tripcodes were invalid.",
 						invalidTripcodeRatio * 100);
 			}
@@ -1239,6 +1240,9 @@ void ObtainOptions(int argCount, char **arguments)
 		} else if (strcmp(arguments[indexArg], "--maximize-key-space") == 0) {
 			options.useOneByteCharactersForKeys = FALSE;
 			options.maximizeKeySpace = TRUE;
+
+		} else if (strcmp(arguments[indexArg], "--disable-tripcode-checks") == 0) {
+			options.checkTripcodes = FALSE;
 
 		} else if (   strcmp(arguments[indexArg], "--display-device-information") == 0
 			       || strcmp(arguments[indexArg], "--list-expanded-patterns"    ) == 0

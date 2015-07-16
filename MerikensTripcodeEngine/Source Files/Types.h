@@ -102,6 +102,7 @@ struct Options {
 	BOOL isAVX2Enabled;
 	BOOL openCLRunChildProcesses;
 	int  openCLNumProcesses;
+	BOOL checkTripcodes;
 };
 
 struct CUDADeviceSearchThreadInfo {

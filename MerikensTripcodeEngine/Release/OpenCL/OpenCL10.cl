@@ -1325,7 +1325,7 @@ void DES_GetTripcode(DES_DATA_BLOCKS_SPACE vtype *DES_dataBlocks, int tripcodeIn
 		__constant KeyInfo                  *       keyInfo,                                               \
 		__global   const unsigned int       * const tripcodeChunkArray,                                    \
 				   const unsigned int               numTripcodeChunk,                                      \
-		__constant const unsigned char      * const keyCharTable_FirstByte,                                \
+		__constant const unsigned char      * const keyCharTableForKey7,                                   \
  		__constant const unsigned char      * const smallKeyBitmap,                                        \
  		__global   const unsigned char      * const keyBitmap,                                             \
 		__global   const PartialKeyFrom3To6 * const partialKeyFrom3To6Array,                               \
@@ -1336,7 +1336,7 @@ void DES_GetTripcode(DES_DATA_BLOCKS_SPACE vtype *DES_dataBlocks, int tripcodeIn
 		__private             unsigned char  key[8];                                                       \
 							  unsigned char  tripcodeIndex;                                                \
 		DES_DATA_BLOCKS_SPACE vtype          DES_dataBlocks[64];                                           \
-		DES_KEYS_SPACE        vtype          *DES_keys = localBuffer + 29 * get_local_id(0);                                \
+		DES_KEYS_SPACE        vtype          *DES_keys = localBuffer + 29 * get_local_id(0);               \
 		__global unsigned char *partialKeyFrom3To6 = partialKeyFrom3To6Array[get_global_id(0)].partialKeyFrom3To6; \
 		output->numMatchingTripcodes = 0;                                                                  \
 		                                                                                                   \
@@ -1376,7 +1376,7 @@ void DES_GetTripcode(DES_DATA_BLOCKS_SPACE vtype *DES_dataBlocks, int tripcodeIn
 		SET_ALL_BITS_FOR_KEY(48, 6, 6);                                                                    \
 		                                                                                                   \
 		for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {                    \
-			key[7] = keyCharTable_FirstByte[keyInfo->partialKeyAndRandomBytes[7] + (tripcodeIndex & 0x3f)];  \
+			key[7] = keyCharTableForKey7[keyInfo->partialKeyAndRandomBytes[7] + (tripcodeIndex & 0x3f)];  \
 			SET_BIT_FOR_KEY(49, 7, 0);                                                                     \
 			SET_BIT_FOR_KEY(50, 7, 1);                                                                     \
 			SET_BIT_FOR_KEY(51, 7, 2);                                                                     \
@@ -1402,7 +1402,7 @@ void DES_GetTripcode(DES_DATA_BLOCKS_SPACE vtype *DES_dataBlocks, int tripcodeIn
 			output->pair.key.c[4] = key[4];                                                                            \
 			output->pair.key.c[5] = key[5];                                                                            \
 			output->pair.key.c[6] = key[6];                                                                            \
-			output->pair.key.c[7] = keyCharTable_FirstByte[keyInfo->partialKeyAndRandomBytes[7] + (tripcodeIndex & 0x3f)]; \
+			output->pair.key.c[7] = keyCharTableForKey7[keyInfo->partialKeyAndRandomBytes[7] + (tripcodeIndex & 0x3f)]; \
 		}                                                                                                              \
 		output->numGeneratedTripcodes = OPENCL_DES_BS_DEPTH;                                                           \
 	}                                                                                                                  \
