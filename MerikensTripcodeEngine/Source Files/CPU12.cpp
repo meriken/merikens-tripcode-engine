@@ -590,7 +590,7 @@ void run_cpuid(uint32_t eax, uint32_t ecx, int *abcd)
 int check_xcr0_ymm() 
 {
     uint32_t xcr0;
-    xcr0 = (uint32_t)_xgetbv(0);  /* min VS2010 SP1 compiler is required */
+    xcr0 = (uint32_t)_myxgetbv(0);
     return ((xcr0 & 6) == 6); /* checking if xmm and ymm state are enabled in XCR0 */
 }
 

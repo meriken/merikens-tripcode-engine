@@ -161,6 +161,7 @@ extern BOOL GetTerminationState();
 //
 extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, BOOL isOptimizationInProgress, char *status);
 extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status);
+extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, unsigned int numDiscardedTripcodes);
 
 //
 extern void ShowCursor();
@@ -239,6 +240,7 @@ extern char           *GetProductNameForOpenCLDevice(char *vendor, char *name, c
 extern void            GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_t *numWorkGroupsPerComputeUnit, size_t *localWorkSize, char *options);
 extern char           *ConvertOpenCLErrorCodeToString(cl_int openCLError);
 extern void __stdcall  OnOpenCLError(const char *errorInfo, const void *privateInfo, size_t sizePrivateInfo, void *userData);
+extern void            Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
 
 
 
@@ -249,6 +251,7 @@ extern void __stdcall  OnOpenCLError(const char *errorInfo, const void *privateI
 extern BOOL VerifySHA1Tripcode (unsigned char *tripcode, unsigned char *key);
 extern BOOL VerifyDESTripcode  (unsigned char *tripcode, unsigned char *key);
 extern BOOL IsTripcodeDuplicate(unsigned char *tripcode);
+extern void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key);
 
 
 
@@ -279,6 +282,6 @@ extern unsigned char charTableForKagami[256];
 ///////////////////////////////////////////////////////////////////////////////
 
 extern "C" int  IsAVXSupported();
-extern "C" int  _xgetbv(int ecx);
+extern "C" int  _myxgetbv(int ecx);
 extern     int  IsAVX2Supported();
 extern     BOOL IsCPUBasedOnNehalemMicroarchitecture();

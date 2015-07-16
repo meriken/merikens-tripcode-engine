@@ -116,52 +116,52 @@ struct {
 	size_t  localWorkSize_DES;
 	char   *buildOptions_DES;
 } static deviceSettingsArray[] = {
-	{OPENCL_VENDOR_AMD,    "Cedar",                      2, "Radeon HD 5450",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Redwood",                    4, "Radeon HD 5550",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Redwood",                    5, "Radeon HD 5570/5670",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Juniper",                    9, "Radeon HD 5750",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Juniper",                   10, "Radeon HD 5770",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""}, // measured
-	{OPENCL_VENDOR_AMD,    "Cypress",                   14, "Radeon HD 5830",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Cypress",                   18, "Radeon HD 5850",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Cypress",                   20, "Radeon HD 5870",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 5120,  64, "OpenCL\\OpenCL10.cl", 5120,  64, ""}, // reported
-	{OPENCL_VENDOR_AMD,    "Hemlock",                   -1, "Radeon HD 5970",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 5120,  64, "OpenCL\\OpenCL10.cl", 5120,  64, ""},
+	{OPENCL_VENDOR_AMD,    "Cedar",                      2, "Radeon HD 5450",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Redwood",                    4, "Radeon HD 5550",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Redwood",                    5, "Radeon HD 5570/5670",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Juniper",                    9, "Radeon HD 5750",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Juniper",                   10, "Radeon HD 5770",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
+	{OPENCL_VENDOR_AMD,    "Cypress",                   14, "Radeon HD 5830",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Cypress",                   18, "Radeon HD 5850",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Cypress",                   20, "Radeon HD 5870",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 5120,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // reported
+	{OPENCL_VENDOR_AMD,    "Hemlock",                   -1, "Radeon HD 5970",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 5120,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 
-	{OPENCL_VENDOR_AMD,    "Saymour",                    2, "Radeon HD 6400M Series", "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Caicos",                     2, "Radeon HD 6450",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Turks",                      6, "Radeon HD 6570/6670",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Whistler",                   6, "Radeon HD 6700M Series", "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Barts",                     10, "Radeon HD 6790",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Barts",                     12, "Radeon HD 6850",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Barts",                     14, "Radeon HD 6870",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Blackcomb",                 12, "Radeon HD 6950M",        "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Cayman",                    22, "Radeon HD 6950",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Cayman",                    -1, "Radeon HD 6970/6990",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
+	{OPENCL_VENDOR_AMD,    "Saymour",                    2, "Radeon HD 6400M Series", "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Caicos",                     2, "Radeon HD 6450",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Turks",                      6, "Radeon HD 6570/6670",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Whistler",                   6, "Radeon HD 6700M Series", "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Barts",                     10, "Radeon HD 6790",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Barts",                     12, "Radeon HD 6850",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Barts",                     14, "Radeon HD 6870",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Blackcomb",                 12, "Radeon HD 6950M",        "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Cayman",                    22, "Radeon HD 6950",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Cayman",                    -1, "Radeon HD 6970/6990",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 
-	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
-	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"}, // measured
+	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
 
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"}, // measured
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"}, // measured
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
 
-	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Zacate",                    -1, "E/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Llano",                     -1, "A8/A6/A4/E2-series",     "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Hondo",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Brazos",                    -1, "E2-series",              "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Trinity",                   -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
-	{OPENCL_VENDOR_AMD,    "Devastator",                -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 2560,  64, ""},
+	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Zacate",                    -1, "E/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Llano",                     -1, "A8/A6/A4/E2-series",     "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Hondo",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Brazos",                    -1, "E2-series",              "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Trinity",                   -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Devastator",                -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 
-	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384,  64, "OpenCL\\OpenCL10.cl",16384,  64, "-DUNROLL_MAIN_LOOP -DUSE_UNSIGNED_LONG"},
+	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 
-	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",16384, 128, ""},
+	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",  512, 128, ""},
 
-	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 2500", -1, NULL,                     "OpenCL\\OpenCL12.cl",               64,  32, "OpenCL\\OpenCL10.cl",   64,  32, ""},
-	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 4000", -1, NULL,                     "OpenCL\\OpenCL12.cl",               64,  32, "OpenCL\\OpenCL10.cl",   64,  32, ""}, // measured
+	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 2500", -1, NULL,                     "OpenCL\\OpenCL12.cl",               64,  32, "OpenCL\\OpenCL10.cl",  512, 128, ""},
+	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 4000", -1, NULL,                     "OpenCL\\OpenCL12.cl",               64,  32, "OpenCL\\OpenCL10.cl",  512, 128, ""}, // measured
 
 	{NULL}
 };
@@ -184,11 +184,11 @@ char *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numCompute
 	return NULL;
 }
 
-void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_t *numWorkGroupsPerComputeUnit, size_t *localWorkSize, char *buildOptions)
+void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_t *numWorkItemsPerComputeUnit, size_t *localWorkSize, char *buildOptions)
 {
 	cl_uint numComputeUnits;
 
-	*numWorkGroupsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_GROUPS_PER_COMPUTE_UNIT;
+	*numWorkItemsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_GROUPS_PER_COMPUTE_UNIT;
 	*localWorkSize               = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS;
 	if (sourceFile && lenTripcode == 12) {
 		strcpy(sourceFile, OPENCL_SHA1_DEFAULT_SOURCE_FILE);
@@ -218,15 +218,171 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 			}
 			if (buildOptions && lenTripcode == 10)
 				strcpy(buildOptions, deviceSettingsArray[i].buildOptions_DES);
-			*numWorkGroupsPerComputeUnit = (lenTripcode == 12) ? (deviceSettingsArray[i].numWorkGroupsPerComputeUnit_SHA1) : (deviceSettingsArray[i].numWorkGroupsPerComputeUnit_DES);
+			*numWorkItemsPerComputeUnit = (lenTripcode == 12) ? (deviceSettingsArray[i].numWorkGroupsPerComputeUnit_SHA1) : (deviceSettingsArray[i].numWorkGroupsPerComputeUnit_DES);
 			*localWorkSize               = (lenTripcode == 12) ? (deviceSettingsArray[i].localWorkSize_SHA1              ) : (deviceSettingsArray[i].localWorkSize_DES              );
 			break;
 		}
 	}
 	if (options.openCLNumWorkGroupsPerCU != OPENCL_NUM_WORK_GROUPS_PER_CU_NIL)
-		*numWorkGroupsPerComputeUnit = options.openCLNumWorkGroupsPerCU;
+		*numWorkItemsPerComputeUnit = options.openCLNumWorkGroupsPerCU;
 	if (options.openCLNumWorkItemsPerWG  != OPENCL_NUM_WORK_ITEMS_PER_WG_NIL)
 		*localWorkSize = options.openCLNumWorkItemsPerWG;
+}
+
+void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
+{
+	char   status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
+
+	size_t  numWorkItemsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_GROUPS_PER_COMPUTE_UNIT;
+	size_t  localWorkSize = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS;
+	GetParametersForOpenCLDevice(info->openCLDeviceID, NULL, &numWorkItemsPerComputeUnit, &localWorkSize, NULL);
+
+	char commandLine[MAX_LEN_COMMAND_LINE + 1];
+	sprintf(commandLine,
+	        "\"%s\" --output-for-redirection -l %d -g -d %d -y %d -z %d -a %d -b 1",
+			applicationPath,
+			lenTripcode,
+			info->deviceNo,
+			numWorkItemsPerComputeUnit,
+			localWorkSize,
+			options.openCLNumThreads);
+	for (int patternFileIndex = 0; patternFileIndex < numPatternFiles; ++patternFileIndex) {
+		strcat(commandLine, " -f ");
+		strcat(commandLine, patternFilePathArray[patternFileIndex]);
+	}
+	if (options.useOneByteCharactersForKeys)
+		strcat(commandLine, " --use-one-byte-characters-for-keys");
+	if (strlen(nameMutexForPausing) > 0) {
+		strcat(commandLine, " -e ");
+		strcat(commandLine, nameMutexForPausing);
+	}
+	if (strlen(nameEventForTerminating) > 0) {
+		strcat(commandLine, " -E ");
+		strcat(commandLine, nameEventForTerminating);
+	}
+	// printf("commandLine: %s\n", commandLine);
+
+	HANDLE hChildProcess = NULL;
+	HANDLE hStdIn = NULL; // Handle to parents std input.
+	BOOL   bRunThread = TRUE;
+   
+	HANDLE hOutputReadTmp,hOutputRead,hOutputWrite;
+	HANDLE hInputWriteTmp,hInputRead,hInputWrite;
+	HANDLE hErrorWrite;
+	HANDLE hThread;
+	DWORD  ThreadId;
+	SECURITY_ATTRIBUTES securityAttributes;
+
+	securityAttributes.nLength= sizeof(SECURITY_ATTRIBUTES);
+	securityAttributes.lpSecurityDescriptor = NULL;
+	securityAttributes.bInheritHandle = TRUE;
+	ERROR0(!CreatePipe(&hOutputReadTmp, &hOutputWrite,   &securityAttributes, 0), ERROR_CHILD_PROCESS, "CreatePipe");
+	ERROR0(!CreatePipe(&hInputRead,     &hInputWriteTmp, &securityAttributes, 0), ERROR_CHILD_PROCESS, "CreatePipe");
+	ERROR0(!DuplicateHandle(GetCurrentProcess(), hOutputWrite,   GetCurrentProcess(), &hErrorWrite, 0, TRUE,  DUPLICATE_SAME_ACCESS), ERROR_CHILD_PROCESS, "DuplicateHandle");
+	ERROR0(!DuplicateHandle(GetCurrentProcess(), hOutputReadTmp, GetCurrentProcess(), &hOutputRead, 0, FALSE, DUPLICATE_SAME_ACCESS), ERROR_CHILD_PROCESS, "DupliateHandle");
+	ERROR0(!DuplicateHandle(GetCurrentProcess(), hInputWriteTmp, GetCurrentProcess(), &hInputWrite, 0, FALSE, DUPLICATE_SAME_ACCESS), ERROR_CHILD_PROCESS, "DupliateHandle");
+	ERROR0(!CloseHandle(hOutputReadTmp), ERROR_CHILD_PROCESS, "CloseHandle");
+	ERROR0(!CloseHandle(hInputWriteTmp), ERROR_CHILD_PROCESS, "CloseHandle");
+	ERROR0((hStdIn = GetStdHandle(STD_INPUT_HANDLE)) == INVALID_HANDLE_VALUE, ERROR_CHILD_PROCESS, "GetStdHandle");
+
+	PROCESS_INFORMATION processInfo;
+	STARTUPINFO startupInfo;
+	ZeroMemory(&startupInfo, sizeof(STARTUPINFO));
+	startupInfo.cb         = sizeof(STARTUPINFO);
+	startupInfo.dwFlags    = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+	startupInfo.hStdOutput = hOutputWrite;
+	startupInfo.hStdInput  = hInputRead;
+	startupInfo.hStdError  = hErrorWrite;
+	startupInfo.wShowWindow =  /* SW_SHOW */ SW_HIDE;
+	WCHAR commandLineWC[MAX_LEN_COMMAND_LINE + 1];
+	MultiByteToWideChar(CP_ACP, 0, commandLine, -1, commandLineWC, MAX_LEN_COMMAND_LINE);
+	ERROR0(!CreateProcess(NULL, commandLineWC, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInfo), ERROR_CHILD_PROCESS, "CreateProcess");
+	hChildProcess = processInfo.hProcess;
+
+	// Close pipe handles.
+	ERROR0(!CloseHandle(processInfo.hThread), ERROR_CHILD_PROCESS, "CloseHandle");
+	ERROR0(!CloseHandle(hOutputWrite       ), ERROR_CHILD_PROCESS, "CloseHandle");
+	ERROR0(!CloseHandle(hInputRead         ), ERROR_CHILD_PROCESS, "CloseHandle");
+	ERROR0(!CloseHandle(hErrorWrite        ), ERROR_CHILD_PROCESS, "CloseHandle");
+
+	// Launch the thread that gets the input and sends it to the child.
+	// hThread = CreateThread(NULL,0,GetAndSendInputThread,
+	// 						(LPVOID)hInputWrite,0,&ThreadId);
+	// if (hThread == NULL) DisplayError("CreateThread");
+
+	CHAR  lpBuffer[LEN_LINE_BUFFER_FOR_SCREEN];
+	DWORD nBytesRead;
+	DWORD nCharsWritten;
+
+	while(!GetTerminationState())
+	{
+		// This line does not work well.
+		ERROR0(WaitForSingleObject(hChildProcess, 0) != WAIT_TIMEOUT, ERROR_CHILD_PROCESS, "A child process terminated unexpectedly.");
+
+		if (!ReadFile(hOutputRead, lpBuffer, sizeof(lpBuffer), &nBytesRead, NULL) || !nBytesRead) {
+			if (GetLastError() == ERROR_BROKEN_PIPE)
+				break;
+			else
+				ERROR0(TRUE, ERROR_CHILD_PROCESS, "ReadFile");
+		}
+		lpBuffer[nBytesRead] = '\0';
+		// printf("%s", lpBuffer);
+		// ERROR0(!WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE), lpBuffer, nBytesRead, &nCharsWritten,NULL), ERROR_CHILD_PROCESS, "WriteConsole");
+
+		if (strncmp(lpBuffer, "[tripcode],", strlen("[tripcode],")) == 0) {
+			unsigned char tripcode[MAX_LEN_TRIPCODE];
+			unsigned char key     [MAX_LEN_TRIPCODE_KEY];
+			int i, j;
+			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode                         ] == ',');
+			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode + 1                     ] == '#');
+			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode + 1 + 1 + lenTripcodeKey] == ',');
+			for (i = 0, j = 10 + 1 + 2; i < lenTripcode; ++i, ++j)
+				tripcode[i] = lpBuffer[j];
+			for (i = 0, j = 10 + 1 + 2 + lenTripcodeKey + 1 + 1; i < lenTripcodeKey; ++i, ++j)
+				key[i] = lpBuffer[j];
+			ProcessValidTripcodePair(tripcode, key);
+		} else if (strncmp(lpBuffer, "[status],", strlen("[status],")) == 0) {
+			double       currentSpeed, averageSpeed, totalNumGeneratedTripcodes;
+			unsigned int numDiscardedTripcodes;
+			char *delimiter = ",";
+			char *currentToken = strtok(lpBuffer, delimiter);                                                 //       "[status]"
+			currentToken = strtok(NULL, delimiter);                                                           //       totalTime,
+			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%lf", &currentSpeed);               // 	   currentSpeed,
+			currentToken = strtok(NULL, delimiter);                                                           // 	   currentSpeed_GPU,
+			currentToken = strtok(NULL, delimiter);                                                           // 	   currentSpeed_CPU,
+			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%lf", &averageSpeed);               // 	   averageSpeed,
+			currentToken = strtok(NULL, delimiter);                                                           // 	   timeForOneMatch,
+			currentToken = strtok(NULL, delimiter);                                                           // 	   (int)(matchingProbDiff * 100),
+			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%lf", &totalNumGeneratedTripcodes); // 	   prevTotalNumGeneratedTripcodes,
+			currentToken = strtok(NULL, delimiter);                                                           // 	   prevNumValidTripcodes,
+			currentToken = strtok(NULL, delimiter);                                                           // 	   IsCUDADeviceOptimizationInProgress(),
+			currentToken = strtok(NULL, delimiter);                                                           // 	   averageSpeed_GPU,
+			currentToken = strtok(NULL, delimiter);                                                           // 	   averageSpeed_CPU);
+			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%u",  &numDiscardedTripcodes);      // 	   numDiscardedTripcodes
+			sprintf(status,
+					"[process] %.1lfM TPS, %d work-groups/CU, %d work-items/WG",
+					averageSpeed / 1000000,
+					numWorkItemsPerComputeUnit,
+					localWorkSize);
+			UpdateOpenCLDeviceStatus_ChildProcess(((OpenCLDeviceSearchThreadInfo *)info), status, currentSpeed, averageSpeed, totalNumGeneratedTripcodes, numDiscardedTripcodes);
+		}
+	}
+
+	// Force the read on the input to return by closing the stdin handle.
+	// ERROR0(!CloseHandle(hStdIn), ERROR_CHILD_PROCESS, "CloseHandle");
+	CloseHandle(hStdIn);
+
+	// Tell the thread to exit and wait for thread to die.
+	// bRunThread = FALSE;
+	// if (WaitForSingleObject(hThread,INFINITE) == WAIT_FAILED)
+	//	DisplayError("WaitForSingleObject");
+
+	// ERROR0(!CloseHandle(hOutputRead), ERROR_CHILD_PROCESS, "CloseHandle");
+	// ERROR0(!CloseHandle(hInputWrite), ERROR_CHILD_PROCESS, "CloseHandle");
+	CloseHandle(hOutputRead);
+	CloseHandle(hInputWrite);
+
+	// TO DO: Wait for child processes to exit.
 }
 
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
@@ -244,14 +400,19 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	key[lenTripcode] = '\0';
+	
+	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
+		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
+		return 0;
+	}
 
 	// Determine the sizes of local and global work items.
-	size_t numWorkGroupsPerComputeUnit;
+	size_t numWorkItemsPerComputeUnit;
 	size_t localWorkSize;
 	size_t globalWorkSize;
 	char   sourceFileName[MAX_LEN_FILE_PATH + 1];
-	GetParametersForOpenCLDevice(deviceID, sourceFileName, &numWorkGroupsPerComputeUnit, &localWorkSize, buildOptions);
-	globalWorkSize = numWorkGroupsPerComputeUnit * numComputeUnits;
+	GetParametersForOpenCLDevice(deviceID, sourceFileName, &numWorkItemsPerComputeUnit, &localWorkSize, buildOptions);
+	globalWorkSize = numWorkItemsPerComputeUnit * numComputeUnits;
 
 	char    deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 	char    deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
@@ -401,9 +562,10 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		
 		// Update the current status.
 		sprintf(status,
-			    "%.1lfM TPS, %d work-groups/CU, %d work-items/WG",
+			    "[thread] %.1lfM TPS, %d WI, %d WI/CU, %d WI/WG",
 				averageSpeed / 1000000,
-				numWorkGroupsPerComputeUnit,
+				globalWorkSize,
+				numWorkItemsPerComputeUnit,
 				localWorkSize);
 		UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), status);
 	}

@@ -30,7 +30,7 @@
 
 global DES_Crypt25_x64_AVX
 global IsAVXSupported
-global _xgetbv
+global _myxgetbv
 global TestASM
 
 
@@ -742,8 +742,8 @@ section .text
 
 
 
-	; int _xgetbv(int ecx);
-	_xgetbv:
+	; int _myxgetbv(int ecx);
+	_myxgetbv:
 		xgetbv
 		ret
 

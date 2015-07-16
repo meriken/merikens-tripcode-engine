@@ -100,6 +100,8 @@ struct Options {
 	BOOL useOnlyASCIICharactersForKeys;
 	BOOL maximizeKeySpace;
 	BOOL isAVX2Enabled;
+	BOOL openCLRunChildProcesses;
+	int  openCLNumProcesses;
 };
 
 struct CUDADeviceSearchThreadInfo {
@@ -119,5 +121,6 @@ struct OpenCLDeviceSearchThreadInfo {
 	double       averageSpeed;
 	double       totalNumGeneratedTripcodes;
 	unsigned int numDiscardedTripcodes;
+	BOOL         runChildProcess;
 };
 

@@ -77,19 +77,27 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	unsigned char  expansionFunction[96];
 
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
+	
+	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
+		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
+		return 0;
+	}
 
 	// Determine the sizes of local and global work items.
-	size_t  numThreadsPerComputeUnit;
+	size_t  numWorkItemsPerComputeUnit;
 	size_t  localWorkSize;
 	size_t  globalWorkSize;
 	char   sourceFileName[MAX_LEN_FILE_PATH + 1];
-	GetParametersForOpenCLDevice(deviceID, sourceFileName, &numThreadsPerComputeUnit, &localWorkSize, buildOptions);
-	globalWorkSize = numThreadsPerComputeUnit * numComputeUnits;
+	GetParametersForOpenCLDevice(deviceID, sourceFileName, &numWorkItemsPerComputeUnit, &localWorkSize, buildOptions);
+	globalWorkSize = numWorkItemsPerComputeUnit * numComputeUnits;
 	// printf("globalWorkSize: %d\n", globalWorkSize);
 	// printf(" localWorkSize: %d\n",  localWorkSize);
 
 	char    deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 	char    deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
+	size_t localMemorySize;
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(localMemorySize), &localMemorySize, NULL));
+	// printf("localMemorySize: %d\n", localMemorySize);
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VENDOR,            sizeof(deviceVendor),    &deviceVendor,    NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_NAME,              sizeof(deviceName),      &deviceName,      NULL));
@@ -102,12 +110,17 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	}
 
 	// Choose the first 3 characters of the keyInfo.partialKeyAndRandomBytes.
-	// Make sure that the first 3 bytes consist of valid Shift-JIS characters.
 	do {
 		SetCharactersInTripcodeKey(keyInfo.partialKeyAndRandomBytes, 3);
-		for (int i = 3; i < lenTripcode; ++i)
-			keyInfo.partialKeyAndRandomBytes[i] = 'A';
-	} while (!IsValidKey(keyInfo.partialKeyAndRandomBytes));
+	} while (!(   (   IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[0])
+		           && IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[1])
+		           && IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[2]))
+	           || (   IS_FIRST_BYTE_SJIS_FULL(keyInfo.partialKeyAndRandomBytes[0])
+		           && IS_SECOND_BYTE_SJIS(keyInfo.partialKeyAndRandomBytes[1])
+		           && IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[2]))
+	           || (   IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[0])
+		           && IS_FIRST_BYTE_SJIS_FULL(keyInfo.partialKeyAndRandomBytes[0])
+		           && IS_SECOND_BYTE_SJIS(keyInfo.partialKeyAndRandomBytes[1]))));
 
 	// Create an OpenCL context.
     cl_context       context      = clCreateContext(NULL, 1, &deviceID, OnOpenCLError, NULL, &openCLError); OPENCL_ERROR(openCLError);
@@ -128,7 +141,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	cl_mem openCL_smallKeyBitmap       = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_KEY_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyBitmap            = clCreateBuffer(context, CL_MEM_READ_ONLY,  KEY_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_partialKeyFrom3To6Array      = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(PartialKeyFrom3To6) * globalWorkSize,     NULL, &openCLError); OPENCL_ERROR(openCLError);
-
+	
 	// Create an expansion function based on the salt.
 	unsigned char  salt[2];
 	salt[0] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[1]);
@@ -155,22 +168,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		sprintf(s, "#define EF%02d %d\n", i, (int)expansionFunction[i]);
 		strcat(sourceCode, s);
 	}
-	//
-	strcat(sourceCode, "#define K07XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[1] & (0x1 << (0))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K08XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[1] & (0x1 << (1))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K09XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[1] & (0x1 << (2))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K10XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[1] & (0x1 << (3))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K11XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[1] & (0x1 << (4))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K12XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[1] & (0x1 << (5))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K13XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[1] & (0x1 << (6))) ? "(~(x))\n" : "(x)\n");
-	//
-	strcat(sourceCode, "#define K14XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[2] & (0x1 << (0))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K15XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[2] & (0x1 << (1))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K16XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[2] & (0x1 << (2))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K17XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[2] & (0x1 << (3))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K18XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[2] & (0x1 << (4))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K19XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[2] & (0x1 << (5))) ? "(~(x))\n" : "(x)\n");
-	strcat(sourceCode, "#define K20XOR(x) "); strcat(sourceCode, (keyInfo.partialKeyAndRandomBytes[2] & (0x1 << (6))) ? "(~(x))\n" : "(x)\n");
 	// printf("sourceCode[%d]:\n%s", strlen(sourceCode), sourceCode);
 	sizeSourceCode =  strlen(sourceCode);
 	sizeSourceCode += fread(sourceCode + strlen(sourceCode), 1, OPENCL_MAX_SIZE_SOURCE_CODE - strlen(sourceCode), sourceFile);
@@ -185,6 +182,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	char buildOption_localWorkSize[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1];
 	sprintf(buildOption_localWorkSize, " -DOPENCL_DES_LOCAL_WORK_SIZE=%d ", (int)localWorkSize);
 	strcat(buildOptions, buildOption_localWorkSize);
+	strcat(buildOptions, " -w ");
 #ifdef DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
 	strcat(buildOptions, " -save-temps=OpenCL10.cl ");
 #endif
@@ -229,12 +227,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	OPENCL_ERROR(clSetKernelArg(kernel, 1, sizeof(cl_mem),       (void *)&openCL_keyInfo));
 	OPENCL_ERROR(clSetKernelArg(kernel, 2, sizeof(cl_mem),       (void *)&openCL_tripcodeChunkArray));
 	OPENCL_ERROR(clSetKernelArg(kernel, 3, sizeof(unsigned int), (void *)&numTripcodeChunk));
-	OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_keyCharTable_OneByte));
-	OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_keyCharTable_FirstByte));
-	OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_keyCharTable_SecondByte));
-	OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),       (void *)&openCL_smallKeyBitmap));
-	OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(cl_mem),       (void *)&openCL_keyBitmap));
-	OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(cl_mem),       (void *)&openCL_partialKeyFrom3To6Array));
+	OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_keyCharTable_FirstByte));
+	OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_smallKeyBitmap));
+	OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_keyBitmap));
+	OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),       (void *)&openCL_partialKeyFrom3To6Array));
+	OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(unsigned int) * 29 * localWorkSize, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,   CL_TRUE, 0, sizeof(unsigned int) * numTripcodeChunk, tripcodeChunkArray,   0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_OneByte, CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_OneByte, 0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_FirstByte,   CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_FirstByte,   0, NULL, NULL));
@@ -268,18 +265,27 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				keyInfo.partialKeyAndRandomBytes[0] = keyCharTable_OneByte[RandomByte()];
 			}
 		} while (!IsValidKey(keyInfo.partialKeyAndRandomBytes));
-		BOOL isKey3SecondByte =    (   (IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes   [0]) && IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[1]))
+		BOOL isSecondByte =    (   (IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes   [0]) && IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[1]))
 			                        || (IS_FIRST_BYTE_SJIS_FULL(keyInfo.partialKeyAndRandomBytes[0])                                                      ))
 								&& IS_FIRST_BYTE_SJIS_FULL(keyInfo.partialKeyAndRandomBytes[2]);
+		SET_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[3], isSecondByte, keyCharTable_FirstByte, RandomByte());
+		BOOL isKey4SecondByte = isSecondByte;
+
+		//
+		unsigned int keyFirst28bits =   ((keyInfo.partialKeyAndRandomBytes[0] & 0x7f) << 0)
+			                          | ((keyInfo.partialKeyAndRandomBytes[1] & 0x7f) << 7)
+									  | ((keyInfo.partialKeyAndRandomBytes[2] & 0x7f) << 14)
+									  | ((keyInfo.partialKeyAndRandomBytes[3] & 0x7f) << 21);
+		OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(unsigned int), (void *)&keyFirst28bits));
 
 		// Generate random bytes for the keyInfo.partialKeyAndRandomBytes to ensure the randomness of generated keys.
-		for (int i = 3; i < lenTripcode; ++i)
+		for (int i = 4; i < lenTripcode; ++i)
 			keyInfo.partialKeyAndRandomBytes[i] = RandomByte();
 		
 		// Generate part of the keys.
 		for (int i = 0; i < globalWorkSize; ++i) {
-			BOOL isSecondByte = isKey3SecondByte;
-			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[0], isSecondByte, keyCharTable_FirstByte, keyInfo.partialKeyAndRandomBytes[3] + ((i >> 15) & 0x1f));
+			isSecondByte = isKey4SecondByte;
+			partialKeyFrom3To6Array[i].partialKeyFrom3To6[0] = keyInfo.partialKeyAndRandomBytes[3];
 			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[1], isSecondByte, keyCharTable_FirstByte, keyInfo.partialKeyAndRandomBytes[4] + ((i >> 10) & 0x1f));
 			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[2], isSecondByte, keyCharTable_FirstByte, keyInfo.partialKeyAndRandomBytes[5] + ((i >>  5) & 0x1f));
 			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[3], isSecondByte, keyCharTable_OneByte,   keyInfo.partialKeyAndRandomBytes[6] + ((i >>  0) & 0x1f));
@@ -287,10 +293,26 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 
 		// Execute the OpenCL kernel
 		OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyInfo, CL_TRUE, 0, sizeof(keyInfo), &keyInfo, 0, NULL, NULL));
+		OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_partialKeyFrom3To6Array, CL_TRUE, 0, sizeof(PartialKeyFrom3To6) * globalWorkSize, partialKeyFrom3To6Array, 0, NULL, NULL));
 		OPENCL_ERROR(clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL));
 		OPENCL_ERROR(clEnqueueReadBuffer(commandQueue, openCL_outputArray, CL_TRUE, 0, sizeOutputArray * sizeof(GPUOutput), outputArray, 0, NULL, NULL));
-		OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_partialKeyFrom3To6Array, CL_TRUE, 0, sizeof(PartialKeyFrom3To6) * globalWorkSize, partialKeyFrom3To6Array, 0, NULL, NULL));
 		OPENCL_ERROR(clFinish(commandQueue));
+		// We can save 18 registers this way.
+		/*
+		for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
+			GPUOutput *output = &outputArray[indexOutput];
+			if (output->numMatchingTripcodes > 0) {
+				output->pair.key.c[0] = keyInfo.partialKeyAndRandomBytes[0];
+				output->pair.key.c[1] = keyInfo.partialKeyAndRandomBytes[1];
+				output->pair.key.c[2] = keyInfo.partialKeyAndRandomBytes[2];
+				output->pair.key.c[3] = partialKeyFrom3To6Array[indexOutput].partialKeyFrom3To6[0];
+				output->pair.key.c[4] = partialKeyFrom3To6Array[indexOutput].partialKeyFrom3To6[1];
+				output->pair.key.c[5] = partialKeyFrom3To6Array[indexOutput].partialKeyFrom3To6[2];
+				output->pair.key.c[6] = partialKeyFrom3To6Array[indexOutput].partialKeyFrom3To6[3];
+				GenerateDESTripcode(output->pair.tripcode.c, output->pair.key.c);
+			}
+		}
+		*/
 		numGeneratedTripcodes += ProcessGPUOutput(keyInfo.partialKeyAndRandomBytes, outputArray, sizeOutputArray, FALSE);
 
 		// Measure the current speed.
@@ -306,9 +328,10 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		
 		// Update the current status.
 		sprintf(status,
-			    "%.1lfM TPS, %d work-groups/CU, %d work-items/WG",
+			    "[thread] %.1lfM TPS, %d WI, %d WI/CU, %d WI/WG",
 				averageSpeed / 1000000,
-				numThreadsPerComputeUnit,
+				globalWorkSize,
+				numWorkItemsPerComputeUnit,
 				localWorkSize);
 		UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), status);
 	}

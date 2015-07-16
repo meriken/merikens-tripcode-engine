@@ -30,7 +30,7 @@
 
 global _DES_Crypt25_x86_AVX
 global _IsAVXSupported
-global __xgetbv
+global __myxgetbv
 
 
 
@@ -806,7 +806,7 @@ section .text
 
 
 
-	__xgetbv:
+	__myxgetbv:
 		push ebp
 		mov ebp, esp
 

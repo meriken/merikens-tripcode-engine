@@ -45,15 +45,15 @@
 char *crypt(char *key, char *salt);
 
 static BOOL             wasCriticalSectionInitialized = FALSE;
-static CRITICAL_SECTION criticalSection_VerifyDESTripcode;
+static CRITICAL_SECTION criticalSection;
 
 BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
         if (!wasCriticalSectionInitialized) {
-                InitializeCriticalSection(&criticalSection_VerifyDESTripcode);
+                InitializeCriticalSection(&criticalSection);
                 wasCriticalSectionInitialized = TRUE;
         }
-        EnterCriticalSection(&criticalSection_VerifyDESTripcode);
+        EnterCriticalSection(&criticalSection);
 
         if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
                 return FALSE;
@@ -80,9 +80,34 @@ BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
         fflush(stdout);
 #endif
 
-        LeaveCriticalSection(&criticalSection_VerifyDESTripcode);
+        LeaveCriticalSection(&criticalSection);
 
         return result;
+}
+
+void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
+{
+    if (!wasCriticalSectionInitialized) {
+            InitializeCriticalSection(&criticalSection);
+            wasCriticalSectionInitialized = TRUE;
+    }
+    EnterCriticalSection(&criticalSection);
+
+    char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
+    BOOL fillRestWithZero = FALSE;
+        
+    strcpy(actualKey, (char *)key);
+    for (int i = 0; i < lenTripcodeKey; ++i) {
+            if (fillRestWithZero) {
+                    actualKey[i] = 0x00;
+            } else if (actualKey[i] == 0x80) {
+                    fillRestWithZero = TRUE;
+            }
+    }
+    strncpy((char *)tripcode, crypt((char *)actualKey, (char *)(actualKey + 1)) + 3, 10);
+	tripcode[10] = '\0';
+
+    LeaveCriticalSection(&criticalSection);
 }
 
 
