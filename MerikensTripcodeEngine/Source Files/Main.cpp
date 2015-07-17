@@ -1989,6 +1989,8 @@ int main(int argc, char **argv)
 	// Terminate search threads.
 	SetTerminationState();
 	BOOL allThreadsHaveExited;
+	startingTime = timeGetTime();
+	DWORD currentTime, deltaTime;
 	do {
 		Sleep(100);
 		allThreadsHaveExited = TRUE;
@@ -2010,7 +2012,9 @@ int main(int argc, char **argv)
 				break;
 			}
 		}
-	} while (!allThreadsHaveExited);
+		currentTime = timeGetTime();
+		deltaTime = (currentTime >= startingTime) ? (currentTime - startingTime) : (currentTime + (0xfffffffU - startingTime));
+	} while (deltaTime < 10 * 1000 && !allThreadsHaveExited);	
 
 	ReleaseResources();
 
