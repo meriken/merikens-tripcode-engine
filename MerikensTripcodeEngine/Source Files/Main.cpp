@@ -516,6 +516,19 @@ void CheckSearchThreads()
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
 
+void KeepSearchThreadsAlive()
+{
+	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+	for (int index = 0; index < numCUDADeviceSearchThreads; ++index)
+		CUDADeviceSearchThreadInfoArray[index].timeLastUpdated = timeGetTime();
+	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+
+	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	for (int index = 0; index < numOpenCLDeviceSearchThreads; ++index)
+		openCLDeviceSearchThreadInfoArray[index].timeLastUpdated = timeGetTime();
+	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+}
+
 BOOL IsCUDADeviceOptimizationInProgress()
 {
 	BOOL ret = FALSE;
@@ -2012,6 +2025,7 @@ int main(int argc, char **argv)
 					break;
 
 				SetPauseState(TRUE);
+				KeepSearchThreadsAlive();
 				Sleep(PAUSE_INTERVAL);
 			}
 			if (mutexForPausingState == WAIT_OBJECT_0) {
