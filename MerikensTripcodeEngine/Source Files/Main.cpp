@@ -451,6 +451,7 @@ void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, BOOL isOpti
 	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
 	info->isOptimizationInProgress = isOptimizationInProgress;
 	strcpy(info->status, status);
+	info->timeLastUpdated = timeGetTime();
 	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
 }
 
@@ -459,6 +460,7 @@ void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *s
 	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 	ASSERT(!info->runChildProcess);
 	strcpy(info->status, status);
+	info->timeLastUpdated = timeGetTime();
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
 
@@ -471,6 +473,46 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	info->averageSpeed = averageSpeed;
 	info->totalNumGeneratedTripcodes = totalNumGeneratedTripcodes;
 	info->numDiscardedTripcodes = numDiscardedTripcodes;
+	info->timeLastUpdated = timeGetTime();
+	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+}
+
+void CheckSearchThreads()
+{
+	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+	for (int index = 0; index < numCUDADeviceSearchThreads; ++index) {
+		struct CUDADeviceSearchThreadInfo *info = &CUDADeviceSearchThreadInfoArray[index];
+		DWORD  currentTime = timeGetTime();
+		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
+			                   ? (currentTime - info->timeLastUpdated)
+							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
+		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		// if (deltaTime > 60 * 1000)
+		// 	strcpy(info->status, "Search thread became unresponsive.");
+
+	}
+	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+
+	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	for (int index = 0; index < numOpenCLDeviceSearchThreads; ++index) {
+		struct OpenCLDeviceSearchThreadInfo *info = &openCLDeviceSearchThreadInfoArray[index];
+		DWORD  currentTime = timeGetTime();
+		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
+			                   ? (currentTime - info->timeLastUpdated)
+							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
+		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		/*
+		if (deltaTime > 60 * 1000) {
+			if (info->runChildProcess) {
+				strcpy(info->status, "[process] Search thread became unresponsive.");
+				info->currentSpeed = 0;
+				info->averageSpeed = 0;
+			} else {
+				strcpy(info->status, "[thread] Search thread became unresponsive.");
+			}
+		}
+		*/
+	}
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
 
@@ -1625,12 +1667,14 @@ void StartCUDADeviceSearchThreads()
 			CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex = i;
 			CUDADeviceSearchThreadInfoArray[i].isOptimizationInProgress = TRUE;
 			CUDADeviceSearchThreadInfoArray[i].status[0] = '\0';
+			CUDADeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
 		}
 	} else if (options.GPUIndex < CUDADeviceCount) {
 		ASSERT(numCUDADeviceSearchThreads == 1);
 		CUDADeviceSearchThreadInfoArray[0].CUDADeviceIndex = options.GPUIndex;
 		CUDADeviceSearchThreadInfoArray[0].isOptimizationInProgress = TRUE;
 		CUDADeviceSearchThreadInfoArray[0].status[0] = '\0';
+		CUDADeviceSearchThreadInfoArray[0].timeLastUpdated = timeGetTime();
 	}
 
 	if (lenTripcode == 12) {
@@ -1682,6 +1726,7 @@ void StartOpenCLDeviceSearchThreads()
 			openCLDeviceSearchThreadInfoArray[i].averageSpeed               = 0;
 			openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
 			openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
+			openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
 			openCLDeviceSearchThreadInfoArray[i].subindex       = 0;
 			if (!openCLRunChildProcesses) {
 				for (j = 1; j < options.openCLNumThreads; ++j) {
@@ -1693,6 +1738,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
 					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = FALSE;
+					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
 				}
 			} else {
 				openCLDeviceSearchThreadInfoArray[i].subindex       = 0;
@@ -1711,6 +1757,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].averageSpeed               = 0;
 					openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
 					openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
+					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
 				}
 			}
 			++openCLDeviceIDArrayIndex;
@@ -1730,6 +1777,7 @@ void StartOpenCLDeviceSearchThreads()
 		openCLDeviceSearchThreadInfoArray[0].averageSpeed               = 0;
 		openCLDeviceSearchThreadInfoArray[0].totalNumGeneratedTripcodes = 0;
 		openCLDeviceSearchThreadInfoArray[0].numDiscardedTripcodes      = 0;
+		openCLDeviceSearchThreadInfoArray[0].timeLastUpdated = timeGetTime();
 		if (!openCLRunChildProcesses) {
 			ASSERT(numOpenCLDeviceSearchThreads == options.openCLNumThreads);
 			openCLDeviceSearchThreadInfoArray[0].subindex       = 0;
@@ -1739,6 +1787,7 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].subindex        = j;
 				openCLDeviceSearchThreadInfoArray[j].status[0]       = '\0';
 				openCLDeviceSearchThreadInfoArray[j].runChildProcess = FALSE;
+				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = timeGetTime();
 			}
 		} else {
 			openCLDeviceSearchThreadInfoArray[0].subindex = 0;
@@ -1755,6 +1804,7 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].averageSpeed               = 0;
 				openCLDeviceSearchThreadInfoArray[j].totalNumGeneratedTripcodes = 0;
 				openCLDeviceSearchThreadInfoArray[j].numDiscardedTripcodes      = 0;
+				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = timeGetTime();
 			}	
 		}
 	}
@@ -1973,6 +2023,7 @@ int main(int argc, char **argv)
 			break;
 				
 		//
+		CheckSearchThreads();
 		startingTime = timeGetTime();
 		PrintStatus();
 		
@@ -2013,7 +2064,7 @@ int main(int argc, char **argv)
 			}
 		}
 		currentTime = timeGetTime();
-		deltaTime = (currentTime >= startingTime) ? (currentTime - startingTime) : (currentTime + (0xfffffffU - startingTime));
+		deltaTime = (currentTime >= startingTime) ? (currentTime - startingTime) : (currentTime + (0xffffffffU - startingTime));
 	} while (deltaTime < 10 * 1000 && !allThreadsHaveExited);	
 
 	ReleaseResources();

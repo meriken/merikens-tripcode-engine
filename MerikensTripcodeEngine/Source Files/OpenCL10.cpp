@@ -87,6 +87,9 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	KeyInfo        keyInfo;
 	unsigned char  expansionFunction[96];
 
+	// Random wait time between 0 and 10 seconds for increased stability.
+	Sleep((DWORD)RandomByte() * 10000 / 256);
+
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	
 	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
@@ -240,10 +243,10 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				sprintf(s, "#define EF%02d %d\n", i, (int)expansionFunction[i]);
 				strcat(sourceCode, s);
 			}
-			// printf("sourceCode[%d]:\n%s", strlen(sourceCode), sourceCode);
 			sizeSourceCode =  strlen(sourceCode);
 			sizeSourceCode += fread(sourceCode + strlen(sourceCode), 1, OPENCL_MAX_SIZE_SOURCE_CODE - strlen(sourceCode), sourceFile);
 			fclose(sourceFile);
+			// printf("sourceCode: %d/%d bytes\n", strlen(sourceCode), OPENCL_MAX_SIZE_SOURCE_CODE);
 
 			//
 			program = clCreateProgramWithSource(context, 1, (const char **)&sourceCode, (const size_t *)&sizeSourceCode, &openCLError);

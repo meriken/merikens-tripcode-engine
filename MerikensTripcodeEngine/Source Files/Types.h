@@ -106,9 +106,10 @@ struct Options {
 };
 
 struct CUDADeviceSearchThreadInfo {
-	int  CUDADeviceIndex;
-	BOOL isOptimizationInProgress;
-	char status[LEN_LINE_BUFFER_FOR_SCREEN];
+	int   CUDADeviceIndex;
+	BOOL  isOptimizationInProgress;
+	char  status[LEN_LINE_BUFFER_FOR_SCREEN];
+	DWORD timeLastUpdated;
 };
 
 struct OpenCLDeviceSearchThreadInfo {
@@ -123,5 +124,6 @@ struct OpenCLDeviceSearchThreadInfo {
 	double       totalNumGeneratedTripcodes;
 	unsigned int numDiscardedTripcodes;
 	BOOL         runChildProcess;
+	DWORD        timeLastUpdated;
 };
 
