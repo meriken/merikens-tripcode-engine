@@ -85,7 +85,7 @@ struct Options {
 	BOOL testNewCode;
 	int  numCPUSearchThreads;
 	BOOL redirection;
-	int  openCLNumWorkGroupsPerCU;
+	int  openCLNumWorkItemsPerCU;
 	int  openCLNumWorkItemsPerWG;
 	int  openCLNumThreads;
 	BOOL useOneByteCharactersForKeys;

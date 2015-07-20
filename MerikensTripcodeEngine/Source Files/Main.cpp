@@ -52,7 +52,7 @@ Options options = {
 	DEFAULT_OPTION_TEST_NEW_CODE,                   // BOOL testNewCode;
 	DEFAULT_OPTION_NUM_CPU_SEARCH_THREADS,          // int  numCPUSearchThreads;
 	DEFAULT_OPTION_REDIRECTION,                     // BOOL redirection;
-	DEFAULT_OPTION_OPENCL_NUM_WORK_GROUPS_PER_CU,   // int  openCLNumWorkGroupsPerCU;
+	DEFAULT_OPTION_OPENCL_NUM_NUM_WORK_ITEMS_PER_CU,   // int  openCLNumWorkItemsPerCU;
 	DEFAULT_OPTION_OPENCL_NUM_WORK_ITEMS_PER_WG,    // int  openCLNumWorkItemsPerWG;
 	DEFAULT_OPTION_OPENCL_NUM_THREADS_PER_AMD_GPU,  // int  openCLNumThreads;
 	DEFAULT_OPTION_USE_ONE_BYTE_CHARACTERS_FOR_KEYS, // BOOL useOneByteCharactersForKeys;
@@ -486,10 +486,21 @@ void CheckSearchThreads()
 		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
 			                   ? (currentTime - info->timeLastUpdated)
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
-		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
-		// if (deltaTime > 60 * 1000)
-		// 	strcpy(info->status, "Search thread became unresponsive.");
-
+		// ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		if (deltaTime > 60 * 1000) {
+			strcpy(info->status, "Restarting search thread.");
+			TerminateThread(CUDADeviceSearchThreadArray[index], 1);
+			unsigned int winThreadID;
+			CUDADeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
+																	    0,
+																	    (lenTripcode == 10) 
+																	        ? Thread_SearchForDESTripcodesOnCUDADevice
+																		    : Thread_SearchForSHA1TripcodesOnCUDADevice,
+																	    &(CUDADeviceSearchThreadInfoArray[index]),
+																	    0,
+																	    &winThreadID);
+			ERROR0((CUDADeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart a CUDA device search thread.");
+		}
 	}
 	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
 
@@ -500,18 +511,28 @@ void CheckSearchThreads()
 		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
 			                   ? (currentTime - info->timeLastUpdated)
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
-		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
-		/*
+		// ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 		if (deltaTime > 60 * 1000) {
 			if (info->runChildProcess) {
-				strcpy(info->status, "[process] Search thread became unresponsive.");
+				strcpy(info->status, "[process] Restarting search thread.");
 				info->currentSpeed = 0;
 				info->averageSpeed = 0;
 			} else {
-				strcpy(info->status, "[thread] Search thread became unresponsive.");
+				strcpy(info->status, "[thread] Restarting search thread.");
 			}
+			// TODO: Kill the child process as well.
+			TerminateThread(openCLDeviceSearchThreadArray[index], 1);
+			unsigned int winThreadID;
+			openCLDeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
+																		  0,
+																		  (lenTripcode == 10) 
+																		      ? Thread_SearchForDESTripcodesOnOpenCLDevice
+																			  : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
+																		  &(openCLDeviceSearchThreadInfoArray[index]),
+																		  0,
+																		  &winThreadID);
+			ERROR0((openCLDeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart an OpenCL device search thread.");
 		}
-		*/
 	}
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
@@ -1153,13 +1174,13 @@ void ObtainOptions(int argCount, char **arguments)
 				   "The number of blocks per SM cannot exceed %d.",    CUDA_MAX_NUM_BLOCKS_PER_SM);
 
 		} else if (strcmp(arguments[indexArg], "-y") == 0 && indexArg + 1 < argCount) {
-			options.openCLNumWorkGroupsPerCU = atoi(arguments[++indexArg]);
-			ERROR1(options.openCLNumWorkGroupsPerCU < OPENCL_MIN_WORK_GROUPS_PER_CU,
+			options.openCLNumWorkItemsPerCU = atoi(arguments[++indexArg]);
+			ERROR1(options.openCLNumWorkItemsPerCU < OPENCL_MIN_NUM_WORK_ITEMS_PER_CU,
 			       ERROR_INVALID_OPTION,
-				   "The number of work groups per CU must be at least %d.", OPENCL_MIN_WORK_GROUPS_PER_CU);
-			ERROR1(options.openCLNumWorkGroupsPerCU > OPENCL_MAX_WORK_GROUPS_PER_CU,
+				   "The number of work items per CU must be at least %d.", OPENCL_MIN_NUM_WORK_ITEMS_PER_CU);
+			ERROR1(options.openCLNumWorkItemsPerCU > OPENCL_MAX_NUM_WORK_ITEMS_PER_CU,
 			       ERROR_INVALID_OPTION,
-				   "The number of work groups per CU cannot exceed %d.", OPENCL_MAX_WORK_GROUPS_PER_CU);
+				   "The number of work items per CU cannot exceed %d.", OPENCL_MAX_NUM_WORK_ITEMS_PER_CU);
 
 		} else if (strcmp(arguments[indexArg], "-z") == 0 && indexArg + 1 < argCount) {
 			options.openCLNumWorkItemsPerWG = atoi(arguments[++indexArg]);
@@ -1739,8 +1760,8 @@ void StartOpenCLDeviceSearchThreads()
 			openCLDeviceSearchThreadInfoArray[i].averageSpeed               = 0;
 			openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
 			openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
-			openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
-			openCLDeviceSearchThreadInfoArray[i].subindex       = 0;
+			openCLDeviceSearchThreadInfoArray[i].timeLastUpdated            = timeGetTime();
+			openCLDeviceSearchThreadInfoArray[i].subindex                   = 0;
 			if (!openCLRunChildProcesses) {
 				for (j = 1; j < options.openCLNumThreads; ++j) {
 					++i;
@@ -1830,13 +1851,10 @@ void StartOpenCLDeviceSearchThreads()
 															        &(openCLDeviceSearchThreadInfoArray[i]),
 															        0,
 											                        &winThreadID);
-			ERROR0((openCLDeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a OpenCL device search thread.");
+			ERROR0((openCLDeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start an OpenCL device search thread.");
 		}
 	} else {
 		ASSERT(lenTripcode == 10);
-#ifndef OPENCL_ENABLE_10CHAR_TRIPCODE_SEARCH
-		ERROR0(TRUE, ERROR_DES, "10 character tripcode search cannot be performed on the specified device(s).");
-#else
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
 			openCLDeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
 			                                                        0,
@@ -1844,12 +1862,9 @@ void StartOpenCLDeviceSearchThreads()
 															        &(openCLDeviceSearchThreadInfoArray[i]),
 															        0,
 														            &winThreadID);
-			ERROR0((openCLDeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a OpenCL device search thread.");
+			ERROR0((openCLDeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start an OpenCL device search thread.");
 		}
-#endif
 	}
-	// printf("openCLDeviceCount            = %d\n", openCLDeviceCount);
-	// printf("numOpenCLDeviceSearchThreads = %d\n", numOpenCLDeviceSearchThreads);
 }
 
 void StartGPUSearchThreads()

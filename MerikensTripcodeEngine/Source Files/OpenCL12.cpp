@@ -137,15 +137,15 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Cayman",                    22, "Radeon HD 6950",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 	{OPENCL_VENDOR_AMD,    "Cayman",                    -1, "Radeon HD 6970/6990",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 
-	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
-	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              960,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
+	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
 
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"}, // measured
 
 	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
@@ -156,18 +156,18 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Trinity",                   -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 	{OPENCL_VENDOR_AMD,    "Devastator",                -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 
-	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384,  64, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
+	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, "-O1"},
 
-	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384, 128, "OpenCL\\OpenCL10.cl",  512, 128, ""},
+	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, ""},
 
-	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 2500", -1, NULL,                     "OpenCL\\OpenCL12.cl",               64,  32, "OpenCL\\OpenCL10.cl",  512, 128, ""},
-	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 4000", -1, NULL,                     "OpenCL\\OpenCL12.cl",               64,  32, "OpenCL\\OpenCL10.cl",  512, 128, ""}, // measured
+	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 2500", -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, ""},
+	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 4000", -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, ""}, // measured
 
 	{NULL}
 };
 
 
-
+ 
 char *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numComputeUnits)
 {
 	for (int i = 0; deviceSettingsArray[i].vendor != NULL; ++i) {
@@ -223,8 +223,8 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 			break;
 		}
 	}
-	if (options.openCLNumWorkGroupsPerCU != OPENCL_NUM_WORK_GROUPS_PER_CU_NIL)
-		*numWorkItemsPerComputeUnit = options.openCLNumWorkGroupsPerCU;
+	if (options.openCLNumWorkItemsPerCU != OPENCL_NUM_NUM_WORK_ITEMS_PER_CU_NIL)
+		*numWorkItemsPerComputeUnit = options.openCLNumWorkItemsPerCU;
 	if (options.openCLNumWorkItemsPerWG  != OPENCL_NUM_WORK_ITEMS_PER_WG_NIL)
 		*localWorkSize = options.openCLNumWorkItemsPerWG;
 }
@@ -395,17 +395,17 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	char           buildOptions[MAX_LEN_COMMAND_LINE + 1] = ""; 
 	unsigned char  key[MAX_LEN_TRIPCODE + 1];
 
-	// Random wait time between 0 and 10 seconds for increased stability.
-	Sleep((DWORD)RandomByte() * 10000 / 256);
-
-	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
-	key[lenTripcode] = '\0';
-	
 	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
 		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
 		return 0;
 	}
 
+	// Random wait time between 0 and 60 seconds for increased stability.
+	Sleep((DWORD)RandomByte() * 60000 / 256);
+
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
+	key[lenTripcode] = '\0';
+	
 	// Determine the sizes of local and global work items.
 	size_t numWorkItemsPerComputeUnit;
 	size_t localWorkSize;

@@ -44,7 +44,7 @@ typedef int BOOL;
 #define SMALL_KEY_BITMAP_LEN_STRING 2
 #define SMALL_KEY_BITMAP_SIZE       (64 * 64)
 #define KEY_BITMAP_LEN_STRING       4
-#define OPENCL_SHA1_MAX_PASS_COUNT  2048
+#define OPENCL_SHA1_MAX_PASS_COUNT  1024
 
 #define IS_FIRST_BYTE_SJIS_FULL(c)    \
 	(   (0x81 <= (c) && (c) <= 0x84)  \
@@ -251,7 +251,7 @@ __kernel void (functionName)(                                    \
 	}                                                                                                      \
 	barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);                                                   \
 	                                                                                                       \
-	randomByte2 += ((get_local_id(0) & 0x40) >> 1);                                                        \
+	randomByte2 += ((get_local_id(0) & 0xc0) >> 2);                                                        \
 	for (passCount = 0; passCount < OPENCL_SHA1_MAX_PASS_COUNT; passCount++){                              \
 		barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);                                               \
 		                                                                                                   \

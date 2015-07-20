@@ -82,16 +82,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	cl_int         openCLError;
 	cl_device_id   deviceID = ((OpenCLDeviceSearchThreadInfo *)info)->openCLDeviceID;
 	cl_uint        numComputeUnits;
-	char           status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
-	char           buildOptions[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1] = ""; 
+	char           status[LEN_LINE_BUFFER_FOR_SCREEN] = {'\0'};
+	char           buildOptions[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1] = {'\0'}; 
 	KeyInfo        keyInfo;
 	unsigned char  expansionFunction[96];
 
-	// Random wait time between 0 and 10 seconds for increased stability.
-	Sleep((DWORD)RandomByte() * 10000 / 256);
-
-	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
-	
 	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
 		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
 		return 0;
@@ -99,11 +94,15 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 
 	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Starting a tripcode search...");
 
+	// Random wait time between 0 and 60 seconds for increased stability.
+	Sleep((DWORD)RandomByte() * 60000 / 256);
+
 	// Determine the sizes of local and global work items.
 	size_t  numWorkItemsPerComputeUnit;
 	size_t  localWorkSize;
 	size_t  globalWorkSize;
 	char   sourceFileName[MAX_LEN_FILE_PATH + 1];
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	GetParametersForOpenCLDevice(deviceID, sourceFileName, &numWorkItemsPerComputeUnit, &localWorkSize, buildOptions);
 	globalWorkSize = numWorkItemsPerComputeUnit * numComputeUnits;
 	// printf("globalWorkSize: %d\n", globalWorkSize);
@@ -186,6 +185,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				OPENCL_ERROR(clReleaseMemObject(openCL_tripcodeChunkArray));
 				OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTableForKey7));
 				OPENCL_ERROR(clReleaseMemObject(openCL_smallKeyBitmap));
+				OPENCL_ERROR(clReleaseMemObject(openCL_keyBitmap));
 				OPENCL_ERROR(clReleaseMemObject(openCL_partialKeyFrom3To6Array));
 				OPENCL_ERROR(clReleaseCommandQueue(commandQueue));
 				OPENCL_ERROR(clReleaseContext(context));
@@ -250,6 +250,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 
 			//
 			program = clCreateProgramWithSource(context, 1, (const char **)&sourceCode, (const size_t *)&sizeSourceCode, &openCLError);
+			free(sourceCode);
 			openCLError = clBuildProgram(program, 1, &deviceID, buildOptions, NULL, NULL);
 			if (openCLError != CL_SUCCESS && !options.redirection) {
 				size_t lenBuildLog= 0;
@@ -374,7 +375,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	}
  
     // Clean up.
-	free(partialKeyFrom3To6Array);
     OPENCL_ERROR(clFlush(commandQueue));
     OPENCL_ERROR(clFinish(commandQueue));
     OPENCL_ERROR(clReleaseKernel(kernel));
@@ -384,8 +384,10 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
     OPENCL_ERROR(clReleaseMemObject(openCL_tripcodeChunkArray));
     OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTableForKey7));
     OPENCL_ERROR(clReleaseMemObject(openCL_smallKeyBitmap));
+	OPENCL_ERROR(clReleaseMemObject(openCL_keyBitmap));
 	OPENCL_ERROR(clReleaseMemObject(openCL_partialKeyFrom3To6Array));
     OPENCL_ERROR(clReleaseCommandQueue(commandQueue));
     OPENCL_ERROR(clReleaseContext(context));
+	free(partialKeyFrom3To6Array);
 }
 
