@@ -1,5 +1,5 @@
-// Meriken's Tripcode Engine 1.1.2
-// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
+// Meriken's Tripcode Engine 2.0.0
+// Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -464,7 +464,7 @@ void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *s
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
 
-void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, unsigned int numDiscardedTripcodes)
+void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, unsigned int numDiscardedTripcodes, HANDLE childProcess)
 {
 	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 	ASSERT(info->runChildProcess);
@@ -473,6 +473,7 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	info->averageSpeed = averageSpeed;
 	info->totalNumGeneratedTripcodes = totalNumGeneratedTripcodes;
 	info->numDiscardedTripcodes = numDiscardedTripcodes;
+	info->childProcess = childProcess;
 	info->timeLastUpdated = timeGetTime();
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
@@ -486,9 +487,12 @@ void CheckSearchThreads()
 		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
 			                   ? (currentTime - info->timeLastUpdated)
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
-		// ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		// if (deltaTime > 60 * 1000)
+		//	strcpy(info->status, "Search thread became unresponsive.");
+		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		/*
 		if (deltaTime > 60 * 1000) {
-			strcpy(info->status, "Restarting search thread.");
+			strcpy(info->status, "Restarting search thread...");
 			TerminateThread(CUDADeviceSearchThreadArray[index], 1);
 			unsigned int winThreadID;
 			CUDADeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
@@ -501,6 +505,7 @@ void CheckSearchThreads()
 																	    &winThreadID);
 			ERROR0((CUDADeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart a CUDA device search thread.");
 		}
+		*/
 	}
 	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
 
@@ -514,13 +519,17 @@ void CheckSearchThreads()
 		// ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 		if (deltaTime > 60 * 1000) {
 			if (info->runChildProcess) {
-				strcpy(info->status, "[process] Restarting search thread.");
+				strcpy(info->status, "[process] Restarting search thread...");
 				info->currentSpeed = 0;
 				info->averageSpeed = 0;
+				if (info->childProcess)
+					TerminateProcess(info->childProcess, 0);
+				info->childProcess = NULL;
 			} else {
-				strcpy(info->status, "[thread] Restarting search thread.");
+				// If we restart the search thread, amdocl64.dll may crash.
+				// strcpy(info->status, "[thread] Restarting search thread...");
+				ERROR0(TRUE, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 			}
-			// TODO: Kill the child process as well.
 			TerminateThread(openCLDeviceSearchThreadArray[index], 1);
 			unsigned int winThreadID;
 			openCLDeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
@@ -1115,6 +1124,8 @@ void InitMemoryBlocks()
 {
 	keyBitmap = (unsigned char *)malloc(KEY_BITMAP_SIZE);
 	ERROR0(keyBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	mediumKeyBitmap = (unsigned char *)malloc(MEDIUM_KEY_BITMAP_SIZE);
+	ERROR0(mediumKeyBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 	smallKeyBitmap = (unsigned char *)malloc(SMALL_KEY_BITMAP_SIZE);
 	ERROR0(smallKeyBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 }
@@ -1754,6 +1765,7 @@ void StartOpenCLDeviceSearchThreads()
 			openCLDeviceSearchThreadInfoArray[i].subindex        = -1;
 			openCLDeviceSearchThreadInfoArray[i].status[0]       = '\0';
 			openCLDeviceSearchThreadInfoArray[i].runChildProcess = openCLRunChildProcesses;
+			openCLDeviceSearchThreadInfoArray[i].childProcess = NULL;
 			//
 			openCLDeviceSearchThreadInfoArray[i].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 			openCLDeviceSearchThreadInfoArray[i].currentSpeed               = 0;
@@ -1772,6 +1784,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
 					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = FALSE;
+					openCLDeviceSearchThreadInfoArray[i].childProcess = NULL;
 					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
 				}
 			} else {
@@ -1785,6 +1798,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
 					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = TRUE;
+					openCLDeviceSearchThreadInfoArray[i].childProcess = NULL;
 					//
 					openCLDeviceSearchThreadInfoArray[i].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 					openCLDeviceSearchThreadInfoArray[i].currentSpeed               = 0;
@@ -1805,6 +1819,7 @@ void StartOpenCLDeviceSearchThreads()
 		openCLDeviceSearchThreadInfoArray[0].subindex        = -1;
 		openCLDeviceSearchThreadInfoArray[0].status[0]       = '\0';
 		openCLDeviceSearchThreadInfoArray[0].runChildProcess = openCLRunChildProcesses;
+		openCLDeviceSearchThreadInfoArray[0].childProcess = NULL;
 		//
 		openCLDeviceSearchThreadInfoArray[0].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 		openCLDeviceSearchThreadInfoArray[0].currentSpeed               = 0;
@@ -1821,6 +1836,7 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].subindex        = j;
 				openCLDeviceSearchThreadInfoArray[j].status[0]       = '\0';
 				openCLDeviceSearchThreadInfoArray[j].runChildProcess = FALSE;
+				openCLDeviceSearchThreadInfoArray[j].childProcess = NULL;
 				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = timeGetTime();
 			}
 		} else {
@@ -1832,6 +1848,7 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].subindex       = j;
 				openCLDeviceSearchThreadInfoArray[j].status[0]      = '\0';
 				openCLDeviceSearchThreadInfoArray[j].runChildProcess = TRUE;
+				openCLDeviceSearchThreadInfoArray[j].childProcess = NULL;
 				//
 				openCLDeviceSearchThreadInfoArray[j].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 				openCLDeviceSearchThreadInfoArray[j].currentSpeed               = 0;

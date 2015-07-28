@@ -1,5 +1,5 @@
-// Meriken's Tripcode Engine 1.1.2
-// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
+// Meriken's Tripcode Engine 2.0.0
+// Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -53,6 +53,7 @@ struct RegexPattern *regexPatternArray        = NULL;
 int                  sizeRegexPatternArray    = 0;
 int                  numRegexPattern          = 0;
 unsigned char       *keyBitmap                = NULL;
+unsigned char       *mediumKeyBitmap          = NULL;
 unsigned char       *smallKeyBitmap           = NULL;
 int                  minLenExpandedPattern;
 int                  maxLenExpandedPattern;
@@ -1221,16 +1222,18 @@ void LoadTargetPatterns(BOOL displayProgress)
 		ResetCursorPos(0);
 	}
 	unsigned int tripcodeChunk;
-	memset(keyBitmap,      0x01, KEY_BITMAP_SIZE);
-	memset(smallKeyBitmap, 0x01, SMALL_KEY_BITMAP_SIZE);
+	memset(keyBitmap,       0x01, KEY_BITMAP_SIZE);
+	memset(mediumKeyBitmap, 0x01, MEDIUM_KEY_BITMAP_SIZE);
+	memset(smallKeyBitmap,  0x01, SMALL_KEY_BITMAP_SIZE);
 	for (int i = 0; i < numExpandedPatterns; ++i) {
 		BOOL lastFiveCharacters =    (searchMode == SEARCH_MODE_BACKWARD_MATCHING || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)
 					              && (expandedPatternArray[i].pos + strlen((char *)(expandedPatternArray[i].c)) == lenTripcode);
 		ERROR0(!CreateTripcodeChunk(expandedPatternArray[i].c, &tripcodeChunk, lastFiveCharacters),
 		       ERROR_INVALID_TARGET_PATTERN,
 		       "There is an invalid character in a target pattern.");
-		keyBitmap     [tripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING      ) * 6)] = 0x00;
-		smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)] = 0x00;
+		keyBitmap      [tripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING       ) * 6)] = 0x00;
+		mediumKeyBitmap[tripcodeChunk >> ((5 - MEDIUM_KEY_BITMAP_LEN_STRING) * 6)] = 0x00;
+		smallKeyBitmap [tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING ) * 6)] = 0x00;
 		AddNewTripcodeChunk(tripcodeChunk & 0x3fffffff);
 	}
 	qsort(tripcodeChunkArray, numTripcodeChunk, sizeof(unsigned int),                   CompareUINT32);

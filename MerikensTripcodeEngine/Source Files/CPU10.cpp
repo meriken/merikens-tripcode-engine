@@ -1,5 +1,5 @@
-﻿// Meriken's Tripcode Engine 1.1.2
-// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
+﻿// Meriken's Tripcode Engine 2.0.0
+// Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1

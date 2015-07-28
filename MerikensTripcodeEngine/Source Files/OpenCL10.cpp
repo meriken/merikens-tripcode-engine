@@ -1,5 +1,5 @@
-// Meriken's Tripcode Engine 1.1.2
-// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
+// Meriken's Tripcode Engine 2.0.0
+// Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA DES Tripper 0.2.1
@@ -43,7 +43,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// OPENCL SEARCH THREAD FOR 12 CHARACTER TRIPCODES                           //
+// OPENCL SEARCH THREAD FOR 10 CHARACTER TRIPCODES                           //
 ///////////////////////////////////////////////////////////////////////////////
 
 // #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
@@ -66,6 +66,145 @@ typedef struct PartialKeyFrom3To6 {
 		isSecondByte = FALSE;                   \
 	}                                           \
 
+static void CreateProgram(cl_context *context, cl_program *program, cl_device_id *deviceID, char *sourceFileName, char *buildOptions, char keyChar1, char keyChar2, unsigned char *expansionFunction)
+{
+	cl_int         openCLError;
+
+	// Create an expansion function based on the salt.
+	unsigned char  salt[2];
+	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
+	salt[1] = CONVERT_CHAR_FOR_SALT(keyChar2);
+	DES_CreateExpansionFunction((char *)salt, expansionFunction);
+
+	/*
+	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
+	FILE   *binaryFile;
+	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\%02x%02x.bin", applicationDirectory, salt[0], salt[1]);
+	if (binaryFile = fopen(binaryFilePath, "rb")) {
+		fseek(binaryFile, 0L, SEEK_END);
+		size_t binarySize = ftell(binaryFile);
+		unsigned char *binary = (unsigned char *)malloc(binarySize);
+		const unsigned char *binaryArray[1] = {binary};
+		ERROR0(binary == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		fseek(binaryFile, 0L, SEEK_SET);
+		fread(binary, sizeof(unsigned char), binarySize, binaryFile);
+		fclose(binaryFile);
+
+		*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
+		OPENCL_ERROR(openCLError);
+		openCLError = clBuildProgram(*program, 1, deviceID, buildOptions, NULL, NULL);
+		OPENCL_ERROR(openCLError);
+		
+		free(binary);
+		return;
+	}
+	*/
+
+	// Load an OpenCL source code
+	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
+	FILE   *sourceFile;
+	char   *sourceCode;
+	size_t  sizeSourceCode;
+	strcpy(sourceFilePath, applicationDirectory);
+	strcat(sourceFilePath, "\\");
+	strcat(sourceFilePath, sourceFileName);
+	sourceFile = fopen(sourceFilePath, "r");
+	ERROR0(!sourceFile, ERROR_OPENCL, "Failed to load an OpenCL source file.");
+	sourceCode = (char*)malloc(OPENCL_MAX_SIZE_SOURCE_CODE);
+	ERROR0(sourceCode == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	sourceCode[0] = '\0';
+	for (int i = 0; i < 7; ++i) {
+		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
+		if (keyChar1 & (1 << i)) {
+			sprintf(s, "#define K%02d 0xfffffffUL\n#define K%02dXOR(dest, val) (dest) = ~(val)\n", i + 7, i + 7);
+		} else {
+			sprintf(s, "#define K%02d 0x0000000UL\n#define K%02dXOR(dest, val) (dest) = (val)\n", i + 7, i + 7);
+		}
+		strcat(sourceCode, s);
+	}
+	for (int i = 0; i < 7; ++i) {
+		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
+		if (keyChar2 & (1 << i)) {
+			sprintf(s, "#define K%02d 0xffffffffU\n#define K%02dXOR(dest, val) (dest) = ~(val)\n", i + 14, i + 14);
+		} else {
+			sprintf(s, "#define K%02d 0x00000000U\n#define K%02dXOR(dest, val) (dest) = (val)\n", i + 14, i + 14);
+		}
+		strcat(sourceCode, s);
+	}
+	for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i) {
+		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
+		sprintf(s, "#define EF%02d %d\n", i, (int)expansionFunction[i]);
+		strcat(sourceCode, s);
+	}
+	unsigned char key7Array[OPENCL_DES_BS_DEPTH];
+	int randomByteForKey7 = RandomByte();
+	strcat(sourceCode, "__constant unsigned char key7Array[] = {");
+	for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i) {
+		key7Array[i] = keyCharTable_SecondByteAndOneByte[randomByteForKey7 + i];
+		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; 
+		sprintf(s, "0x%02x,", key7Array[i]);
+		strcat(sourceCode, s);
+	}
+	strcat(sourceCode, "};\n");
+	for (int j = 0; j < 7; ++j) {
+		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
+		unsigned int k = 0;
+		for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i)
+			k |= ((key7Array[i] >> j) & 0x1) << i;
+		sprintf(s, "#define K%02d 0x%08x\n#define K%02dXOR(dest, val) (dest) = ((val) ^ 0x%08x)\n", j + 49, k, j + 49, k);
+		strcat(sourceCode, s);
+	}
+	sizeSourceCode =  strlen(sourceCode);
+	sizeSourceCode += fread(sourceCode + strlen(sourceCode), 1, OPENCL_MAX_SIZE_SOURCE_CODE - strlen(sourceCode), sourceFile);
+	fclose(sourceFile);
+	// printf("sourceCode: %d/%d bytes\n", strlen(sourceCode), OPENCL_MAX_SIZE_SOURCE_CODE);
+
+	//
+	*program = clCreateProgramWithSource(*context, 1, (const char **)&sourceCode, (const size_t *)&sizeSourceCode, &openCLError);
+	free(sourceCode);
+	openCLError = clBuildProgram(*program, 1, deviceID, buildOptions, NULL, NULL);
+	if (openCLError != CL_SUCCESS && !options.redirection) {
+		size_t lenBuildLog= 0;
+		clGetProgramBuildInfo(*program, *deviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &lenBuildLog);
+		char *buildLog = (char *)malloc(lenBuildLog + 1);
+		ERROR0(buildLog == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		clGetProgramBuildInfo(*program, *deviceID, CL_PROGRAM_BUILD_LOG, lenBuildLog, buildLog, &lenBuildLog);
+		buildLog[lenBuildLog] = '\0';
+		fprintf(stderr, "%s\n", buildLog);
+		free(buildLog);
+	}
+	OPENCL_ERROR(openCLError);
+
+	/*
+	//
+	size_t numDevices;
+	openCLError = clGetProgramInfo(*program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
+	OPENCL_ERROR(openCLError);
+	size_t *binarySizeArray = (size_t *)malloc(sizeof(size_t) * numDevices);
+	ERROR0(binarySizeArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t) * numDevices, binarySizeArray, NULL);
+	OPENCL_ERROR(openCLError);
+	unsigned char **binaryArray = (unsigned char **)malloc(sizeof(unsigned char *) * numDevices);
+	ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	for(int i = 0; i < numDevices; ++i) {
+		binaryArray[i] = (unsigned char *)malloc(binarySizeArray[i]);
+		ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	}
+	openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARIES, sizeof(unsigned char *) * numDevices, binaryArray, NULL);
+	OPENCL_ERROR(openCLError);
+
+	//
+	if (binaryFile = fopen(binaryFilePath, "wb")) {
+		fwrite(binaryArray[0], sizeof(unsigned char), binarySizeArray[0], binaryFile);
+		fclose(binaryFile);
+	}
+	free(binarySizeArray);
+	for(int i = 0; i < numDevices; ++i)
+		free(binaryArray[i]);
+	free(binaryArray);
+	*/
+}
+
 unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 {
 	cl_context       context;
@@ -75,8 +214,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	cl_mem openCL_outputArray;
 	cl_mem openCL_keyInfo;
 	cl_mem openCL_tripcodeChunkArray;
-	cl_mem openCL_keyCharTableForKey7;
 	cl_mem openCL_smallKeyBitmap;
+	cl_mem openCL_compactMediumKeyBitmap;
 	cl_mem openCL_keyBitmap;
 	cl_mem openCL_partialKeyFrom3To6Array;
 	cl_int         openCLError;
@@ -94,8 +233,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 
 	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Starting a tripcode search...");
 
-	// Random wait time between 0 and 60 seconds for increased stability.
-	Sleep((DWORD)RandomByte() * 60000 / 256);
+	// Random wait time between 0 and 10 seconds for increased stability.
+	Sleep((DWORD)RandomByte() * 10000 / 256);
 
 	// Determine the sizes of local and global work items.
 	size_t  numWorkItemsPerComputeUnit;
@@ -128,13 +267,18 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	unsigned int  sizeOutputArray = globalWorkSize;
 	GPUOutput    *outputArray     = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
 	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	unsigned int *compactMediumKeyBitmap = (unsigned int *)calloc(MEDIUM_KEY_BITMAP_SIZE / 8, sizeof(unsigned int));
+	ERROR0(compactMediumKeyBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	for (int i = 0; i < MEDIUM_KEY_BITMAP_SIZE; ++i)
+		if (mediumKeyBitmap[i])
+			compactMediumKeyBitmap[i >> 5] |= 0x1 << (i & 0x1f);
 	// printf("sizeOutputArray = %u\n", sizeOutputArray);
 	PartialKeyFrom3To6 *partialKeyFrom3To6Array = (PartialKeyFrom3To6 *)malloc(sizeof(PartialKeyFrom3To6) * globalWorkSize);
 	ERROR0(partialKeyFrom3To6Array == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 
     // 
 	if (options.maximizeKeySpace)
-		strcat(buildOptions, " -D MAXIMIZE_KEY_SPACE ");
+		strcat(buildOptions, " -DMAXIMIZE_KEY_SPACE ");
 	char buildOption_localWorkSize[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1];
 	sprintf(buildOption_localWorkSize, " -DOPENCL_DES_LOCAL_WORK_SIZE=%d ", (int)localWorkSize);
 	strcat(buildOptions, buildOption_localWorkSize);
@@ -146,21 +290,24 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	//
 	char *nameKernelFunction;
 	if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
-		nameKernelFunction = (numTripcodeChunk == 1)                              ? "OpenCL_DES_PerformSearching_ForwardMatching_1Chunk" :
-		                     (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "OpenCL_DES_PerformSearching_ForwardMatching_Simple" :
-							                                                        "OpenCL_DES_PerformSearching_ForwardMatching";
+		nameKernelFunction = (numTripcodeChunk == 1)                              ? "FORWARD_MATCHING_1CHUNK" :
+		                     (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "FORWARD_MATCHING_SIMPLE" :
+							                                                        "FORWARD_MATCHING";
 	} else if (searchMode == SEARCH_MODE_BACKWARD_MATCHING) {
-		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "OpenCL_DES_PerformSearching_BackwardMatching_Simple" : 
-		                                                                            "OpenCL_DES_PerformSearching_BackwardMatching";
+		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "BACKWARD_MATCHING_SIMPLE" : 
+		                                                                            "BACKWARD_MATCHING";
 	} else if (searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING) {
-		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "OpenCL_DES_PerformSearching_ForwardAndBackwardMatching_Simple" : 
-		                                                                            "OpenCL_DES_PerformSearching_ForwardAndBackwardMatching";
+		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "FORWARD_AND_BACKWARD_MATCHING_SIMPLE" : 
+		                                                                            "FORWARD_AND_BACKWARD_MATCHING";
 	} else {
 		// Flexible search
-		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "OpenCL_DES_PerformSearching_Flexible_Simple" :
-		                                                                            "OpenCL_DES_PerformSearching_Flexible";
+		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "FLEXIBLE_SIMPLE" :
+		                                                                            "FLEXIBLE";
 	}
 	// printf("nameKernelFunction = %s\n", nameKernelFunction);
+	strcat(buildOptions, " -D");
+	strcat(buildOptions, nameKernelFunction);
+	strcat(buildOptions, " ");
 
 	// The main loop of the thread.
 	double       timeElapsed = 0;
@@ -169,121 +316,78 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	DWORD        startingTime = timeGetTime();
 	DWORD        endingTime;
 	double       deltaTime;
-	unsigned int buildCounter = 0;
+	int          execCounter = 0;
 	BOOL         firstBuild = TRUE;
+	int          salt0NonDotCounter = 0;
+	int          salt1NonDotCounter = 0;
 
+	// Create an OpenCL context.
+	context      = clCreateContext(NULL, 1, &deviceID, OnOpenCLError, NULL, &openCLError); OPENCL_ERROR(openCLError);
+	commandQueue = clCreateCommandQueue(context, deviceID, 0, &openCLError);               OPENCL_ERROR(openCLError);
+
+	// Create memory blocks for the OpenCL device.
+	openCL_outputArray          = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(GPUOutput) * sizeOutputArray,     NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_keyInfo              = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(keyInfo),                         NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_tripcodeChunkArray   = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(unsigned int) * numTripcodeChunk, NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_smallKeyBitmap       = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_KEY_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_compactMediumKeyBitmap = clCreateBuffer(context, CL_MEM_READ_ONLY,  MEDIUM_KEY_BITMAP_SIZE / 8,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_keyBitmap            = clCreateBuffer(context, CL_MEM_READ_ONLY,  KEY_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_partialKeyFrom3To6Array      = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(PartialKeyFrom3To6) * globalWorkSize,     NULL, &openCLError); OPENCL_ERROR(openCLError);
+			
 	while (!GetTerminationState()) {
 		// Build the kernel.
-		if (firstBuild || ++buildCounter > 65536) {
-			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Building an OpenCL kernel...");
+		if (firstBuild || --execCounter < 0) {
+			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL program...");
 
 			if (!firstBuild) {
 				OPENCL_ERROR(clReleaseKernel(kernel));
 				OPENCL_ERROR(clReleaseProgram(program));
-				OPENCL_ERROR(clReleaseMemObject(openCL_outputArray));
-				OPENCL_ERROR(clReleaseMemObject(openCL_keyInfo));
-				OPENCL_ERROR(clReleaseMemObject(openCL_tripcodeChunkArray));
-				OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTableForKey7));
-				OPENCL_ERROR(clReleaseMemObject(openCL_smallKeyBitmap));
-				OPENCL_ERROR(clReleaseMemObject(openCL_keyBitmap));
-				OPENCL_ERROR(clReleaseMemObject(openCL_partialKeyFrom3To6Array));
-				OPENCL_ERROR(clReleaseCommandQueue(commandQueue));
-				OPENCL_ERROR(clReleaseContext(context));
 			}
-
-			// Create an OpenCL context.
-			context      = clCreateContext(NULL, 1, &deviceID, OnOpenCLError, NULL, &openCLError); OPENCL_ERROR(openCLError);
-			commandQueue = clCreateCommandQueue(context, deviceID, 0, &openCLError);               OPENCL_ERROR(openCLError);
-			
-			// Create memory blocks for the OpenCL device.
-			openCL_outputArray          = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(GPUOutput) * sizeOutputArray,     NULL, &openCLError); OPENCL_ERROR(openCLError);
-			openCL_keyInfo              = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(keyInfo),                         NULL, &openCLError); OPENCL_ERROR(openCLError);
-			openCL_tripcodeChunkArray   = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(unsigned int) * numTripcodeChunk, NULL, &openCLError); OPENCL_ERROR(openCLError);
-			openCL_keyCharTableForKey7   = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
-			openCL_smallKeyBitmap       = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_KEY_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
-			openCL_keyBitmap            = clCreateBuffer(context, CL_MEM_READ_ONLY,  KEY_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
-			openCL_partialKeyFrom3To6Array      = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(PartialKeyFrom3To6) * globalWorkSize,     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	
 			// Choose the first 3 characters of the keyInfo.partialKeyAndRandomBytes.
 			do {
 				SetCharactersInTripcodeKey(keyInfo.partialKeyAndRandomBytes, 3);
-			} while (!(   (   IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[0])
-							&& IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[1])
-							&& IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[2]))
-						|| (   IS_FIRST_BYTE_SJIS_FULL(keyInfo.partialKeyAndRandomBytes[0])
-							&& IS_SECOND_BYTE_SJIS(keyInfo.partialKeyAndRandomBytes[1])
-							&& IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[2]))
-						|| (   IS_ONE_BYTE_KEY_CHAR(keyInfo.partialKeyAndRandomBytes[0])
-							&& IS_FIRST_BYTE_SJIS_FULL(keyInfo.partialKeyAndRandomBytes[0])
-							&& IS_SECOND_BYTE_SJIS(keyInfo.partialKeyAndRandomBytes[1]))));
-
-			// Create an expansion function based on the salt.
-			unsigned char  salt[2];
-			salt[0] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[1]);
-			salt[1] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[2]);
-			DES_CreateExpansionFunction((char *)salt, expansionFunction);
-			for (int i = 0; i < 96; ++i)
-				keyInfo.expansioinFunction[i] = expansionFunction[i];
-
-			// Load an OpenCL source code
-			char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
-			FILE   *sourceFile;
-			char   *sourceCode;
-			size_t  sizeSourceCode;
-			strcpy(sourceFilePath, applicationDirectory);
-			strcat(sourceFilePath, "\\");
-			strcat(sourceFilePath, sourceFileName);
-			sourceFile = fopen(sourceFilePath, "r");
-			ERROR0(!sourceFile, ERROR_OPENCL, "Failed to load an OpenCL source file.");
-			sourceCode = (char*)malloc(OPENCL_MAX_SIZE_SOURCE_CODE);
-			ERROR0(sourceCode == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-			sourceCode[0] = '\0';
-			for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i) {
-				char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
-				sprintf(s, "#define EF%02d %d\n", i, (int)expansionFunction[i]);
-				strcat(sourceCode, s);
-			}
-			sizeSourceCode =  strlen(sourceCode);
-			sizeSourceCode += fread(sourceCode + strlen(sourceCode), 1, OPENCL_MAX_SIZE_SOURCE_CODE - strlen(sourceCode), sourceFile);
-			fclose(sourceFile);
-			// printf("sourceCode: %d/%d bytes\n", strlen(sourceCode), OPENCL_MAX_SIZE_SOURCE_CODE);
-
-			//
-			program = clCreateProgramWithSource(context, 1, (const char **)&sourceCode, (const size_t *)&sizeSourceCode, &openCLError);
-			free(sourceCode);
-			openCLError = clBuildProgram(program, 1, &deviceID, buildOptions, NULL, NULL);
-			if (openCLError != CL_SUCCESS && !options.redirection) {
-				size_t lenBuildLog= 0;
-				char  *buildLog = NULL;
-				clGetProgramBuildInfo(program, deviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &lenBuildLog);
-				if ((buildLog = (char *)malloc(lenBuildLog + 1)) != NULL) {
-					clGetProgramBuildInfo(program, deviceID, CL_PROGRAM_BUILD_LOG, lenBuildLog, buildLog, &lenBuildLog);
-					buildLog[lenBuildLog] = '\0';
-					fprintf(stderr, "%s\n", buildLog);
-					free(buildLog);
+				unsigned char  salt[2];
+				salt[0] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[1]);
+				if (salt[0] == '.' && salt0NonDotCounter < 64) {
+					continue;
+				} else if (salt[0] == '.') {
+					salt0NonDotCounter -= 63;
+				} else {
+					++salt0NonDotCounter;
 				}
-			}
-			OPENCL_ERROR(openCLError);
-			kernel = clCreateKernel(program, nameKernelFunction, &openCLError);
+				salt[1] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[2]);
+				if (salt[1] == '.' && salt1NonDotCounter < 64) {
+					continue;
+				} else if (salt[1] == '.') {
+					salt1NonDotCounter -= 63;
+				} else {
+					++salt1NonDotCounter;
+				}
+				break;
+			} while (TRUE);
+
+			CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction);
+			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL kernel...");
+			kernel = clCreateKernel(program, "OpenCL_DES_PerformSearching", &openCLError);
 			// printf("clCreateKernel(): done\n");
    			OPENCL_ERROR(openCLError);
-			
+
 			// Set arguments for the kernel.
 			OPENCL_ERROR(clSetKernelArg(kernel, 0, sizeof(cl_mem),       (void *)&openCL_outputArray));
 			OPENCL_ERROR(clSetKernelArg(kernel, 1, sizeof(cl_mem),       (void *)&openCL_keyInfo));
 			OPENCL_ERROR(clSetKernelArg(kernel, 2, sizeof(cl_mem),       (void *)&openCL_tripcodeChunkArray));
 			OPENCL_ERROR(clSetKernelArg(kernel, 3, sizeof(unsigned int), (void *)&numTripcodeChunk));
-			OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_keyCharTableForKey7));
-			OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_smallKeyBitmap));
+			OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_smallKeyBitmap));
+			OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_compactMediumKeyBitmap));
 			OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_keyBitmap));
 			OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),       (void *)&openCL_partialKeyFrom3To6Array));
-			OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(unsigned int) * 29 * localWorkSize, NULL));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,   CL_TRUE, 0, sizeof(unsigned int) * numTripcodeChunk, tripcodeChunkArray,   0, NULL, NULL));
-			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTableForKey7,  CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_OneByte,   0, NULL, NULL));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_smallKeyBitmap,       CL_TRUE, 0, SMALL_KEY_BITMAP_SIZE,                   smallKeyBitmap,       0, NULL, NULL));
+			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_compactMediumKeyBitmap,       CL_TRUE, 0, MEDIUM_KEY_BITMAP_SIZE / 8,     compactMediumKeyBitmap,       0, NULL, NULL));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyBitmap,            CL_TRUE, 0, KEY_BITMAP_SIZE,                         keyBitmap,            0, NULL, NULL));
 
-			buildCounter = 0;
+			execCounter = 16384 + ((int)RandomByte() * 32 - 128 * 32);;
 			firstBuild = FALSE;
 		}
 
@@ -309,11 +413,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		BOOL isKey4SecondByte = isSecondByte;
 
 		//
-		unsigned int keyFirst28bits =   ((keyInfo.partialKeyAndRandomBytes[0] & 0x7f) << 0)
+		unsigned int keyFrom00To27 =   ((keyInfo.partialKeyAndRandomBytes[0] & 0x7f) << 0)
 			                          | ((keyInfo.partialKeyAndRandomBytes[1] & 0x7f) << 7)
 									  | ((keyInfo.partialKeyAndRandomBytes[2] & 0x7f) << 14)
 									  | ((keyInfo.partialKeyAndRandomBytes[3] & 0x7f) << 21);
-		OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(unsigned int), (void *)&keyFirst28bits));
+		OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(unsigned int), (void *)&keyFrom00To27));
 
 		// Generate random bytes for the keyInfo.partialKeyAndRandomBytes to ensure the randomness of generated keys.
 		for (int i = 4; i < lenTripcode; ++i)
@@ -334,8 +438,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		OPENCL_ERROR(clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL));
 		OPENCL_ERROR(clEnqueueReadBuffer(commandQueue, openCL_outputArray, CL_TRUE, 0, sizeOutputArray * sizeof(GPUOutput), outputArray, 0, NULL, NULL));
 		OPENCL_ERROR(clFinish(commandQueue));
-		// We can save registers this way.
-		/*
+		// We can save registers this way. Not particularly safe, though.
 		for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
 			GPUOutput *output = &outputArray[indexOutput];
 			if (output->numMatchingTripcodes > 0) {
@@ -349,7 +452,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				GenerateDESTripcode(output->pair.tripcode.c, output->pair.key.c);
 			}
 		}
-		*/
 		numGeneratedTripcodes += ProcessGPUOutput(keyInfo.partialKeyAndRandomBytes, outputArray, sizeOutputArray, FALSE);
 
 		// Measure the current speed.
@@ -365,12 +467,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		
 		// Update the current status.
 		sprintf(status,
-			    "[thread] %.1lfM TPS, %d WI, %d WI/CU, %d WI/WG, %d",
+			    "[thread] %.1lfM TPS, %d WI, %d WI/CU, %d WI/WG",
 				averageSpeed / 1000000,
 				globalWorkSize,
 				numWorkItemsPerComputeUnit,
-				localWorkSize,
-				buildCounter);
+				localWorkSize);
 		UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), status);
 	}
  
@@ -382,12 +483,13 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
     OPENCL_ERROR(clReleaseMemObject(openCL_outputArray));
     OPENCL_ERROR(clReleaseMemObject(openCL_keyInfo));
     OPENCL_ERROR(clReleaseMemObject(openCL_tripcodeChunkArray));
-    OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTableForKey7));
     OPENCL_ERROR(clReleaseMemObject(openCL_smallKeyBitmap));
 	OPENCL_ERROR(clReleaseMemObject(openCL_keyBitmap));
 	OPENCL_ERROR(clReleaseMemObject(openCL_partialKeyFrom3To6Array));
     OPENCL_ERROR(clReleaseCommandQueue(commandQueue));
     OPENCL_ERROR(clReleaseContext(context));
+	free(outputArray);
+	free(compactMediumKeyBitmap);
 	free(partialKeyFrom3To6Array);
 }
 

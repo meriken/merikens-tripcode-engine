@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source Files\CPU10.h" />
-    <ClInclude Include="Source Files\MERIKENsTripcodeEngine.h" />
+    <ClInclude Include="Source Files\MerikensTripcodeEngine.h" />
     <ClInclude Include="Source Files\Constants.h" />
     <ClInclude Include="Source Files\Macros.h" />
     <ClInclude Include="Source Files\Types.h" />

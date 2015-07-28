@@ -1,5 +1,5 @@
-// Meriken's Tripcode Engine 1.1.2
-// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
+// Meriken's Tripcode Engine 2.0.0
+// Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -43,6 +43,7 @@ typedef unsigned char BOOL;
 #define MAX_LEN_EXPANDED_PATTERN    MAX_LEN_TRIPCODE
 #define SMALL_KEY_BITMAP_LEN_STRING 2
 #define SMALL_KEY_BITMAP_SIZE       (64 * 64)
+#define MEDIUM_KEY_BITMAP_LEN_STRING 3
 #define KEY_BITMAP_LEN_STRING       4
 #define DES_SIZE_EXPANSION_FUNCTION 96
 #define OPENCL_DES_BS_DEPTH         32
@@ -122,7 +123,7 @@ __constant const char indexToCharTable[64] =
 	/* 54 */ 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
 };
 
-typedef unsigned int vtype;
+typedef unsigned long vtype;
 
 #define vnot(dst, a)     (dst) =  (~(a))
 #define vand(dst, a, b)  (dst) =  ((a) & (b))
@@ -154,10 +155,7 @@ void s1(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 	vtype var13; 
 	vtype var14; 
 	vtype var15; 
-	vtype var16; 
-	vtype var17; 
-	vtype var18; 
-	vtype var19;
+	vtype var16;
 	
 	vsel(var6, var2, var1, var4); 
 	vxor(var7, var1, var2); 
@@ -215,8 +213,6 @@ void s2(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 	vtype var15; 
 	vtype var16; 
 	vtype var17; 
-	vtype var18; 
-	vtype var19;
 
 	vsel(var6, var0, var2, var5); 
 	vsel(var7, var5, var6, var4); 
@@ -269,10 +265,7 @@ void s3(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 	vtype var13; 
 	vtype var14; 
 	vtype var15; 
-	vtype var16; 
-	vtype var17; 
-	vtype var18; 
-	vtype var19;
+	vtype var16;
 
 	vsel(var6, var3, var2, var4); 
 	vxor(var7, var5, var6); 
@@ -322,13 +315,7 @@ void s4(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 	vtype var10; 
 	vtype var11; 
 	vtype var12; 
-	vtype var13; 
-	vtype var14; 
-	vtype var15; 
-	vtype var16; 
-	vtype var17; 
-	vtype var18; 
-	vtype var19;
+	vtype var13;
 	
 	vsel(var6, var4, var2, var0); 
 	vsel(var7, var6, var0, var3); 
@@ -433,10 +420,7 @@ void s6(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 	vtype var14; 
 	vtype var15; 
 	vtype var16; 
-	vtype var17; 
-	vtype var18; 
-	vtype var19;
-	
+
 	vsel(var6, var0, var3, var4); 
 	vxor(var7, var1, var6); 
 	vsel(var8, var7, var3, var2); 
@@ -490,9 +474,6 @@ void s7(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 	vtype var14; 
 	vtype var15; 
 	vtype var16; 
-	vtype var17; 
-	vtype var18; 
-	vtype var19;
 	
 	vsel(var6, var1, var5, var2); 
 	vxor(var7, var3, var6); 
@@ -589,15 +570,67 @@ void s8(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 	vxor(*out1, *out1, var0); 
 }
 
-unsigned int keyFunc(const unsigned int keyFirst28bits, DES_KEYS_SPACE const vtype *k, int j)
-{
-	return (j < 28) ? ((keyFirst28bits & (0x1U << j)) ? 0xffffffffU : 0x00000000U) : k[j - 28];
-}
+#define z(r) (db + (r))
 
-#define w(p, q)  (db[p]                    ^ keyFunc(keyFirst28bits, k, (q) & 0x3f))
-#define z(r)     (db + (r))
+#define K00XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  0)) ? (~(val)) : (val))
+#define K01XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  1)) ? (~(val)) : (val))
+#define K02XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  2)) ? (~(val)) : (val))
+#define K03XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  3)) ? (~(val)) : (val))
+#define K04XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  4)) ? (~(val)) : (val))
+#define K05XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  5)) ? (~(val)) : (val))
+#define K06XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  6)) ? (~(val)) : (val))
 
-void DES_Crypt(DES_DATA_BLOCKS_SPACE vtype *db, DES_KEYS_SPACE const vtype *k, const unsigned int keyFirst28bits)
+/*
+#define K07XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  7)) ? (~(val)) : (val))
+#define K08XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  8)) ? (~(val)) : (val))
+#define K09XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  9)) ? (~(val)) : (val))
+#define K10XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 10)) ? (~(val)) : (val))
+#define K11XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 11)) ? (~(val)) : (val))
+#define K12XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 12)) ? (~(val)) : (val))
+#define K13XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 13)) ? (~(val)) : (val))
+
+#define K14XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 14)) ? (~(val)) : (val))
+#define K15XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 15)) ? (~(val)) : (val))
+#define K16XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 16)) ? (~(val)) : (val))
+#define K17XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 17)) ? (~(val)) : (val))
+#define K18XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 18)) ? (~(val)) : (val))
+#define K19XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 19)) ? (~(val)) : (val))
+#define K20XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 20)) ? (~(val)) : (val))
+*/
+
+#define K21XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 21)) ? (~(val)) : (val))
+#define K22XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 22)) ? (~(val)) : (val))
+#define K23XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 23)) ? (~(val)) : (val))
+#define K24XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 24)) ? (~(val)) : (val))
+#define K25XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 25)) ? (~(val)) : (val))
+#define K26XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 26)) ? (~(val)) : (val))
+#define K27XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 27)) ? (~(val)) : (val))
+
+#define K28XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (28 - 28))) ? (~(val)) : (val))
+#define K29XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (29 - 28))) ? (~(val)) : (val))
+#define K30XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (30 - 28))) ? (~(val)) : (val))
+#define K31XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (31 - 28))) ? (~(val)) : (val))
+#define K32XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (32 - 28))) ? (~(val)) : (val))
+#define K33XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (33 - 28))) ? (~(val)) : (val))
+#define K34XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (34 - 28))) ? (~(val)) : (val))
+
+#define K35XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (35 - 28))) ? (~(val)) : (val))
+#define K36XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (36 - 28))) ? (~(val)) : (val))
+#define K37XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (37 - 28))) ? (~(val)) : (val))
+#define K38XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (38 - 28))) ? (~(val)) : (val))
+#define K39XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (39 - 28))) ? (~(val)) : (val))
+#define K40XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (40 - 28))) ? (~(val)) : (val))
+#define K41XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (41 - 28))) ? (~(val)) : (val))
+
+#define K42XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (42 - 28))) ? (~(val)) : (val))
+#define K43XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (43 - 28))) ? (~(val)) : (val))
+#define K44XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (44 - 28))) ? (~(val)) : (val))
+#define K45XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (45 - 28))) ? (~(val)) : (val))
+#define K46XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (46 - 28))) ? (~(val)) : (val))
+#define K47XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (47 - 28))) ? (~(val)) : (val))
+#define K48XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (48 - 28))) ? (~(val)) : (val))
+
+void DES_Crypt(DES_DATA_BLOCKS_SPACE vtype *db, unsigned int keyFrom00To27, unsigned int keyFrom28To48)
 {
 	for (int i = 0; i < 64; ++i)
 		db[i] = 0x00000000;
@@ -605,45 +638,45 @@ void DES_Crypt(DES_DATA_BLOCKS_SPACE vtype *db, DES_KEYS_SPACE const vtype *k, c
 	int iterations           = 25;
 	int roundsAndSwapped     = 8; 
 	int round = 0;
-	int DB00, DB01, DB02, DB03, DB04, DB05;
-	int DB10, DB11, DB12, DB13, DB14, DB15;
+	vtype DB00, DB01, DB02, DB03, DB04, DB05;
+	vtype DB10, DB11, DB12, DB13, DB14, DB15;
 
 start:
 	if (round < 8) {
 		if (round < 4) {
 			if (round < 2) {
 				if (round == 0) {
-					DB00 = w(EF00, 12); DB01 = w(EF01, 46); DB02 = w(EF02, 33); DB03 = w(EF03, 52); DB04 = w(EF04, 48); DB05 = w(EF05, 20);
-					DB10 = w(EF06, 34); DB11 = w(EF07, 55); DB12 = w(EF08,  5); DB13 = w(EF09, 13); DB14 = w(EF10, 18); DB15 = w(EF11, 40);
+					K12XOR(DB00, db[EF00]); K46XOR(DB01, db[EF01]); K33XOR(DB02, db[EF02]); K52XOR(DB03, db[EF03]); K48XOR(DB04, db[EF04]); K20XOR(DB05, db[EF05]);
+					K34XOR(DB10, db[EF06]); K55XOR(DB11, db[EF07]); K05XOR(DB12, db[EF08]); K13XOR(DB13, db[EF09]); K18XOR(DB14, db[EF10]); K40XOR(DB15, db[EF11]);
 				} else {
-					DB00 = w(EF00,  5); DB01 = w(EF01, 39); DB02 = w(EF02, 26); DB03 = w(EF03, 45); DB04 = w(EF04, 41); DB05 = w(EF05, 13);
-					DB10 = w(EF06, 27); DB11 = w(EF07, 48); DB12 = w(EF08, 53); DB13 = w(EF09,  6); DB14 = w(EF10, 11); DB15 = w(EF11, 33);
+					K05XOR(DB00, db[EF00]); K39XOR(DB01, db[EF01]); K26XOR(DB02, db[EF02]); K45XOR(DB03, db[EF03]); K41XOR(DB04, db[EF04]); K13XOR(DB05, db[EF05]);
+					K27XOR(DB10, db[EF06]); K48XOR(DB11, db[EF07]); K53XOR(DB12, db[EF08]); K06XOR(DB13, db[EF09]); K11XOR(DB14, db[EF10]); K33XOR(DB15, db[EF11]);
 				}
 			} else {
 				if (round == 2) {
-					DB00 = w(EF00, 46); DB01 = w(EF01, 25); DB02 = w(EF02, 12); DB03 = w(EF03, 31); DB04 = w(EF04, 27); DB05 = w(EF05, 54);
-					DB10 = w(EF06, 13); DB11 = w(EF07, 34); DB12 = w(EF08, 39); DB13 = w(EF09, 47); DB14 = w(EF10, 52); DB15 = w(EF11, 19);
+					K46XOR(DB00, db[EF00]); K25XOR(DB01, db[EF01]); K12XOR(DB02, db[EF02]); K31XOR(DB03, db[EF03]); K27XOR(DB04, db[EF04]); K54XOR(DB05, db[EF05]);
+					K13XOR(DB10, db[EF06]); K34XOR(DB11, db[EF07]); K39XOR(DB12, db[EF08]); K47XOR(DB13, db[EF09]); K52XOR(DB14, db[EF10]); K19XOR(DB15, db[EF11]);
 				} else {
-					DB00 = w(EF00, 32); DB01 = w(EF01, 11); DB02 = w(EF02, 53); DB03 = w(EF03, 48); DB04 = w(EF04, 13); DB05 = w(EF05, 40);
-					DB10 = w(EF06, 54); DB11 = w(EF07, 20); DB12 = w(EF08, 25); DB13 = w(EF09, 33); DB14 = w(EF10, 38); DB15 = w(EF11,  5);
+					K32XOR(DB00, db[EF00]); K11XOR(DB01, db[EF01]); K53XOR(DB02, db[EF02]); K48XOR(DB03, db[EF03]); K13XOR(DB04, db[EF04]); K40XOR(DB05, db[EF05]);
+					K54XOR(DB10, db[EF06]); K20XOR(DB11, db[EF07]); K25XOR(DB12, db[EF08]); K33XOR(DB13, db[EF09]); K38XOR(DB14, db[EF10]); K05XOR(DB15, db[EF11]);
 				}
 			}
 		} else {
 			if (round < 6) {
 				if (round == 4) {
-					DB00 = w(EF00, 18); DB01 = w(EF01, 52); DB02 = w(EF02, 39); DB03 = w(EF03, 34); DB04 = w(EF04, 54); DB05 = w(EF05, 26);
-					DB10 = w(EF06, 40); DB11 = w(EF07,  6); DB12 = w(EF08, 11); DB13 = w(EF09, 19); DB14 = w(EF10, 55); DB15 = w(EF11, 46);
+					K18XOR(DB00, db[EF00]); K52XOR(DB01, db[EF01]); K39XOR(DB02, db[EF02]); K34XOR(DB03, db[EF03]); K54XOR(DB04, db[EF04]); K26XOR(DB05, db[EF05]);
+					K40XOR(DB10, db[EF06]); K06XOR(DB11, db[EF07]); K11XOR(DB12, db[EF08]); K19XOR(DB13, db[EF09]); K55XOR(DB14, db[EF10]); K46XOR(DB15, db[EF11]);
 				} else {
-					DB00 = w(EF00,  4); DB01 = w(EF01, 38); DB02 = w(EF02, 25); DB03 = w(EF03, 20); DB04 = w(EF04, 40); DB05 = w(EF05, 12);
-					DB10 = w(EF06, 26); DB11 = w(EF07, 47); DB12 = w(EF08, 52); DB13 = w(EF09,  5); DB14 = w(EF10, 41); DB15 = w(EF11, 32);
+					K04XOR(DB00, db[EF00]); K38XOR(DB01, db[EF01]); K25XOR(DB02, db[EF02]); K20XOR(DB03, db[EF03]); K40XOR(DB04, db[EF04]); K12XOR(DB05, db[EF05]);
+					K26XOR(DB10, db[EF06]); K47XOR(DB11, db[EF07]); K52XOR(DB12, db[EF08]); K05XOR(DB13, db[EF09]); K41XOR(DB14, db[EF10]); K32XOR(DB15, db[EF11]);
 				}
 			} else {
 				if (round == 6) {
-					DB00 = w(EF00, 45); DB01 = w(EF01, 55); DB02 = w(EF02, 11); DB03 = w(EF03,  6); DB04 = w(EF04, 26); DB05 = w(EF05, 53);
-					DB10 = w(EF06, 12); DB11 = w(EF07, 33); DB12 = w(EF08, 38); DB13 = w(EF09, 46); DB14 = w(EF10, 27); DB15 = w(EF11, 18);
+					K45XOR(DB00, db[EF00]); K55XOR(DB01, db[EF01]); K11XOR(DB02, db[EF02]); K06XOR(DB03, db[EF03]); K26XOR(DB04, db[EF04]); K53XOR(DB05, db[EF05]);
+					K12XOR(DB10, db[EF06]); K33XOR(DB11, db[EF07]); K38XOR(DB12, db[EF08]); K46XOR(DB13, db[EF09]); K27XOR(DB14, db[EF10]); K18XOR(DB15, db[EF11]);
 				} else {
-					DB00 = w(EF00, 31); DB01 = w(EF01, 41); DB02 = w(EF02, 52); DB03 = w(EF03, 47); DB04 = w(EF04, 12); DB05 = w(EF05, 39);
-					DB10 = w(EF06, 53); DB11 = w(EF07, 19); DB12 = w(EF08, 55); DB13 = w(EF09, 32); DB14 = w(EF10, 13); DB15 = w(EF11,  4);
+					K31XOR(DB00, db[EF00]); K41XOR(DB01, db[EF01]); K52XOR(DB02, db[EF02]); K47XOR(DB03, db[EF03]); K12XOR(DB04, db[EF04]); K39XOR(DB05, db[EF05]);
+					K53XOR(DB10, db[EF06]); K19XOR(DB11, db[EF07]); K55XOR(DB12, db[EF08]); K32XOR(DB13, db[EF09]); K13XOR(DB14, db[EF10]); K04XOR(DB15, db[EF11]);
 				}
 			}
 		}
@@ -651,37 +684,37 @@ start:
 		if (round < 12) {
 			if (round < 10) {
 				if (round == 8) {
-					DB00 = w(EF00, 55); DB01 = w(EF01, 34); DB02 = w(EF02, 45); DB03 = w(EF03, 40); DB04 = w(EF04,  5); DB05 = w(EF05, 32);
-					DB10 = w(EF06, 46); DB11 = w(EF07, 12); DB12 = w(EF08, 48); DB13 = w(EF09, 25); DB14 = w(EF10,  6); DB15 = w(EF11, 52);
+					K55XOR(DB00, db[EF00]); K34XOR(DB01, db[EF01]); K45XOR(DB02, db[EF02]); K40XOR(DB03, db[EF03]); K05XOR(DB04, db[EF04]); K32XOR(DB05, db[EF05]);
+					K46XOR(DB10, db[EF06]); K12XOR(DB11, db[EF07]); K48XOR(DB12, db[EF08]); K25XOR(DB13, db[EF09]); K06XOR(DB14, db[EF10]); K52XOR(DB15, db[EF11]);
 				} else {
-					DB00 = w(EF00, 41); DB01 = w(EF01, 20); DB02 = w(EF02, 31); DB03 = w(EF03, 26); DB04 = w(EF04, 46); DB05 = w(EF05, 18);
-					DB10 = w(EF06, 32); DB11 = w(EF07, 53); DB12 = w(EF08, 34); DB13 = w(EF09, 11); DB14 = w(EF10, 47); DB15 = w(EF11, 38);
+					K41XOR(DB00, db[EF00]); K20XOR(DB01, db[EF01]); K31XOR(DB02, db[EF02]); K26XOR(DB03, db[EF03]); K46XOR(DB04, db[EF04]); K18XOR(DB05, db[EF05]);
+					K32XOR(DB10, db[EF06]); K53XOR(DB11, db[EF07]); K34XOR(DB12, db[EF08]); K11XOR(DB13, db[EF09]); K47XOR(DB14, db[EF10]); K38XOR(DB15, db[EF11]);
 				}
 			} else {
 				if (round == 10) {
-					DB00 = w(EF00, 27); DB01 = w(EF01,  6); DB02 = w(EF02, 48); DB03 = w(EF03, 12); DB04 = w(EF04, 32); DB05 = w(EF05,  4);
-					DB10 = w(EF06, 18); DB11 = w(EF07, 39); DB12 = w(EF08, 20); DB13 = w(EF09, 52); DB14 = w(EF10, 33); DB15 = w(EF11, 55);
+					K27XOR(DB00, db[EF00]); K06XOR(DB01, db[EF01]); K48XOR(DB02, db[EF02]); K12XOR(DB03, db[EF03]); K32XOR(DB04, db[EF04]); K04XOR(DB05, db[EF05]);
+					K18XOR(DB10, db[EF06]); K39XOR(DB11, db[EF07]); K20XOR(DB12, db[EF08]); K52XOR(DB13, db[EF09]); K33XOR(DB14, db[EF10]); K55XOR(DB15, db[EF11]);
 				} else {
-					DB00 = w(EF00, 13); DB01 = w(EF01, 47); DB02 = w(EF02, 34); DB03 = w(EF03, 53); DB04 = w(EF04, 18); DB05 = w(EF05, 45);
-					DB10 = w(EF06,  4); DB11 = w(EF07, 25); DB12 = w(EF08,  6); DB13 = w(EF09, 38); DB14 = w(EF10, 19); DB15 = w(EF11, 41);
+					K13XOR(DB00, db[EF00]); K47XOR(DB01, db[EF01]); K34XOR(DB02, db[EF02]); K53XOR(DB03, db[EF03]); K18XOR(DB04, db[EF04]); K45XOR(DB05, db[EF05]);
+					K04XOR(DB10, db[EF06]); K25XOR(DB11, db[EF07]); K06XOR(DB12, db[EF08]); K38XOR(DB13, db[EF09]); K19XOR(DB14, db[EF10]); K41XOR(DB15, db[EF11]);
 				}
 			}
 		} else {
 			if (round < 14) {
 				if (round == 12) {
-					DB00 = w(EF00, 54); DB01 = w(EF01, 33); DB02 = w(EF02, 20); DB03 = w(EF03, 39); DB04 = w(EF04,  4); DB05 = w(EF05, 31);
-					DB10 = w(EF06, 45); DB11 = w(EF07, 11); DB12 = w(EF08, 47); DB13 = w(EF09, 55); DB14 = w(EF10,  5); DB15 = w(EF11, 27);
+					K54XOR(DB00, db[EF00]); K33XOR(DB01, db[EF01]); K20XOR(DB02, db[EF02]); K39XOR(DB03, db[EF03]); K04XOR(DB04, db[EF04]); K31XOR(DB05, db[EF05]);
+					K45XOR(DB10, db[EF06]); K11XOR(DB11, db[EF07]); K47XOR(DB12, db[EF08]); K55XOR(DB13, db[EF09]); K05XOR(DB14, db[EF10]); K27XOR(DB15, db[EF11]);
 				} else {
-					DB00 = w(EF00, 40); DB01 = w(EF01, 19); DB02 = w(EF02,  6); DB03 = w(EF03, 25); DB04 = w(EF04, 45); DB05 = w(EF05, 48);
-					DB10 = w(EF06, 31); DB11 = w(EF07, 52); DB12 = w(EF08, 33); DB13 = w(EF09, 41); DB14 = w(EF10, 46); DB15 = w(EF11, 13);
+					K40XOR(DB00, db[EF00]); K19XOR(DB01, db[EF01]); K06XOR(DB02, db[EF02]); K25XOR(DB03, db[EF03]); K45XOR(DB04, db[EF04]); K48XOR(DB05, db[EF05]);
+					K31XOR(DB10, db[EF06]); K52XOR(DB11, db[EF07]); K33XOR(DB12, db[EF08]); K41XOR(DB13, db[EF09]); K46XOR(DB14, db[EF10]); K13XOR(DB15, db[EF11]);
 				}
 			} else {
 				if (round == 14) {
-					DB00 = w(EF00, 26); DB01 = w(EF01,  5); DB02 = w(EF02, 47); DB03 = w(EF03, 11); DB04 = w(EF04, 31); DB05 = w(EF05, 34);
-					DB10 = w(EF06, 48); DB11 = w(EF07, 38); DB12 = w(EF08, 19); DB13 = w(EF09, 27); DB14 = w(EF10, 32); DB15 = w(EF11, 54);
+					K26XOR(DB00, db[EF00]); K05XOR(DB01, db[EF01]); K47XOR(DB02, db[EF02]); K11XOR(DB03, db[EF03]); K31XOR(DB04, db[EF04]); K34XOR(DB05, db[EF05]);
+					K48XOR(DB10, db[EF06]); K38XOR(DB11, db[EF07]); K19XOR(DB12, db[EF08]); K27XOR(DB13, db[EF09]); K32XOR(DB14, db[EF10]); K54XOR(DB15, db[EF11]);
 				} else {
-					DB00 = w(EF00, 19); DB01 = w(EF01, 53); DB02 = w(EF02, 40); DB03 = w(EF03,  4); DB04 = w(EF04, 55); DB05 = w(EF05, 27);
-					DB10 = w(EF06, 41); DB11 = w(EF07, 31); DB12 = w(EF08, 12); DB13 = w(EF09, 20); DB14 = w(EF10, 25); DB15 = w(EF11, 47);
+					K19XOR(DB00, db[EF00]); K53XOR(DB01, db[EF01]); K40XOR(DB02, db[EF02]); K04XOR(DB03, db[EF03]); K55XOR(DB04, db[EF04]); K27XOR(DB05, db[EF05]);
+					K41XOR(DB10, db[EF06]); K31XOR(DB11, db[EF07]); K12XOR(DB12, db[EF08]); K20XOR(DB13, db[EF09]); K25XOR(DB14, db[EF10]); K47XOR(DB15, db[EF11]);
 				}
 			}
 		}	
@@ -693,37 +726,37 @@ start:
 		if (round < 4) {
 			if (round < 2) {
 				if (round == 0) {
-					DB00 = w(   7,  4); DB01 = w(   8, 32); DB02 = w(   9, 26); DB03 = w(  10, 27); DB04 = w(  11, 38); DB05 = w(  12, 54);
-					DB10 = w(  11, 53); DB11 = w(  12,  6); DB12 = w(  13, 31); DB13 = w(  14, 25); DB14 = w(  15, 19); DB15 = w(  16, 41);
+					K04XOR(DB00, db[   7]); K32XOR(DB01, db[   8]); K26XOR(DB02, db[   9]); K27XOR(DB03, db[  10]); K38XOR(DB04, db[  11]); K54XOR(DB05, db[  12]);
+					K53XOR(DB10, db[  11]); K06XOR(DB11, db[  12]); K31XOR(DB12, db[  13]); K25XOR(DB13, db[  14]); K19XOR(DB14, db[  15]); K41XOR(DB15, db[  16]);
 				} else {
-					DB00 = w(   7, 52); DB01 = w(   8, 25); DB02 = w(   9, 19); DB03 = w(  10, 20); DB04 = w(  11, 31); DB05 = w(  12, 47);
-					DB10 = w(  11, 46); DB11 = w(  12, 54); DB12 = w(  13, 55); DB13 = w(  14, 18); DB14 = w(  15, 12); DB15 = w(  16, 34);
+					K52XOR(DB00, db[   7]); K25XOR(DB01, db[   8]); K19XOR(DB02, db[   9]); K20XOR(DB03, db[  10]); K31XOR(DB04, db[  11]); K47XOR(DB05, db[  12]);
+					K46XOR(DB10, db[  11]); K54XOR(DB11, db[  12]); K55XOR(DB12, db[  13]); K18XOR(DB13, db[  14]); K12XOR(DB14, db[  15]); K34XOR(DB15, db[  16]);
 				}
 			} else {
 				if (round == 2) {
-					DB00 = w(   7, 38); DB01 = w(   8, 11); DB02 = w(   9,  5); DB03 = w(  10,  6); DB04 = w(  11, 48); DB05 = w(  12, 33);
-					DB10 = w(  11, 32); DB11 = w(  12, 40); DB12 = w(  13, 41); DB13 = w(  14,  4); DB14 = w(  15, 53); DB15 = w(  16, 20);
+					K38XOR(DB00, db[   7]); K11XOR(DB01, db[   8]); K05XOR(DB02, db[   9]); K06XOR(DB03, db[  10]); K48XOR(DB04, db[  11]); K33XOR(DB05, db[  12]);
+					K32XOR(DB10, db[  11]); K40XOR(DB11, db[  12]); K41XOR(DB12, db[  13]); K04XOR(DB13, db[  14]); K53XOR(DB14, db[  15]); K20XOR(DB15, db[  16]);
 				} else {
-					DB00 = w(   7, 55); DB01 = w(   8, 52); DB02 = w(   9, 46); DB03 = w(  10, 47); DB04 = w(  11, 34); DB05 = w(  12, 19);
-					DB10 = w(  11, 18); DB11 = w(  12, 26); DB12 = w(  13, 27); DB13 = w(  14, 45); DB14 = w(  15, 39); DB15 = w(  16,  6);
+					K55XOR(DB00, db[   7]); K52XOR(DB01, db[   8]); K46XOR(DB02, db[   9]); K47XOR(DB03, db[  10]); K34XOR(DB04, db[  11]); K19XOR(DB05, db[  12]);
+					K18XOR(DB10, db[  11]); K26XOR(DB11, db[  12]); K27XOR(DB12, db[  13]); K45XOR(DB13, db[  14]); K39XOR(DB14, db[  15]); K06XOR(DB15, db[  16]);
 				}
 			}
 		} else {
 			if (round < 6) {
 				if (round == 4) {
-					DB00 = w(   7, 41); DB01 = w(   8, 38); DB02 = w(   9, 32); DB03 = w(  10, 33); DB04 = w(  11, 20); DB05 = w(  12,  5);
-					DB10 = w(  11,  4); DB11 = w(  12, 12); DB12 = w(  13, 13); DB13 = w(  14, 31); DB14 = w(  15, 25); DB15 = w(  16, 47);
+					K41XOR(DB00, db[   7]); K38XOR(DB01, db[   8]); K32XOR(DB02, db[   9]); K33XOR(DB03, db[  10]); K20XOR(DB04, db[  11]); K05XOR(DB05, db[  12]);
+					K04XOR(DB10, db[  11]); K12XOR(DB11, db[  12]); K13XOR(DB12, db[  13]); K31XOR(DB13, db[  14]); K25XOR(DB14, db[  15]); K47XOR(DB15, db[  16]);
 				} else {
-					DB00 = w(   7, 27); DB01 = w(   8, 55); DB02 = w(   9, 18); DB03 = w(  10, 19); DB04 = w(  11,  6); DB05 = w(  12, 46);
-					DB10 = w(  11, 45); DB11 = w(  12, 53); DB12 = w(  13, 54); DB13 = w(  14, 48); DB14 = w(  15, 11); DB15 = w(  16, 33);
+					K27XOR(DB00, db[   7]); K55XOR(DB01, db[   8]); K18XOR(DB02, db[   9]); K19XOR(DB03, db[  10]); K06XOR(DB04, db[  11]); K46XOR(DB05, db[  12]);
+					K45XOR(DB10, db[  11]); K53XOR(DB11, db[  12]); K54XOR(DB12, db[  13]); K48XOR(DB13, db[  14]); K11XOR(DB14, db[  15]); K33XOR(DB15, db[  16]);
 				}
 			} else {
 				if (round == 6) {
-					DB00 = w(   7, 13); DB01 = w(   8, 41); DB02 = w(   9,  4); DB03 = w(  10,  5); DB04 = w(  11, 47); DB05 = w(  12, 32);
-					DB10 = w(  11, 31); DB11 = w(  12, 39); DB12 = w(  13, 40); DB13 = w(  14, 34); DB14 = w(  15, 52); DB15 = w(  16, 19);
+					K13XOR(DB00, db[   7]); K41XOR(DB01, db[   8]); K04XOR(DB02, db[   9]); K05XOR(DB03, db[  10]); K47XOR(DB04, db[  11]); K32XOR(DB05, db[  12]);
+					K31XOR(DB10, db[  11]); K39XOR(DB11, db[  12]); K40XOR(DB12, db[  13]); K34XOR(DB13, db[  14]); K52XOR(DB14, db[  15]); K19XOR(DB15, db[  16]);
 				} else {
-					DB00 = w(   7, 54); DB01 = w(   8, 27); DB02 = w(   9, 45); DB03 = w(  10, 46); DB04 = w(  11, 33); DB05 = w(  12, 18);
-					DB10 = w(  11, 48); DB11 = w(  12, 25); DB12 = w(  13, 26); DB13 = w(  14, 20); DB14 = w(  15, 38); DB15 = w(  16,  5);
+					K54XOR(DB00, db[   7]); K27XOR(DB01, db[   8]); K45XOR(DB02, db[   9]); K46XOR(DB03, db[  10]); K33XOR(DB04, db[  11]); K18XOR(DB05, db[  12]);
+					K48XOR(DB10, db[  11]); K25XOR(DB11, db[  12]); K26XOR(DB12, db[  13]); K20XOR(DB13, db[  14]); K38XOR(DB14, db[  15]); K05XOR(DB15, db[  16]);
 				}
 			}
 		}
@@ -731,37 +764,37 @@ start:
 		if (round < 12) {
 			if (round < 10) {
 				if (round == 8) {
-					DB00 = w(   7, 47); DB01 = w(   8, 20); DB02 = w(   9, 38); DB03 = w(  10, 39); DB04 = w(  11, 26); DB05 = w(  12, 11);
-					DB10 = w(  11, 41); DB11 = w(  12, 18); DB12 = w(  13, 19); DB13 = w(  14, 13); DB14 = w(  15, 31); DB15 = w(  16, 53);
+					K47XOR(DB00, db[   7]); K20XOR(DB01, db[   8]); K38XOR(DB02, db[   9]); K39XOR(DB03, db[  10]); K26XOR(DB04, db[  11]); K11XOR(DB05, db[  12]);
+					K41XOR(DB10, db[  11]); K18XOR(DB11, db[  12]); K19XOR(DB12, db[  13]); K13XOR(DB13, db[  14]); K31XOR(DB14, db[  15]); K53XOR(DB15, db[  16]);
 				} else {
-					DB00 = w(   7, 33); DB01 = w(   8,  6); DB02 = w(   9, 55); DB03 = w(  10, 25); DB04 = w(  11, 12); DB05 = w(  12, 52);
-					DB10 = w(  11, 27); DB11 = w(  12,  4); DB12 = w(  13,  5); DB13 = w(  14, 54); DB14 = w(  15, 48); DB15 = w(  16, 39);
+					K33XOR(DB00, db[   7]); K06XOR(DB01, db[   8]); K55XOR(DB02, db[   9]); K25XOR(DB03, db[  10]); K12XOR(DB04, db[  11]); K52XOR(DB05, db[  12]);
+					K27XOR(DB10, db[  11]); K04XOR(DB11, db[  12]); K05XOR(DB12, db[  13]); K54XOR(DB13, db[  14]); K48XOR(DB14, db[  15]); K39XOR(DB15, db[  16]);
 				}
 			} else {
 				if (round == 10) {
-					DB00 = w(   7, 19); DB01 = w(   8, 47); DB02 = w(   9, 41); DB03 = w(  10, 11); DB04 = w(  11, 53); DB05 = w(  12, 38);
-					DB10 = w(  11, 13); DB11 = w(  12, 45); DB12 = w(  13, 46); DB13 = w(  14, 40); DB14 = w(  15, 34); DB15 = w(  16, 25);
+					K19XOR(DB00, db[   7]); K47XOR(DB01, db[   8]); K41XOR(DB02, db[   9]); K11XOR(DB03, db[  10]); K53XOR(DB04, db[  11]); K38XOR(DB05, db[  12]);
+					K13XOR(DB10, db[  11]); K45XOR(DB11, db[  12]); K46XOR(DB12, db[  13]); K40XOR(DB13, db[  14]); K34XOR(DB14, db[  15]); K25XOR(DB15, db[  16]);
 				} else {
-					DB00 = w(   7,  5); DB01 = w(   8, 33); DB02 = w(   9, 27); DB03 = w(  10, 52); DB04 = w(  11, 39); DB05 = w(  12, 55);
-					DB10 = w(  11, 54); DB11 = w(  12, 31); DB12 = w(  13, 32); DB13 = w(  14, 26); DB14 = w(  15, 20); DB15 = w(  16, 11);
+					K05XOR(DB00, db[   7]); K33XOR(DB01, db[   8]); K27XOR(DB02, db[   9]); K52XOR(DB03, db[  10]); K39XOR(DB04, db[  11]); K55XOR(DB05, db[  12]);
+					K54XOR(DB10, db[  11]); K31XOR(DB11, db[  12]); K32XOR(DB12, db[  13]); K26XOR(DB13, db[  14]); K20XOR(DB14, db[  15]); K11XOR(DB15, db[  16]);
 				}
 			}
 		} else {
 			if (round < 14) {
 				if (round == 12) {
-					DB00 = w(   7, 46); DB01 = w(   8, 19); DB02 = w(   9, 13); DB03 = w(  10, 38); DB04 = w(  11, 25); DB05 = w(  12, 41);
-					DB10 = w(  11, 40); DB11 = w(  12, 48); DB12 = w(  13, 18); DB13 = w(  14, 12); DB14 = w(  15,  6); DB15 = w(  16, 52);
+					K46XOR(DB00, db[   7]); K19XOR(DB01, db[   8]); K13XOR(DB02, db[   9]); K38XOR(DB03, db[  10]); K25XOR(DB04, db[  11]); K41XOR(DB05, db[  12]);
+					K40XOR(DB10, db[  11]); K48XOR(DB11, db[  12]); K18XOR(DB12, db[  13]); K12XOR(DB13, db[  14]); K06XOR(DB14, db[  15]); K52XOR(DB15, db[  16]);
 				} else {
-					DB00 = w(   7, 32); DB01 = w(   8,  5); DB02 = w(   9, 54); DB03 = w(  10, 55); DB04 = w(  11, 11); DB05 = w(  12, 27);
-					DB10 = w(  11, 26); DB11 = w(  12, 34); DB12 = w(  13,  4); DB13 = w(  14, 53); DB14 = w(  15, 47); DB15 = w(  16, 38);
+					K32XOR(DB00, db[   7]); K05XOR(DB01, db[   8]); K54XOR(DB02, db[   9]); K55XOR(DB03, db[  10]); K11XOR(DB04, db[  11]); K27XOR(DB05, db[  12]);
+					K26XOR(DB10, db[  11]); K34XOR(DB11, db[  12]); K04XOR(DB12, db[  13]); K53XOR(DB13, db[  14]); K47XOR(DB14, db[  15]); K38XOR(DB15, db[  16]);
 				}
 			} else {
 				if (round == 14) {
-					DB00 = w(   7, 18); DB01 = w(   8, 46); DB02 = w(   9, 40); DB03 = w(  10, 41); DB04 = w(  11, 52); DB05 = w(  12, 13);
-					DB10 = w(  11, 12); DB11 = w(  12, 20); DB12 = w(  13, 45); DB13 = w(  14, 39); DB14 = w(  15, 33); DB15 = w(  16, 55);
+					K18XOR(DB00, db[   7]); K46XOR(DB01, db[   8]); K40XOR(DB02, db[   9]); K41XOR(DB03, db[  10]); K52XOR(DB04, db[  11]); K13XOR(DB05, db[  12]);
+					K12XOR(DB10, db[  11]); K20XOR(DB11, db[  12]); K45XOR(DB12, db[  13]); K39XOR(DB13, db[  14]); K33XOR(DB14, db[  15]); K55XOR(DB15, db[  16]);
 				} else {
-					DB00 = w(   7, 11); DB01 = w(   8, 39); DB02 = w(   9, 33); DB03 = w(  10, 34); DB04 = w(  11, 45); DB05 = w(  12,  6);
-					DB10 = w(  11,  5); DB11 = w(  12, 13); DB12 = w(  13, 38); DB13 = w(  14, 32); DB14 = w(  15, 26); DB15 = w(  16, 48);
+					K11XOR(DB00, db[   7]); K39XOR(DB01, db[   8]); K33XOR(DB02, db[   9]); K34XOR(DB03, db[  10]); K45XOR(DB04, db[  11]); K06XOR(DB05, db[  12]);
+					K05XOR(DB10, db[  11]); K13XOR(DB11, db[  12]); K38XOR(DB12, db[  13]); K32XOR(DB13, db[  14]); K26XOR(DB14, db[  15]); K48XOR(DB15, db[  16]);
 				}
 			}
 		}	
@@ -773,37 +806,37 @@ start:
 		if (round < 4) {
 			if (round < 2) {
 				if (round == 0) {
-					DB00 = w(EF24, 15); DB01 = w(EF25, 24); DB02 = w(EF26, 28); DB03 = w(EF27, 43); DB04 = w(EF28, 30); DB05 = w(EF29,  3);
-					DB10 = w(EF30, 35); DB11 = w(EF31, 22); DB12 = w(EF32,  2); DB13 = w(EF33, 44); DB14 = w(EF34, 14); DB15 = w(EF35, 23);
+					K15XOR(DB00, db[EF24]); K24XOR(DB01, db[EF25]); K28XOR(DB02, db[EF26]); K43XOR(DB03, db[EF27]); K30XOR(DB04, db[EF28]); K03XOR(DB05, db[EF29]);
+					K35XOR(DB10, db[EF30]); K22XOR(DB11, db[EF31]); K02XOR(DB12, db[EF32]); K44XOR(DB13, db[EF33]); K14XOR(DB14, db[EF34]); K23XOR(DB15, db[EF35]);
 				} else {
-					DB00 = w(EF24,  8); DB01 = w(EF25, 17); DB02 = w(EF26, 21); DB03 = w(EF27, 36); DB04 = w(EF28, 23); DB05 = w(EF29, 49);
-					DB10 = w(EF30, 28); DB11 = w(EF31, 15); DB12 = w(EF32, 24); DB13 = w(EF33, 37); DB14 = w(EF34,  7); DB15 = w(EF35, 16);
+					K08XOR(DB00, db[EF24]); K17XOR(DB01, db[EF25]); K21XOR(DB02, db[EF26]); K36XOR(DB03, db[EF27]); K23XOR(DB04, db[EF28]); K49XOR(DB05, db[EF29]);
+					K28XOR(DB10, db[EF30]); K15XOR(DB11, db[EF31]); K24XOR(DB12, db[EF32]); K37XOR(DB13, db[EF33]); K07XOR(DB14, db[EF34]); K16XOR(DB15, db[EF35]);
 				}
 			} else {
 				if (round == 2) {
-					DB00 = w(EF24, 51); DB01 = w(EF25,  3); DB02 = w(EF26,  7); DB03 = w(EF27, 22); DB04 = w(EF28,  9); DB05 = w(EF29, 35);
-					DB10 = w(EF30, 14); DB11 = w(EF31,  1); DB12 = w(EF32, 10); DB13 = w(EF33, 23); DB14 = w(EF34, 50); DB15 = w(EF35,  2);
+					K51XOR(DB00, db[EF24]); K03XOR(DB01, db[EF25]); K07XOR(DB02, db[EF26]); K22XOR(DB03, db[EF27]); K09XOR(DB04, db[EF28]); K35XOR(DB05, db[EF29]);
+					K14XOR(DB10, db[EF30]); K01XOR(DB11, db[EF31]); K10XOR(DB12, db[EF32]); K23XOR(DB13, db[EF33]); K50XOR(DB14, db[EF34]); K02XOR(DB15, db[EF35]);
 				} else {
-					DB00 = w(EF24, 37); DB01 = w(EF25, 42); DB02 = w(EF26, 50); DB03 = w(EF27,  8); DB04 = w(EF28, 24); DB05 = w(EF29, 21);
-					DB10 = w(EF30,  0); DB11 = w(EF31, 44); DB12 = w(EF32, 49); DB13 = w(EF33,  9); DB14 = w(EF34, 36); DB15 = w(EF35, 17);
+					K37XOR(DB00, db[EF24]); K42XOR(DB01, db[EF25]); K50XOR(DB02, db[EF26]); K08XOR(DB03, db[EF27]); K24XOR(DB04, db[EF28]); K21XOR(DB05, db[EF29]);
+					K00XOR(DB10, db[EF30]); K44XOR(DB11, db[EF31]); K49XOR(DB12, db[EF32]); K09XOR(DB13, db[EF33]); K36XOR(DB14, db[EF34]); K17XOR(DB15, db[EF35]);
 				}
 			}
 		} else {
 			if (round < 6) {
 				if (round == 4) {
-					DB00 = w(EF24, 23); DB01 = w(EF25, 28); DB02 = w(EF26, 36); DB03 = w(EF27, 51); DB04 = w(EF28, 10); DB05 = w(EF29,  7);
-					DB10 = w(EF30, 43); DB11 = w(EF31, 30); DB12 = w(EF32, 35); DB13 = w(EF33, 24); DB14 = w(EF34, 22); DB15 = w(EF35,  3);
+					K23XOR(DB00, db[EF24]); K28XOR(DB01, db[EF25]); K36XOR(DB02, db[EF26]); K51XOR(DB03, db[EF27]); K10XOR(DB04, db[EF28]); K07XOR(DB05, db[EF29]);
+					K43XOR(DB10, db[EF30]); K30XOR(DB11, db[EF31]); K35XOR(DB12, db[EF32]); K24XOR(DB13, db[EF33]); K22XOR(DB14, db[EF34]); K03XOR(DB15, db[EF35]);
 				} else {
-					DB00 = w(EF24,  9); DB01 = w(EF25, 14); DB02 = w(EF26, 22); DB03 = w(EF27, 37); DB04 = w(EF28, 49); DB05 = w(EF29, 50);
-					DB10 = w(EF30, 29); DB11 = w(EF31, 16); DB12 = w(EF32, 21); DB13 = w(EF33, 10); DB14 = w(EF34,  8); DB15 = w(EF35, 42);
+					K09XOR(DB00, db[EF24]); K14XOR(DB01, db[EF25]); K22XOR(DB02, db[EF26]); K37XOR(DB03, db[EF27]); K49XOR(DB04, db[EF28]); K50XOR(DB05, db[EF29]);
+					K29XOR(DB10, db[EF30]); K16XOR(DB11, db[EF31]); K21XOR(DB12, db[EF32]); K10XOR(DB13, db[EF33]); K08XOR(DB14, db[EF34]); K42XOR(DB15, db[EF35]);
 				}
 			} else {
 				if (round == 6) {
-					DB00 = w(EF24, 24); DB01 = w(EF25,  0); DB02 = w(EF26,  8); DB03 = w(EF27, 23); DB04 = w(EF28, 35); DB05 = w(EF29, 36);
-					DB10 = w(EF30, 15); DB11 = w(EF31,  2); DB12 = w(EF32,  7); DB13 = w(EF33, 49); DB14 = w(EF34, 51); DB15 = w(EF35, 28);
+					K24XOR(DB00, db[EF24]); K00XOR(DB01, db[EF25]); K08XOR(DB02, db[EF26]); K23XOR(DB03, db[EF27]); K35XOR(DB04, db[EF28]); K36XOR(DB05, db[EF29]);
+					K15XOR(DB10, db[EF30]); K02XOR(DB11, db[EF31]); K07XOR(DB12, db[EF32]); K49XOR(DB13, db[EF33]); K51XOR(DB14, db[EF34]); K28XOR(DB15, db[EF35]);
 				} else {
-					DB00 = w(EF24, 10); DB01 = w(EF25, 43); DB02 = w(EF26, 51); DB03 = w(EF27,  9); DB04 = w(EF28, 21); DB05 = w(EF29, 22);
-					DB10 = w(EF30,  1); DB11 = w(EF31, 17); DB12 = w(EF32, 50); DB13 = w(EF33, 35); DB14 = w(EF34, 37); DB15 = w(EF35, 14);
+					K10XOR(DB00, db[EF24]); K43XOR(DB01, db[EF25]); K51XOR(DB02, db[EF26]); K09XOR(DB03, db[EF27]); K21XOR(DB04, db[EF28]); K22XOR(DB05, db[EF29]);
+					K01XOR(DB10, db[EF30]); K17XOR(DB11, db[EF31]); K50XOR(DB12, db[EF32]); K35XOR(DB13, db[EF33]); K37XOR(DB14, db[EF34]); K14XOR(DB15, db[EF35]);
 				}
 			}
 		}
@@ -811,37 +844,37 @@ start:
 		if (round < 12) {
 			if (round < 10) {
 				if (round == 8) {
-					DB00 = w(EF24,  3); DB01 = w(EF25, 36); DB02 = w(EF26, 44); DB03 = w(EF27,  2); DB04 = w(EF28, 14); DB05 = w(EF29, 15);
-					DB10 = w(EF30, 51); DB11 = w(EF31, 10); DB12 = w(EF32, 43); DB13 = w(EF33, 28); DB14 = w(EF34, 30); DB15 = w(EF35,  7);
+					K03XOR(DB00, db[EF24]); K36XOR(DB01, db[EF25]); K44XOR(DB02, db[EF26]); K02XOR(DB03, db[EF27]); K14XOR(DB04, db[EF28]); K15XOR(DB05, db[EF29]);
+					K51XOR(DB10, db[EF30]); K10XOR(DB11, db[EF31]); K43XOR(DB12, db[EF32]); K28XOR(DB13, db[EF33]); K30XOR(DB14, db[EF34]); K07XOR(DB15, db[EF35]);
 				} else {
-					DB00 = w(EF24, 42); DB01 = w(EF25, 22); DB02 = w(EF26, 30); DB03 = w(EF27, 17); DB04 = w(EF28,  0); DB05 = w(EF29,  1);
-					DB10 = w(EF30, 37); DB11 = w(EF31, 49); DB12 = w(EF32, 29); DB13 = w(EF33, 14); DB14 = w(EF34, 16); DB15 = w(EF35, 50);
+					K42XOR(DB00, db[EF24]); K22XOR(DB01, db[EF25]); K30XOR(DB02, db[EF26]); K17XOR(DB03, db[EF27]); K00XOR(DB04, db[EF28]); K01XOR(DB05, db[EF29]);
+					K37XOR(DB10, db[EF30]); K49XOR(DB11, db[EF31]); K29XOR(DB12, db[EF32]); K14XOR(DB13, db[EF33]); K16XOR(DB14, db[EF34]); K50XOR(DB15, db[EF35]);
 				}
 			} else {
 				if (round == 10) {
-					DB00 = w(EF24, 28); DB01 = w(EF25,  8); DB02 = w(EF26, 16); DB03 = w(EF27,  3); DB04 = w(EF28, 43); DB05 = w(EF29, 44);
-					DB10 = w(EF30, 23); DB11 = w(EF31, 35); DB12 = w(EF32, 15); DB13 = w(EF33,  0); DB14 = w(EF34,  2); DB15 = w(EF35, 36);
+					K28XOR(DB00, db[EF24]); K08XOR(DB01, db[EF25]); K16XOR(DB02, db[EF26]); K03XOR(DB03, db[EF27]); K43XOR(DB04, db[EF28]); K44XOR(DB05, db[EF29]);
+					K23XOR(DB10, db[EF30]); K35XOR(DB11, db[EF31]); K15XOR(DB12, db[EF32]); K00XOR(DB13, db[EF33]); K02XOR(DB14, db[EF34]); K36XOR(DB15, db[EF35]);
 				} else {
-					DB00 = w(EF24, 14); DB01 = w(EF25, 51); DB02 = w(EF26,  2); DB03 = w(EF27, 42); DB04 = w(EF28, 29); DB05 = w(EF29, 30);
-					DB10 = w(EF30,  9); DB11 = w(EF31, 21); DB12 = w(EF32,  1); DB13 = w(EF33, 43); DB14 = w(EF34, 17); DB15 = w(EF35, 22);
+					K14XOR(DB00, db[EF24]); K51XOR(DB01, db[EF25]); K02XOR(DB02, db[EF26]); K42XOR(DB03, db[EF27]); K29XOR(DB04, db[EF28]); K30XOR(DB05, db[EF29]);
+					K09XOR(DB10, db[EF30]); K21XOR(DB11, db[EF31]); K01XOR(DB12, db[EF32]); K43XOR(DB13, db[EF33]); K17XOR(DB14, db[EF34]); K22XOR(DB15, db[EF35]);
 				}
 			}
 		} else {
 			if (round < 14) {
 				if (round == 12) {
-					DB00 = w(EF24,  0); DB01 = w(EF25, 37); DB02 = w(EF26, 17); DB03 = w(EF27, 28); DB04 = w(EF28, 15); DB05 = w(EF29, 16);
-					DB10 = w(EF30, 24); DB11 = w(EF31,  7); DB12 = w(EF32, 44); DB13 = w(EF33, 29); DB14 = w(EF34,  3); DB15 = w(EF35,  8);
+					K00XOR(DB00, db[EF24]); K37XOR(DB01, db[EF25]); K17XOR(DB02, db[EF26]); K28XOR(DB03, db[EF27]); K15XOR(DB04, db[EF28]); K16XOR(DB05, db[EF29]);
+					K24XOR(DB10, db[EF30]); K07XOR(DB11, db[EF31]); K44XOR(DB12, db[EF32]); K29XOR(DB13, db[EF33]); K03XOR(DB14, db[EF34]); K08XOR(DB15, db[EF35]);
 				} else {
-					DB00 = w(EF24, 43); DB01 = w(EF25, 23); DB02 = w(EF26,  3); DB03 = w(EF27, 14); DB04 = w(EF28,  1); DB05 = w(EF29,  2);
-					DB10 = w(EF30, 10); DB11 = w(EF31, 50); DB12 = w(EF32, 30); DB13 = w(EF33, 15); DB14 = w(EF34, 42); DB15 = w(EF35, 51);
+					K43XOR(DB00, db[EF24]); K23XOR(DB01, db[EF25]); K03XOR(DB02, db[EF26]); K14XOR(DB03, db[EF27]); K01XOR(DB04, db[EF28]); K02XOR(DB05, db[EF29]);
+					K10XOR(DB10, db[EF30]); K50XOR(DB11, db[EF31]); K30XOR(DB12, db[EF32]); K15XOR(DB13, db[EF33]); K42XOR(DB14, db[EF34]); K51XOR(DB15, db[EF35]);
 				}
 			} else {
 				if (round == 14) {
-					DB00 = w(EF24, 29); DB01 = w(EF25,  9); DB02 = w(EF26, 42); DB03 = w(EF27,  0); DB04 = w(EF28, 44); DB05 = w(EF29, 17);
-					DB10 = w(EF30, 49); DB11 = w(EF31, 36); DB12 = w(EF32, 16); DB13 = w(EF33,  1); DB14 = w(EF34, 28); DB15 = w(EF35, 37);
+					K29XOR(DB00, db[EF24]); K09XOR(DB01, db[EF25]); K42XOR(DB02, db[EF26]); K00XOR(DB03, db[EF27]); K44XOR(DB04, db[EF28]); K17XOR(DB05, db[EF29]);
+					K49XOR(DB10, db[EF30]); K36XOR(DB11, db[EF31]); K16XOR(DB12, db[EF32]); K01XOR(DB13, db[EF33]); K28XOR(DB14, db[EF34]); K37XOR(DB15, db[EF35]);
 				} else {
-					DB00 = w(EF24, 22); DB01 = w(EF25,  2); DB02 = w(EF26, 35); DB03 = w(EF27, 50); DB04 = w(EF28, 37); DB05 = w(EF29, 10);
-					DB10 = w(EF30, 42); DB11 = w(EF31, 29); DB12 = w(EF32,  9); DB13 = w(EF33, 51); DB14 = w(EF34, 21); DB15 = w(EF35, 30);
+					K22XOR(DB00, db[EF24]); K02XOR(DB01, db[EF25]); K35XOR(DB02, db[EF26]); K50XOR(DB03, db[EF27]); K37XOR(DB04, db[EF28]); K10XOR(DB05, db[EF29]);
+					K42XOR(DB10, db[EF30]); K29XOR(DB11, db[EF31]); K09XOR(DB12, db[EF32]); K51XOR(DB13, db[EF33]); K21XOR(DB14, db[EF34]); K30XOR(DB15, db[EF35]);
 				}
 			}
 		}	
@@ -853,37 +886,37 @@ start:
 		if (round < 4) {
 			if (round < 2) {
 				if (round == 0) {
-					DB00 = w(  23, 51); DB01 = w(  24, 16); DB02 = w(  25, 29); DB03 = w(  26, 49); DB04 = w(  27,  7); DB05 = w(  28, 17);
-					DB10 = w(  27, 37); DB11 = w(  28,  8); DB12 = w(  29,  9); DB13 = w(  30, 50); DB14 = w(  31, 42); DB15 = w(   0, 21);
+					K51XOR(DB00, db[  23]); K16XOR(DB01, db[  24]); K29XOR(DB02, db[  25]); K49XOR(DB03, db[  26]); K07XOR(DB04, db[  27]); K17XOR(DB05, db[  28]);
+					K37XOR(DB10, db[  27]); K08XOR(DB11, db[  28]); K09XOR(DB12, db[  29]); K50XOR(DB13, db[  30]); K42XOR(DB14, db[  31]); K21XOR(DB15, db[   0]);
 				} else {
-					DB00 = w(  23, 44); DB01 = w(  24,  9); DB02 = w(  25, 22); DB03 = w(  26, 42); DB04 = w(  27,  0); DB05 = w(  28, 10);
-					DB10 = w(  27, 30); DB11 = w(  28,  1); DB12 = w(  29,  2); DB13 = w(  30, 43); DB14 = w(  31, 35); DB15 = w(   0, 14);
+					K44XOR(DB00, db[  23]); K09XOR(DB01, db[  24]); K22XOR(DB02, db[  25]); K42XOR(DB03, db[  26]); K00XOR(DB04, db[  27]); K10XOR(DB05, db[  28]);
+					K30XOR(DB10, db[  27]); K01XOR(DB11, db[  28]); K02XOR(DB12, db[  29]); K43XOR(DB13, db[  30]); K35XOR(DB14, db[  31]); K14XOR(DB15, db[   0]);
 				}
 			} else {
 				if (round == 2) {
-					DB00 = w(  23, 30); DB01 = w(  24, 24); DB02 = w(  25,  8); DB03 = w(  26, 28); DB04 = w(  27, 43); DB05 = w(  28, 49);
-					DB10 = w(  27, 16); DB11 = w(  28, 44); DB12 = w(  29, 17); DB13 = w(  30, 29); DB14 = w(  31, 21); DB15 = w(   0,  0);
+					K30XOR(DB00, db[  23]); K24XOR(DB01, db[  24]); K08XOR(DB02, db[  25]); K28XOR(DB03, db[  26]); K43XOR(DB04, db[  27]); K49XOR(DB05, db[  28]);
+					K16XOR(DB10, db[  27]); K44XOR(DB11, db[  28]); K17XOR(DB12, db[  29]); K29XOR(DB13, db[  30]); K21XOR(DB14, db[  31]); K00XOR(DB15, db[   0]);
 				} else {
-					DB00 = w(  23, 16); DB01 = w(  24, 10); DB02 = w(  25, 51); DB03 = w(  26, 14); DB04 = w(  27, 29); DB05 = w(  28, 35);
-					DB10 = w(  27,  2); DB11 = w(  28, 30); DB12 = w(  29,  3); DB13 = w(  30, 15); DB14 = w(  31,  7); DB15 = w(   0, 43);
+					K16XOR(DB00, db[  23]); K10XOR(DB01, db[  24]); K51XOR(DB02, db[  25]); K14XOR(DB03, db[  26]); K29XOR(DB04, db[  27]); K35XOR(DB05, db[  28]);
+					K02XOR(DB10, db[  27]); K30XOR(DB11, db[  28]); K03XOR(DB12, db[  29]); K15XOR(DB13, db[  30]); K07XOR(DB14, db[  31]); K43XOR(DB15, db[   0]);
 				}
 			}
 		} else {
 			if (round < 6) {
 				if (round == 4) {
-					DB00 = w(  23,  2); DB01 = w(  24, 49); DB02 = w(  25, 37); DB03 = w(  26,  0); DB04 = w(  27, 15); DB05 = w(  28, 21);
-					DB10 = w(  27, 17); DB11 = w(  28, 16); DB12 = w(  29, 42); DB13 = w(  30,  1); DB14 = w(  31, 50); DB15 = w(   0, 29);
+					K02XOR(DB00, db[  23]); K49XOR(DB01, db[  24]); K37XOR(DB02, db[  25]); K00XOR(DB03, db[  26]); K15XOR(DB04, db[  27]); K21XOR(DB05, db[  28]);
+					K17XOR(DB10, db[  27]); K16XOR(DB11, db[  28]); K42XOR(DB12, db[  29]); K01XOR(DB13, db[  30]); K50XOR(DB14, db[  31]); K29XOR(DB15, db[   0]);
 				} else {
-					DB00 = w(  23, 17); DB01 = w(  24, 35); DB02 = w(  25, 23); DB03 = w(  26, 43); DB04 = w(  27,  1); DB05 = w(  28,  7);
-					DB10 = w(  27,  3); DB11 = w(  28,  2); DB12 = w(  29, 28); DB13 = w(  30, 44); DB14 = w(  31, 36); DB15 = w(   0, 15);
+					K17XOR(DB00, db[  23]); K35XOR(DB01, db[  24]); K23XOR(DB02, db[  25]); K43XOR(DB03, db[  26]); K01XOR(DB04, db[  27]); K07XOR(DB05, db[  28]);
+					K03XOR(DB10, db[  27]); K02XOR(DB11, db[  28]); K28XOR(DB12, db[  29]); K44XOR(DB13, db[  30]); K36XOR(DB14, db[  31]); K15XOR(DB15, db[   0]);
 				}
 			} else {
 				if (round == 6) {
-					DB00 = w(  23,  3); DB01 = w(  24, 21); DB02 = w(  25,  9); DB03 = w(  26, 29); DB04 = w(  27, 44); DB05 = w(  28, 50);
-					DB10 = w(  27, 42); DB11 = w(  28, 17); DB12 = w(  29, 14); DB13 = w(  30, 30); DB14 = w(  31, 22); DB15 = w(   0,  1);
+					K03XOR(DB00, db[  23]); K21XOR(DB01, db[  24]); K09XOR(DB02, db[  25]); K29XOR(DB03, db[  26]); K44XOR(DB04, db[  27]); K50XOR(DB05, db[  28]);
+					K42XOR(DB10, db[  27]); K17XOR(DB11, db[  28]); K14XOR(DB12, db[  29]); K30XOR(DB13, db[  30]); K22XOR(DB14, db[  31]); K01XOR(DB15, db[   0]);
 				} else {
-					DB00 = w(  23, 42); DB01 = w(  24,  7); DB02 = w(  25, 24); DB03 = w(  26, 15); DB04 = w(  27, 30); DB05 = w(  28, 36);
-					DB10 = w(  27, 28); DB11 = w(  28,  3); DB12 = w(  29,  0); DB13 = w(  30, 16); DB14 = w(  31,  8); DB15 = w(   0, 44);
+					K42XOR(DB00, db[  23]); K07XOR(DB01, db[  24]); K24XOR(DB02, db[  25]); K15XOR(DB03, db[  26]); K30XOR(DB04, db[  27]); K36XOR(DB05, db[  28]);
+					K28XOR(DB10, db[  27]); K03XOR(DB11, db[  28]); K00XOR(DB12, db[  29]); K16XOR(DB13, db[  30]); K08XOR(DB14, db[  31]); K44XOR(DB15, db[   0]);
 				}
 			}
 		}
@@ -891,37 +924,37 @@ start:
 		if (round < 12) {
 			if (round < 10) {
 				if (round == 8) {
-					DB00 = w(  23, 35); DB01 = w(  24,  0); DB02 = w(  25, 17); DB03 = w(  26,  8); DB04 = w(  27, 23); DB05 = w(  28, 29);
-					DB10 = w(  27, 21); DB11 = w(  28, 49); DB12 = w(  29, 50); DB13 = w(  30,  9); DB14 = w(  31,  1); DB15 = w(   0, 37);
+					K35XOR(DB00, db[  23]); K00XOR(DB01, db[  24]); K17XOR(DB02, db[  25]); K08XOR(DB03, db[  26]); K23XOR(DB04, db[  27]); K29XOR(DB05, db[  28]);
+					K21XOR(DB10, db[  27]); K49XOR(DB11, db[  28]); K50XOR(DB12, db[  29]); K09XOR(DB13, db[  30]); K01XOR(DB14, db[  31]); K37XOR(DB15, db[   0]);
 				} else {
-					DB00 = w(  23, 21); DB01 = w(  24, 43); DB02 = w(  25,  3); DB03 = w(  26, 51); DB04 = w(  27,  9); DB05 = w(  28, 15);
-					DB10 = w(  27,  7); DB11 = w(  28, 35); DB12 = w(  29, 36); DB13 = w(  30, 24); DB14 = w(  31, 44); DB15 = w(   0, 23);
+					K21XOR(DB00, db[  23]); K43XOR(DB01, db[  24]); K03XOR(DB02, db[  25]); K51XOR(DB03, db[  26]); K09XOR(DB04, db[  27]); K15XOR(DB05, db[  28]);
+					K07XOR(DB10, db[  27]); K35XOR(DB11, db[  28]); K36XOR(DB12, db[  29]); K24XOR(DB13, db[  30]); K44XOR(DB14, db[  31]); K23XOR(DB15, db[   0]);
 				}
 			} else {
 				if (round == 10) {
-					DB00 = w(  23,  7); DB01 = w(  24, 29); DB02 = w(  25, 42); DB03 = w(  26, 37); DB04 = w(  27, 24); DB05 = w(  28,  1);
-					DB10 = w(  27, 50); DB11 = w(  28, 21); DB12 = w(  29, 22); DB13 = w(  30, 10); DB14 = w(  31, 30); DB15 = w(   0,  9);
+					K07XOR(DB00, db[  23]); K29XOR(DB01, db[  24]); K42XOR(DB02, db[  25]); K37XOR(DB03, db[  26]); K24XOR(DB04, db[  27]); K01XOR(DB05, db[  28]);
+					K50XOR(DB10, db[  27]); K21XOR(DB11, db[  28]); K22XOR(DB12, db[  29]); K10XOR(DB13, db[  30]); K30XOR(DB14, db[  31]); K09XOR(DB15, db[   0]);
 				} else {
-					DB00 = w(  23, 50); DB01 = w(  24, 15); DB02 = w(  25, 28); DB03 = w(  26, 23); DB04 = w(  27, 10); DB05 = w(  28, 44);
-					DB10 = w(  27, 36); DB11 = w(  28,  7); DB12 = w(  29,  8); DB13 = w(  30, 49); DB14 = w(  31, 16); DB15 = w(   0, 24);
+					K50XOR(DB00, db[  23]); K15XOR(DB01, db[  24]); K28XOR(DB02, db[  25]); K23XOR(DB03, db[  26]); K10XOR(DB04, db[  27]); K44XOR(DB05, db[  28]);
+					K36XOR(DB10, db[  27]); K07XOR(DB11, db[  28]); K08XOR(DB12, db[  29]); K49XOR(DB13, db[  30]); K16XOR(DB14, db[  31]); K24XOR(DB15, db[   0]);
 				}
 			}
 		} else {
 			if (round < 14) {
 				if (round == 12) {
-					DB00 = w(  23, 36); DB01 = w(  24,  1); DB02 = w(  25, 14); DB03 = w(  26,  9); DB04 = w(  27, 49); DB05 = w(  28, 30);
-					DB10 = w(  27, 22); DB11 = w(  28, 50); DB12 = w(  29, 51); DB13 = w(  30, 35); DB14 = w(  31,  2); DB15 = w(   0, 10);
+					K36XOR(DB00, db[  23]); K01XOR(DB01, db[  24]); K14XOR(DB02, db[  25]); K09XOR(DB03, db[  26]); K49XOR(DB04, db[  27]); K30XOR(DB05, db[  28]);
+					K22XOR(DB10, db[  27]); K50XOR(DB11, db[  28]); K51XOR(DB12, db[  29]); K35XOR(DB13, db[  30]); K02XOR(DB14, db[  31]); K10XOR(DB15, db[   0]);
 				} else {
-					DB00 = w(  23, 22); DB01 = w(  24, 44); DB02 = w(  25,  0); DB03 = w(  26, 24); DB04 = w(  27, 35); DB05 = w(  28, 16);
-					DB10 = w(  27,  8); DB11 = w(  28, 36); DB12 = w(  29, 37); DB13 = w(  30, 21); DB14 = w(  31, 17); DB15 = w(   0, 49);
+					K22XOR(DB00, db[  23]); K44XOR(DB01, db[  24]); K00XOR(DB02, db[  25]); K24XOR(DB03, db[  26]); K35XOR(DB04, db[  27]); K16XOR(DB05, db[  28]);
+					K08XOR(DB10, db[  27]); K36XOR(DB11, db[  28]); K37XOR(DB12, db[  29]); K21XOR(DB13, db[  30]); K17XOR(DB14, db[  31]); K49XOR(DB15, db[   0]);
 				}
 			} else {
 				if (round == 14) {
-					DB00 = w(  23,  8); DB01 = w(  24, 30); DB02 = w(  25, 43); DB03 = w(  26, 10); DB04 = w(  27, 21); DB05 = w(  28,  2);
-					DB10 = w(  27, 51); DB11 = w(  28, 22); DB12 = w(  29, 23); DB13 = w(  30,  7); DB14 = w(  31,  3); DB15 = w(   0, 35);
+					K08XOR(DB00, db[  23]); K30XOR(DB01, db[  24]); K43XOR(DB02, db[  25]); K10XOR(DB03, db[  26]); K21XOR(DB04, db[  27]); K02XOR(DB05, db[  28]);
+					K51XOR(DB10, db[  27]); K22XOR(DB11, db[  28]); K23XOR(DB12, db[  29]); K07XOR(DB13, db[  30]); K03XOR(DB14, db[  31]); K35XOR(DB15, db[   0]);
 				} else {
-					DB00 = w(  23,  1); DB01 = w(  24, 23); DB02 = w(  25, 36); DB03 = w(  26,  3); DB04 = w(  27, 14); DB05 = w(  28, 24);
-					DB10 = w(  27, 44); DB11 = w(  28, 15); DB12 = w(  29, 16); DB13 = w(  30,  0); DB14 = w(  31, 49); DB15 = w(   0, 28);
+					K01XOR(DB00, db[  23]); K23XOR(DB01, db[  24]); K36XOR(DB02, db[  25]); K03XOR(DB03, db[  26]); K14XOR(DB04, db[  27]); K24XOR(DB05, db[  28]);
+					K44XOR(DB10, db[  27]); K15XOR(DB11, db[  28]); K16XOR(DB12, db[  29]); K00XOR(DB13, db[  30]); K49XOR(DB14, db[  31]); K28XOR(DB15, db[   0]);
 				}
 			}
 		}	
@@ -939,37 +972,37 @@ swap:
 		if (round < 4) {
 			if (round < 2) {
 				if (round == 0) {
-					DB00 = w(EF00+32, 12); DB01 = w(EF01+32, 46); DB02 = w(EF02+32, 33); DB03 = w(EF03+32, 52); DB04 = w(EF04+32, 48); DB05 = w(EF05+32, 20);
-					DB10 = w(EF06+32, 34); DB11 = w(EF07+32, 55); DB12 = w(EF08+32,  5); DB13 = w(EF09+32, 13); DB14 = w(EF10+32, 18); DB15 = w(EF11+32, 40);
+					K12XOR(DB00, db[EF00+32]); K46XOR(DB01, db[EF01+32]); K33XOR(DB02, db[EF02+32]); K52XOR(DB03, db[EF03+32]); K48XOR(DB04, db[EF04+32]); K20XOR(DB05, db[EF05+32]);
+					K34XOR(DB10, db[EF06+32]); K55XOR(DB11, db[EF07+32]); K05XOR(DB12, db[EF08+32]); K13XOR(DB13, db[EF09+32]); K18XOR(DB14, db[EF10+32]); K40XOR(DB15, db[EF11+32]);
 				} else {
-					DB00 = w(EF00+32,  5); DB01 = w(EF01+32, 39); DB02 = w(EF02+32, 26); DB03 = w(EF03+32, 45); DB04 = w(EF04+32, 41); DB05 = w(EF05+32, 13);
-					DB10 = w(EF06+32, 27); DB11 = w(EF07+32, 48); DB12 = w(EF08+32, 53); DB13 = w(EF09+32,  6); DB14 = w(EF10+32, 11); DB15 = w(EF11+32, 33);
+					K05XOR(DB00, db[EF00+32]); K39XOR(DB01, db[EF01+32]); K26XOR(DB02, db[EF02+32]); K45XOR(DB03, db[EF03+32]); K41XOR(DB04, db[EF04+32]); K13XOR(DB05, db[EF05+32]);
+					K27XOR(DB10, db[EF06+32]); K48XOR(DB11, db[EF07+32]); K53XOR(DB12, db[EF08+32]); K06XOR(DB13, db[EF09+32]); K11XOR(DB14, db[EF10+32]); K33XOR(DB15, db[EF11+32]);
 				}
 			} else {
 				if (round == 2) {
-					DB00 = w(EF00+32, 46); DB01 = w(EF01+32, 25); DB02 = w(EF02+32, 12); DB03 = w(EF03+32, 31); DB04 = w(EF04+32, 27); DB05 = w(EF05+32, 54);
-					DB10 = w(EF06+32, 13); DB11 = w(EF07+32, 34); DB12 = w(EF08+32, 39); DB13 = w(EF09+32, 47); DB14 = w(EF10+32, 52); DB15 = w(EF11+32, 19);
+					K46XOR(DB00, db[EF00+32]); K25XOR(DB01, db[EF01+32]); K12XOR(DB02, db[EF02+32]); K31XOR(DB03, db[EF03+32]); K27XOR(DB04, db[EF04+32]); K54XOR(DB05, db[EF05+32]);
+					K13XOR(DB10, db[EF06+32]); K34XOR(DB11, db[EF07+32]); K39XOR(DB12, db[EF08+32]); K47XOR(DB13, db[EF09+32]); K52XOR(DB14, db[EF10+32]); K19XOR(DB15, db[EF11+32]);
 				} else {
-					DB00 = w(EF00+32, 32); DB01 = w(EF01+32, 11); DB02 = w(EF02+32, 53); DB03 = w(EF03+32, 48); DB04 = w(EF04+32, 13); DB05 = w(EF05+32, 40);
-					DB10 = w(EF06+32, 54); DB11 = w(EF07+32, 20); DB12 = w(EF08+32, 25); DB13 = w(EF09+32, 33); DB14 = w(EF10+32, 38); DB15 = w(EF11+32,  5);
+					K32XOR(DB00, db[EF00+32]); K11XOR(DB01, db[EF01+32]); K53XOR(DB02, db[EF02+32]); K48XOR(DB03, db[EF03+32]); K13XOR(DB04, db[EF04+32]); K40XOR(DB05, db[EF05+32]);
+					K54XOR(DB10, db[EF06+32]); K20XOR(DB11, db[EF07+32]); K25XOR(DB12, db[EF08+32]); K33XOR(DB13, db[EF09+32]); K38XOR(DB14, db[EF10+32]); K05XOR(DB15, db[EF11+32]);
 				}
 			}
 		} else {
 			if (round < 6) {
 				if (round == 4) {
-					DB00 = w(EF00+32, 18); DB01 = w(EF01+32, 52); DB02 = w(EF02+32, 39); DB03 = w(EF03+32, 34); DB04 = w(EF04+32, 54); DB05 = w(EF05+32, 26);
-					DB10 = w(EF06+32, 40); DB11 = w(EF07+32,  6); DB12 = w(EF08+32, 11); DB13 = w(EF09+32, 19); DB14 = w(EF10+32, 55); DB15 = w(EF11+32, 46);
+					K18XOR(DB00, db[EF00+32]); K52XOR(DB01, db[EF01+32]); K39XOR(DB02, db[EF02+32]); K34XOR(DB03, db[EF03+32]); K54XOR(DB04, db[EF04+32]); K26XOR(DB05, db[EF05+32]);
+					K40XOR(DB10, db[EF06+32]); K06XOR(DB11, db[EF07+32]); K11XOR(DB12, db[EF08+32]); K19XOR(DB13, db[EF09+32]); K55XOR(DB14, db[EF10+32]); K46XOR(DB15, db[EF11+32]);
 				} else {
-					DB00 = w(EF00+32,  4); DB01 = w(EF01+32, 38); DB02 = w(EF02+32, 25); DB03 = w(EF03+32, 20); DB04 = w(EF04+32, 40); DB05 = w(EF05+32, 12);
-					DB10 = w(EF06+32, 26); DB11 = w(EF07+32, 47); DB12 = w(EF08+32, 52); DB13 = w(EF09+32,  5); DB14 = w(EF10+32, 41); DB15 = w(EF11+32, 32);
+					K04XOR(DB00, db[EF00+32]); K38XOR(DB01, db[EF01+32]); K25XOR(DB02, db[EF02+32]); K20XOR(DB03, db[EF03+32]); K40XOR(DB04, db[EF04+32]); K12XOR(DB05, db[EF05+32]);
+					K26XOR(DB10, db[EF06+32]); K47XOR(DB11, db[EF07+32]); K52XOR(DB12, db[EF08+32]); K05XOR(DB13, db[EF09+32]); K41XOR(DB14, db[EF10+32]); K32XOR(DB15, db[EF11+32]);
 				}
 			} else {
 				if (round == 6) {
-					DB00 = w(EF00+32, 45); DB01 = w(EF01+32, 55); DB02 = w(EF02+32, 11); DB03 = w(EF03+32,  6); DB04 = w(EF04+32, 26); DB05 = w(EF05+32, 53);
-					DB10 = w(EF06+32, 12); DB11 = w(EF07+32, 33); DB12 = w(EF08+32, 38); DB13 = w(EF09+32, 46); DB14 = w(EF10+32, 27); DB15 = w(EF11+32, 18);
+					K45XOR(DB00, db[EF00+32]); K55XOR(DB01, db[EF01+32]); K11XOR(DB02, db[EF02+32]); K06XOR(DB03, db[EF03+32]); K26XOR(DB04, db[EF04+32]); K53XOR(DB05, db[EF05+32]);
+					K12XOR(DB10, db[EF06+32]); K33XOR(DB11, db[EF07+32]); K38XOR(DB12, db[EF08+32]); K46XOR(DB13, db[EF09+32]); K27XOR(DB14, db[EF10+32]); K18XOR(DB15, db[EF11+32]);
 				} else {
-					DB00 = w(EF00+32, 31); DB01 = w(EF01+32, 41); DB02 = w(EF02+32, 52); DB03 = w(EF03+32, 47); DB04 = w(EF04+32, 12); DB05 = w(EF05+32, 39);
-					DB10 = w(EF06+32, 53); DB11 = w(EF07+32, 19); DB12 = w(EF08+32, 55); DB13 = w(EF09+32, 32); DB14 = w(EF10+32, 13); DB15 = w(EF11+32,  4);
+					K31XOR(DB00, db[EF00+32]); K41XOR(DB01, db[EF01+32]); K52XOR(DB02, db[EF02+32]); K47XOR(DB03, db[EF03+32]); K12XOR(DB04, db[EF04+32]); K39XOR(DB05, db[EF05+32]);
+					K53XOR(DB10, db[EF06+32]); K19XOR(DB11, db[EF07+32]); K55XOR(DB12, db[EF08+32]); K32XOR(DB13, db[EF09+32]); K13XOR(DB14, db[EF10+32]); K04XOR(DB15, db[EF11+32]);
 				}
 			}
 		}
@@ -977,37 +1010,37 @@ swap:
 		if (round < 12) {
 			if (round < 10) {
 				if (round == 8) {
-					DB00 = w(EF00+32, 55); DB01 = w(EF01+32, 34); DB02 = w(EF02+32, 45); DB03 = w(EF03+32, 40); DB04 = w(EF04+32,  5); DB05 = w(EF05+32, 32);
-					DB10 = w(EF06+32, 46); DB11 = w(EF07+32, 12); DB12 = w(EF08+32, 48); DB13 = w(EF09+32, 25); DB14 = w(EF10+32,  6); DB15 = w(EF11+32, 52);
+					K55XOR(DB00, db[EF00+32]); K34XOR(DB01, db[EF01+32]); K45XOR(DB02, db[EF02+32]); K40XOR(DB03, db[EF03+32]); K05XOR(DB04, db[EF04+32]); K32XOR(DB05, db[EF05+32]);
+					K46XOR(DB10, db[EF06+32]); K12XOR(DB11, db[EF07+32]); K48XOR(DB12, db[EF08+32]); K25XOR(DB13, db[EF09+32]); K06XOR(DB14, db[EF10+32]); K52XOR(DB15, db[EF11+32]);
 				} else {
-					DB00 = w(EF00+32, 41); DB01 = w(EF01+32, 20); DB02 = w(EF02+32, 31); DB03 = w(EF03+32, 26); DB04 = w(EF04+32, 46); DB05 = w(EF05+32, 18);
-					DB10 = w(EF06+32, 32); DB11 = w(EF07+32, 53); DB12 = w(EF08+32, 34); DB13 = w(EF09+32, 11); DB14 = w(EF10+32, 47); DB15 = w(EF11+32, 38);
+					K41XOR(DB00, db[EF00+32]); K20XOR(DB01, db[EF01+32]); K31XOR(DB02, db[EF02+32]); K26XOR(DB03, db[EF03+32]); K46XOR(DB04, db[EF04+32]); K18XOR(DB05, db[EF05+32]);
+					K32XOR(DB10, db[EF06+32]); K53XOR(DB11, db[EF07+32]); K34XOR(DB12, db[EF08+32]); K11XOR(DB13, db[EF09+32]); K47XOR(DB14, db[EF10+32]); K38XOR(DB15, db[EF11+32]);
 				}
 			} else {
 				if (round == 10) {
-					DB00 = w(EF00+32, 27); DB01 = w(EF01+32,  6); DB02 = w(EF02+32, 48); DB03 = w(EF03+32, 12); DB04 = w(EF04+32, 32); DB05 = w(EF05+32,  4);
-					DB10 = w(EF06+32, 18); DB11 = w(EF07+32, 39); DB12 = w(EF08+32, 20); DB13 = w(EF09+32, 52); DB14 = w(EF10+32, 33); DB15 = w(EF11+32, 55);
+					K27XOR(DB00, db[EF00+32]); K06XOR(DB01, db[EF01+32]); K48XOR(DB02, db[EF02+32]); K12XOR(DB03, db[EF03+32]); K32XOR(DB04, db[EF04+32]); K04XOR(DB05, db[EF05+32]);
+					K18XOR(DB10, db[EF06+32]); K39XOR(DB11, db[EF07+32]); K20XOR(DB12, db[EF08+32]); K52XOR(DB13, db[EF09+32]); K33XOR(DB14, db[EF10+32]); K55XOR(DB15, db[EF11+32]);
 				} else {
-					DB00 = w(EF00+32, 13); DB01 = w(EF01+32, 47); DB02 = w(EF02+32, 34); DB03 = w(EF03+32, 53); DB04 = w(EF04+32, 18); DB05 = w(EF05+32, 45);
-					DB10 = w(EF06+32,  4); DB11 = w(EF07+32, 25); DB12 = w(EF08+32,  6); DB13 = w(EF09+32, 38); DB14 = w(EF10+32, 19); DB15 = w(EF11+32, 41);
+					K13XOR(DB00, db[EF00+32]); K47XOR(DB01, db[EF01+32]); K34XOR(DB02, db[EF02+32]); K53XOR(DB03, db[EF03+32]); K18XOR(DB04, db[EF04+32]); K45XOR(DB05, db[EF05+32]);
+					K04XOR(DB10, db[EF06+32]); K25XOR(DB11, db[EF07+32]); K06XOR(DB12, db[EF08+32]); K38XOR(DB13, db[EF09+32]); K19XOR(DB14, db[EF10+32]); K41XOR(DB15, db[EF11+32]);
 				}
 			}
 		} else {
 			if (round < 14) {
 				if (round == 12) {
-					DB00 = w(EF00+32, 54); DB01 = w(EF01+32, 33); DB02 = w(EF02+32, 20); DB03 = w(EF03+32, 39); DB04 = w(EF04+32,  4); DB05 = w(EF05+32, 31);
-					DB10 = w(EF06+32, 45); DB11 = w(EF07+32, 11); DB12 = w(EF08+32, 47); DB13 = w(EF09+32, 55); DB14 = w(EF10+32,  5); DB15 = w(EF11+32, 27);
+					K54XOR(DB00, db[EF00+32]); K33XOR(DB01, db[EF01+32]); K20XOR(DB02, db[EF02+32]); K39XOR(DB03, db[EF03+32]); K04XOR(DB04, db[EF04+32]); K31XOR(DB05, db[EF05+32]);
+					K45XOR(DB10, db[EF06+32]); K11XOR(DB11, db[EF07+32]); K47XOR(DB12, db[EF08+32]); K55XOR(DB13, db[EF09+32]); K05XOR(DB14, db[EF10+32]); K27XOR(DB15, db[EF11+32]);
 				} else {
-					DB00 = w(EF00+32, 40); DB01 = w(EF01+32, 19); DB02 = w(EF02+32,  6); DB03 = w(EF03+32, 25); DB04 = w(EF04+32, 45); DB05 = w(EF05+32, 48);
-					DB10 = w(EF06+32, 31); DB11 = w(EF07+32, 52); DB12 = w(EF08+32, 33); DB13 = w(EF09+32, 41); DB14 = w(EF10+32, 46); DB15 = w(EF11+32, 13);
+					K40XOR(DB00, db[EF00+32]); K19XOR(DB01, db[EF01+32]); K06XOR(DB02, db[EF02+32]); K25XOR(DB03, db[EF03+32]); K45XOR(DB04, db[EF04+32]); K48XOR(DB05, db[EF05+32]);
+					K31XOR(DB10, db[EF06+32]); K52XOR(DB11, db[EF07+32]); K33XOR(DB12, db[EF08+32]); K41XOR(DB13, db[EF09+32]); K46XOR(DB14, db[EF10+32]); K13XOR(DB15, db[EF11+32]);
 				}
 			} else {
 				if (round == 14) {
-					DB00 = w(EF00+32, 26); DB01 = w(EF01+32,  5); DB02 = w(EF02+32, 47); DB03 = w(EF03+32, 11); DB04 = w(EF04+32, 31); DB05 = w(EF05+32, 34);
-					DB10 = w(EF06+32, 48); DB11 = w(EF07+32, 38); DB12 = w(EF08+32, 19); DB13 = w(EF09+32, 27); DB14 = w(EF10+32, 32); DB15 = w(EF11+32, 54);
+					K26XOR(DB00, db[EF00+32]); K05XOR(DB01, db[EF01+32]); K47XOR(DB02, db[EF02+32]); K11XOR(DB03, db[EF03+32]); K31XOR(DB04, db[EF04+32]); K34XOR(DB05, db[EF05+32]);
+					K48XOR(DB10, db[EF06+32]); K38XOR(DB11, db[EF07+32]); K19XOR(DB12, db[EF08+32]); K27XOR(DB13, db[EF09+32]); K32XOR(DB14, db[EF10+32]); K54XOR(DB15, db[EF11+32]);
 				} else {
-					DB00 = w(EF00+32, 19); DB01 = w(EF01+32, 53); DB02 = w(EF02+32, 40); DB03 = w(EF03+32,  4); DB04 = w(EF04+32, 55); DB05 = w(EF05+32, 27);
-					DB10 = w(EF06+32, 41); DB11 = w(EF07+32, 31); DB12 = w(EF08+32, 12); DB13 = w(EF09+32, 20); DB14 = w(EF10+32, 25); DB15 = w(EF11+32, 47);
+					K19XOR(DB00, db[EF00+32]); K53XOR(DB01, db[EF01+32]); K40XOR(DB02, db[EF02+32]); K04XOR(DB03, db[EF03+32]); K55XOR(DB04, db[EF04+32]); K27XOR(DB05, db[EF05+32]);
+					K41XOR(DB10, db[EF06+32]); K31XOR(DB11, db[EF07+32]); K12XOR(DB12, db[EF08+32]); K20XOR(DB13, db[EF09+32]); K25XOR(DB14, db[EF10+32]); K47XOR(DB15, db[EF11+32]);
 				}
 			}
 		}	
@@ -1019,37 +1052,37 @@ swap:
 		if (round < 4) {
 			if (round < 2) {
 				if (round == 0) {
-					DB00 = w(   7+32,  4); DB01 = w(   8+32, 32); DB02 = w(   9+32, 26); DB03 = w(  10+32, 27); DB04 = w(  11+32, 38); DB05 = w(  12+32, 54);
-					DB10 = w(  11+32, 53); DB11 = w(  12+32,  6); DB12 = w(  13+32, 31); DB13 = w(  14+32, 25); DB14 = w(  15+32, 19); DB15 = w(  16+32, 41);
+					K04XOR(DB00, db[   7+32]); K32XOR(DB01, db[   8+32]); K26XOR(DB02, db[   9+32]); K27XOR(DB03, db[  10+32]); K38XOR(DB04, db[  11+32]); K54XOR(DB05, db[  12+32]);
+					K53XOR(DB10, db[  11+32]); K06XOR(DB11, db[  12+32]); K31XOR(DB12, db[  13+32]); K25XOR(DB13, db[  14+32]); K19XOR(DB14, db[  15+32]); K41XOR(DB15, db[  16+32]);
 				} else {
-					DB00 = w(   7+32, 52); DB01 = w(   8+32, 25); DB02 = w(   9+32, 19); DB03 = w(  10+32, 20); DB04 = w(  11+32, 31); DB05 = w(  12+32, 47);
-					DB10 = w(  11+32, 46); DB11 = w(  12+32, 54); DB12 = w(  13+32, 55); DB13 = w(  14+32, 18); DB14 = w(  15+32, 12); DB15 = w(  16+32, 34);
+					K52XOR(DB00, db[   7+32]); K25XOR(DB01, db[   8+32]); K19XOR(DB02, db[   9+32]); K20XOR(DB03, db[  10+32]); K31XOR(DB04, db[  11+32]); K47XOR(DB05, db[  12+32]);
+					K46XOR(DB10, db[  11+32]); K54XOR(DB11, db[  12+32]); K55XOR(DB12, db[  13+32]); K18XOR(DB13, db[  14+32]); K12XOR(DB14, db[  15+32]); K34XOR(DB15, db[  16+32]);
 				}
 			} else {
 				if (round == 2) {
-					DB00 = w(   7+32, 38); DB01 = w(   8+32, 11); DB02 = w(   9+32,  5); DB03 = w(  10+32,  6); DB04 = w(  11+32, 48); DB05 = w(  12+32, 33);
-					DB10 = w(  11+32, 32); DB11 = w(  12+32, 40); DB12 = w(  13+32, 41); DB13 = w(  14+32,  4); DB14 = w(  15+32, 53); DB15 = w(  16+32, 20);
+					K38XOR(DB00, db[   7+32]); K11XOR(DB01, db[   8+32]); K05XOR(DB02, db[   9+32]); K06XOR(DB03, db[  10+32]); K48XOR(DB04, db[  11+32]); K33XOR(DB05, db[  12+32]);
+					K32XOR(DB10, db[  11+32]); K40XOR(DB11, db[  12+32]); K41XOR(DB12, db[  13+32]); K04XOR(DB13, db[  14+32]); K53XOR(DB14, db[  15+32]); K20XOR(DB15, db[  16+32]);
 				} else {
-					DB00 = w(   7+32, 55); DB01 = w(   8+32, 52); DB02 = w(   9+32, 46); DB03 = w(  10+32, 47); DB04 = w(  11+32, 34); DB05 = w(  12+32, 19);
-					DB10 = w(  11+32, 18); DB11 = w(  12+32, 26); DB12 = w(  13+32, 27); DB13 = w(  14+32, 45); DB14 = w(  15+32, 39); DB15 = w(  16+32,  6);
+					K55XOR(DB00, db[   7+32]); K52XOR(DB01, db[   8+32]); K46XOR(DB02, db[   9+32]); K47XOR(DB03, db[  10+32]); K34XOR(DB04, db[  11+32]); K19XOR(DB05, db[  12+32]);
+					K18XOR(DB10, db[  11+32]); K26XOR(DB11, db[  12+32]); K27XOR(DB12, db[  13+32]); K45XOR(DB13, db[  14+32]); K39XOR(DB14, db[  15+32]); K06XOR(DB15, db[  16+32]);
 				}
 			}
 		} else {
 			if (round < 6) {
 				if (round == 4) {
-					DB00 = w(   7+32, 41); DB01 = w(   8+32, 38); DB02 = w(   9+32, 32); DB03 = w(  10+32, 33); DB04 = w(  11+32, 20); DB05 = w(  12+32,  5);
-					DB10 = w(  11+32,  4); DB11 = w(  12+32, 12); DB12 = w(  13+32, 13); DB13 = w(  14+32, 31); DB14 = w(  15+32, 25); DB15 = w(  16+32, 47);
+					K41XOR(DB00, db[   7+32]); K38XOR(DB01, db[   8+32]); K32XOR(DB02, db[   9+32]); K33XOR(DB03, db[  10+32]); K20XOR(DB04, db[  11+32]); K05XOR(DB05, db[  12+32]);
+					K04XOR(DB10, db[  11+32]); K12XOR(DB11, db[  12+32]); K13XOR(DB12, db[  13+32]); K31XOR(DB13, db[  14+32]); K25XOR(DB14, db[  15+32]); K47XOR(DB15, db[  16+32]);
 				} else {
-					DB00 = w(   7+32, 27); DB01 = w(   8+32, 55); DB02 = w(   9+32, 18); DB03 = w(  10+32, 19); DB04 = w(  11+32,  6); DB05 = w(  12+32, 46);
-					DB10 = w(  11+32, 45); DB11 = w(  12+32, 53); DB12 = w(  13+32, 54); DB13 = w(  14+32, 48); DB14 = w(  15+32, 11); DB15 = w(  16+32, 33);
+					K27XOR(DB00, db[   7+32]); K55XOR(DB01, db[   8+32]); K18XOR(DB02, db[   9+32]); K19XOR(DB03, db[  10+32]); K06XOR(DB04, db[  11+32]); K46XOR(DB05, db[  12+32]);
+					K45XOR(DB10, db[  11+32]); K53XOR(DB11, db[  12+32]); K54XOR(DB12, db[  13+32]); K48XOR(DB13, db[  14+32]); K11XOR(DB14, db[  15+32]); K33XOR(DB15, db[  16+32]);
 				}
 			} else {
 				if (round == 6) {
-					DB00 = w(   7+32, 13); DB01 = w(   8+32, 41); DB02 = w(   9+32,  4); DB03 = w(  10+32,  5); DB04 = w(  11+32, 47); DB05 = w(  12+32, 32);
-					DB10 = w(  11+32, 31); DB11 = w(  12+32, 39); DB12 = w(  13+32, 40); DB13 = w(  14+32, 34); DB14 = w(  15+32, 52); DB15 = w(  16+32, 19);
+					K13XOR(DB00, db[   7+32]); K41XOR(DB01, db[   8+32]); K04XOR(DB02, db[   9+32]); K05XOR(DB03, db[  10+32]); K47XOR(DB04, db[  11+32]); K32XOR(DB05, db[  12+32]);
+					K31XOR(DB10, db[  11+32]); K39XOR(DB11, db[  12+32]); K40XOR(DB12, db[  13+32]); K34XOR(DB13, db[  14+32]); K52XOR(DB14, db[  15+32]); K19XOR(DB15, db[  16+32]);
 				} else {
-					DB00 = w(   7+32, 54); DB01 = w(   8+32, 27); DB02 = w(   9+32, 45); DB03 = w(  10+32, 46); DB04 = w(  11+32, 33); DB05 = w(  12+32, 18);
-					DB10 = w(  11+32, 48); DB11 = w(  12+32, 25); DB12 = w(  13+32, 26); DB13 = w(  14+32, 20); DB14 = w(  15+32, 38); DB15 = w(  16+32,  5);
+					K54XOR(DB00, db[   7+32]); K27XOR(DB01, db[   8+32]); K45XOR(DB02, db[   9+32]); K46XOR(DB03, db[  10+32]); K33XOR(DB04, db[  11+32]); K18XOR(DB05, db[  12+32]);
+					K48XOR(DB10, db[  11+32]); K25XOR(DB11, db[  12+32]); K26XOR(DB12, db[  13+32]); K20XOR(DB13, db[  14+32]); K38XOR(DB14, db[  15+32]); K05XOR(DB15, db[  16+32]);
 				}
 			}
 		}
@@ -1057,37 +1090,37 @@ swap:
 		if (round < 12) {
 			if (round < 10) {
 				if (round == 8) {
-					DB00 = w(   7+32, 47); DB01 = w(   8+32, 20); DB02 = w(   9+32, 38); DB03 = w(  10+32, 39); DB04 = w(  11+32, 26); DB05 = w(  12+32, 11);
-					DB10 = w(  11+32, 41); DB11 = w(  12+32, 18); DB12 = w(  13+32, 19); DB13 = w(  14+32, 13); DB14 = w(  15+32, 31); DB15 = w(  16+32, 53);
+					K47XOR(DB00, db[   7+32]); K20XOR(DB01, db[   8+32]); K38XOR(DB02, db[   9+32]); K39XOR(DB03, db[  10+32]); K26XOR(DB04, db[  11+32]); K11XOR(DB05, db[  12+32]);
+					K41XOR(DB10, db[  11+32]); K18XOR(DB11, db[  12+32]); K19XOR(DB12, db[  13+32]); K13XOR(DB13, db[  14+32]); K31XOR(DB14, db[  15+32]); K53XOR(DB15, db[  16+32]);
 				} else {
-					DB00 = w(   7+32, 33); DB01 = w(   8+32,  6); DB02 = w(   9+32, 55); DB03 = w(  10+32, 25); DB04 = w(  11+32, 12); DB05 = w(  12+32, 52);
-					DB10 = w(  11+32, 27); DB11 = w(  12+32,  4); DB12 = w(  13+32,  5); DB13 = w(  14+32, 54); DB14 = w(  15+32, 48); DB15 = w(  16+32, 39);
+					K33XOR(DB00, db[   7+32]); K06XOR(DB01, db[   8+32]); K55XOR(DB02, db[   9+32]); K25XOR(DB03, db[  10+32]); K12XOR(DB04, db[  11+32]); K52XOR(DB05, db[  12+32]);
+					K27XOR(DB10, db[  11+32]); K04XOR(DB11, db[  12+32]); K05XOR(DB12, db[  13+32]); K54XOR(DB13, db[  14+32]); K48XOR(DB14, db[  15+32]); K39XOR(DB15, db[  16+32]);
 				}
 			} else {
 				if (round == 10) {
-					DB00 = w(   7+32, 19); DB01 = w(   8+32, 47); DB02 = w(   9+32, 41); DB03 = w(  10+32, 11); DB04 = w(  11+32, 53); DB05 = w(  12+32, 38);
-					DB10 = w(  11+32, 13); DB11 = w(  12+32, 45); DB12 = w(  13+32, 46); DB13 = w(  14+32, 40); DB14 = w(  15+32, 34); DB15 = w(  16+32, 25);
+					K19XOR(DB00, db[   7+32]); K47XOR(DB01, db[   8+32]); K41XOR(DB02, db[   9+32]); K11XOR(DB03, db[  10+32]); K53XOR(DB04, db[  11+32]); K38XOR(DB05, db[  12+32]);
+					K13XOR(DB10, db[  11+32]); K45XOR(DB11, db[  12+32]); K46XOR(DB12, db[  13+32]); K40XOR(DB13, db[  14+32]); K34XOR(DB14, db[  15+32]); K25XOR(DB15, db[  16+32]);
 				} else {
-					DB00 = w(   7+32,  5); DB01 = w(   8+32, 33); DB02 = w(   9+32, 27); DB03 = w(  10+32, 52); DB04 = w(  11+32, 39); DB05 = w(  12+32, 55);
-					DB10 = w(  11+32, 54); DB11 = w(  12+32, 31); DB12 = w(  13+32, 32); DB13 = w(  14+32, 26); DB14 = w(  15+32, 20); DB15 = w(  16+32, 11);
+					K05XOR(DB00, db[   7+32]); K33XOR(DB01, db[   8+32]); K27XOR(DB02, db[   9+32]); K52XOR(DB03, db[  10+32]); K39XOR(DB04, db[  11+32]); K55XOR(DB05, db[  12+32]);
+					K54XOR(DB10, db[  11+32]); K31XOR(DB11, db[  12+32]); K32XOR(DB12, db[  13+32]); K26XOR(DB13, db[  14+32]); K20XOR(DB14, db[  15+32]); K11XOR(DB15, db[  16+32]);
 				}
 			}
 		} else {
 			if (round < 14) {
 				if (round == 12) {
-					DB00 = w(   7+32, 46); DB01 = w(   8+32, 19); DB02 = w(   9+32, 13); DB03 = w(  10+32, 38); DB04 = w(  11+32, 25); DB05 = w(  12+32, 41);
-					DB10 = w(  11+32, 40); DB11 = w(  12+32, 48); DB12 = w(  13+32, 18); DB13 = w(  14+32, 12); DB14 = w(  15+32,  6); DB15 = w(  16+32, 52);
+					K46XOR(DB00, db[   7+32]); K19XOR(DB01, db[   8+32]); K13XOR(DB02, db[   9+32]); K38XOR(DB03, db[  10+32]); K25XOR(DB04, db[  11+32]); K41XOR(DB05, db[  12+32]);
+					K40XOR(DB10, db[  11+32]); K48XOR(DB11, db[  12+32]); K18XOR(DB12, db[  13+32]); K12XOR(DB13, db[  14+32]); K06XOR(DB14, db[  15+32]); K52XOR(DB15, db[  16+32]);
 				} else {
-					DB00 = w(   7+32, 32); DB01 = w(   8+32,  5); DB02 = w(   9+32, 54); DB03 = w(  10+32, 55); DB04 = w(  11+32, 11); DB05 = w(  12+32, 27);
-					DB10 = w(  11+32, 26); DB11 = w(  12+32, 34); DB12 = w(  13+32,  4); DB13 = w(  14+32, 53); DB14 = w(  15+32, 47); DB15 = w(  16+32, 38);
+					K32XOR(DB00, db[   7+32]); K05XOR(DB01, db[   8+32]); K54XOR(DB02, db[   9+32]); K55XOR(DB03, db[  10+32]); K11XOR(DB04, db[  11+32]); K27XOR(DB05, db[  12+32]);
+					K26XOR(DB10, db[  11+32]); K34XOR(DB11, db[  12+32]); K04XOR(DB12, db[  13+32]); K53XOR(DB13, db[  14+32]); K47XOR(DB14, db[  15+32]); K38XOR(DB15, db[  16+32]);
 				}
 			} else {
 				if (round == 14) {
-					DB00 = w(   7+32, 18); DB01 = w(   8+32, 46); DB02 = w(   9+32, 40); DB03 = w(  10+32, 41); DB04 = w(  11+32, 52); DB05 = w(  12+32, 13);
-					DB10 = w(  11+32, 12); DB11 = w(  12+32, 20); DB12 = w(  13+32, 45); DB13 = w(  14+32, 39); DB14 = w(  15+32, 33); DB15 = w(  16+32, 55);
+					K18XOR(DB00, db[   7+32]); K46XOR(DB01, db[   8+32]); K40XOR(DB02, db[   9+32]); K41XOR(DB03, db[  10+32]); K52XOR(DB04, db[  11+32]); K13XOR(DB05, db[  12+32]);
+					K12XOR(DB10, db[  11+32]); K20XOR(DB11, db[  12+32]); K45XOR(DB12, db[  13+32]); K39XOR(DB13, db[  14+32]); K33XOR(DB14, db[  15+32]); K55XOR(DB15, db[  16+32]);
 				} else {
-					DB00 = w(   7+32, 11); DB01 = w(   8+32, 39); DB02 = w(   9+32, 33); DB03 = w(  10+32, 34); DB04 = w(  11+32, 45); DB05 = w(  12+32,  6);
-					DB10 = w(  11+32,  5); DB11 = w(  12+32, 13); DB12 = w(  13+32, 38); DB13 = w(  14+32, 32); DB14 = w(  15+32, 26); DB15 = w(  16+32, 48);
+					K11XOR(DB00, db[   7+32]); K39XOR(DB01, db[   8+32]); K33XOR(DB02, db[   9+32]); K34XOR(DB03, db[  10+32]); K45XOR(DB04, db[  11+32]); K06XOR(DB05, db[  12+32]);
+					K05XOR(DB10, db[  11+32]); K13XOR(DB11, db[  12+32]); K38XOR(DB12, db[  13+32]); K32XOR(DB13, db[  14+32]); K26XOR(DB14, db[  15+32]); K48XOR(DB15, db[  16+32]);
 				}
 			}
 		}	
@@ -1099,37 +1132,37 @@ swap:
 		if (round < 4) {
 			if (round < 2) {
 				if (round == 0) {
-					DB00 = w(EF24+32, 15); DB01 = w(EF25+32, 24); DB02 = w(EF26+32, 28); DB03 = w(EF27+32, 43); DB04 = w(EF28+32, 30); DB05 = w(EF29+32,  3);
-					DB10 = w(EF30+32, 35); DB11 = w(EF31+32, 22); DB12 = w(EF32+32,  2); DB13 = w(EF33+32, 44); DB14 = w(EF34+32, 14); DB15 = w(EF35+32, 23);
+					K15XOR(DB00, db[EF24+32]); K24XOR(DB01, db[EF25+32]); K28XOR(DB02, db[EF26+32]); K43XOR(DB03, db[EF27+32]); K30XOR(DB04, db[EF28+32]); K03XOR(DB05, db[EF29+32]);
+					K35XOR(DB10, db[EF30+32]); K22XOR(DB11, db[EF31+32]); K02XOR(DB12, db[EF32+32]); K44XOR(DB13, db[EF33+32]); K14XOR(DB14, db[EF34+32]); K23XOR(DB15, db[EF35+32]);
 				} else {
-					DB00 = w(EF24+32,  8); DB01 = w(EF25+32, 17); DB02 = w(EF26+32, 21); DB03 = w(EF27+32, 36); DB04 = w(EF28+32, 23); DB05 = w(EF29+32, 49);
-					DB10 = w(EF30+32, 28); DB11 = w(EF31+32, 15); DB12 = w(EF32+32, 24); DB13 = w(EF33+32, 37); DB14 = w(EF34+32,  7); DB15 = w(EF35+32, 16);
+					K08XOR(DB00, db[EF24+32]); K17XOR(DB01, db[EF25+32]); K21XOR(DB02, db[EF26+32]); K36XOR(DB03, db[EF27+32]); K23XOR(DB04, db[EF28+32]); K49XOR(DB05, db[EF29+32]);
+					K28XOR(DB10, db[EF30+32]); K15XOR(DB11, db[EF31+32]); K24XOR(DB12, db[EF32+32]); K37XOR(DB13, db[EF33+32]); K07XOR(DB14, db[EF34+32]); K16XOR(DB15, db[EF35+32]);
 				}
 			} else {
 				if (round == 2) {
-					DB00 = w(EF24+32, 51); DB01 = w(EF25+32,  3); DB02 = w(EF26+32,  7); DB03 = w(EF27+32, 22); DB04 = w(EF28+32,  9); DB05 = w(EF29+32, 35);
-					DB10 = w(EF30+32, 14); DB11 = w(EF31+32,  1); DB12 = w(EF32+32, 10); DB13 = w(EF33+32, 23); DB14 = w(EF34+32, 50); DB15 = w(EF35+32,  2);
+					K51XOR(DB00, db[EF24+32]); K03XOR(DB01, db[EF25+32]); K07XOR(DB02, db[EF26+32]); K22XOR(DB03, db[EF27+32]); K09XOR(DB04, db[EF28+32]); K35XOR(DB05, db[EF29+32]);
+					K14XOR(DB10, db[EF30+32]); K01XOR(DB11, db[EF31+32]); K10XOR(DB12, db[EF32+32]); K23XOR(DB13, db[EF33+32]); K50XOR(DB14, db[EF34+32]); K02XOR(DB15, db[EF35+32]);
 				} else {
-					DB00 = w(EF24+32, 37); DB01 = w(EF25+32, 42); DB02 = w(EF26+32, 50); DB03 = w(EF27+32,  8); DB04 = w(EF28+32, 24); DB05 = w(EF29+32, 21);
-					DB10 = w(EF30+32,  0); DB11 = w(EF31+32, 44); DB12 = w(EF32+32, 49); DB13 = w(EF33+32,  9); DB14 = w(EF34+32, 36); DB15 = w(EF35+32, 17);
+					K37XOR(DB00, db[EF24+32]); K42XOR(DB01, db[EF25+32]); K50XOR(DB02, db[EF26+32]); K08XOR(DB03, db[EF27+32]); K24XOR(DB04, db[EF28+32]); K21XOR(DB05, db[EF29+32]);
+					K00XOR(DB10, db[EF30+32]); K44XOR(DB11, db[EF31+32]); K49XOR(DB12, db[EF32+32]); K09XOR(DB13, db[EF33+32]); K36XOR(DB14, db[EF34+32]); K17XOR(DB15, db[EF35+32]);
 				}
 			}
 		} else {
 			if (round < 6) {
 				if (round == 4) {
-					DB00 = w(EF24+32, 23); DB01 = w(EF25+32, 28); DB02 = w(EF26+32, 36); DB03 = w(EF27+32, 51); DB04 = w(EF28+32, 10); DB05 = w(EF29+32,  7);
-					DB10 = w(EF30+32, 43); DB11 = w(EF31+32, 30); DB12 = w(EF32+32, 35); DB13 = w(EF33+32, 24); DB14 = w(EF34+32, 22); DB15 = w(EF35+32,  3);
+					K23XOR(DB00, db[EF24+32]); K28XOR(DB01, db[EF25+32]); K36XOR(DB02, db[EF26+32]); K51XOR(DB03, db[EF27+32]); K10XOR(DB04, db[EF28+32]); K07XOR(DB05, db[EF29+32]);
+					K43XOR(DB10, db[EF30+32]); K30XOR(DB11, db[EF31+32]); K35XOR(DB12, db[EF32+32]); K24XOR(DB13, db[EF33+32]); K22XOR(DB14, db[EF34+32]); K03XOR(DB15, db[EF35+32]);
 				} else {
-					DB00 = w(EF24+32,  9); DB01 = w(EF25+32, 14); DB02 = w(EF26+32, 22); DB03 = w(EF27+32, 37); DB04 = w(EF28+32, 49); DB05 = w(EF29+32, 50);
-					DB10 = w(EF30+32, 29); DB11 = w(EF31+32, 16); DB12 = w(EF32+32, 21); DB13 = w(EF33+32, 10); DB14 = w(EF34+32,  8); DB15 = w(EF35+32, 42);
+					K09XOR(DB00, db[EF24+32]); K14XOR(DB01, db[EF25+32]); K22XOR(DB02, db[EF26+32]); K37XOR(DB03, db[EF27+32]); K49XOR(DB04, db[EF28+32]); K50XOR(DB05, db[EF29+32]);
+					K29XOR(DB10, db[EF30+32]); K16XOR(DB11, db[EF31+32]); K21XOR(DB12, db[EF32+32]); K10XOR(DB13, db[EF33+32]); K08XOR(DB14, db[EF34+32]); K42XOR(DB15, db[EF35+32]);
 				}
 			} else {
 				if (round == 6) {
-					DB00 = w(EF24+32, 24); DB01 = w(EF25+32,  0); DB02 = w(EF26+32,  8); DB03 = w(EF27+32, 23); DB04 = w(EF28+32, 35); DB05 = w(EF29+32, 36);
-					DB10 = w(EF30+32, 15); DB11 = w(EF31+32,  2); DB12 = w(EF32+32,  7); DB13 = w(EF33+32, 49); DB14 = w(EF34+32, 51); DB15 = w(EF35+32, 28);
+					K24XOR(DB00, db[EF24+32]); K00XOR(DB01, db[EF25+32]); K08XOR(DB02, db[EF26+32]); K23XOR(DB03, db[EF27+32]); K35XOR(DB04, db[EF28+32]); K36XOR(DB05, db[EF29+32]);
+					K15XOR(DB10, db[EF30+32]); K02XOR(DB11, db[EF31+32]); K07XOR(DB12, db[EF32+32]); K49XOR(DB13, db[EF33+32]); K51XOR(DB14, db[EF34+32]); K28XOR(DB15, db[EF35+32]);
 				} else {
-					DB00 = w(EF24+32, 10); DB01 = w(EF25+32, 43); DB02 = w(EF26+32, 51); DB03 = w(EF27+32,  9); DB04 = w(EF28+32, 21); DB05 = w(EF29+32, 22);
-					DB10 = w(EF30+32,  1); DB11 = w(EF31+32, 17); DB12 = w(EF32+32, 50); DB13 = w(EF33+32, 35); DB14 = w(EF34+32, 37); DB15 = w(EF35+32, 14);
+					K10XOR(DB00, db[EF24+32]); K43XOR(DB01, db[EF25+32]); K51XOR(DB02, db[EF26+32]); K09XOR(DB03, db[EF27+32]); K21XOR(DB04, db[EF28+32]); K22XOR(DB05, db[EF29+32]);
+					K01XOR(DB10, db[EF30+32]); K17XOR(DB11, db[EF31+32]); K50XOR(DB12, db[EF32+32]); K35XOR(DB13, db[EF33+32]); K37XOR(DB14, db[EF34+32]); K14XOR(DB15, db[EF35+32]);
 				}
 			}
 		}
@@ -1137,37 +1170,37 @@ swap:
 		if (round < 12) {
 			if (round < 10) {
 				if (round == 8) {
-					DB00 = w(EF24+32,  3); DB01 = w(EF25+32, 36); DB02 = w(EF26+32, 44); DB03 = w(EF27+32,  2); DB04 = w(EF28+32, 14); DB05 = w(EF29+32, 15);
-					DB10 = w(EF30+32, 51); DB11 = w(EF31+32, 10); DB12 = w(EF32+32, 43); DB13 = w(EF33+32, 28); DB14 = w(EF34+32, 30); DB15 = w(EF35+32,  7);
+					K03XOR(DB00, db[EF24+32]); K36XOR(DB01, db[EF25+32]); K44XOR(DB02, db[EF26+32]); K02XOR(DB03, db[EF27+32]); K14XOR(DB04, db[EF28+32]); K15XOR(DB05, db[EF29+32]);
+					K51XOR(DB10, db[EF30+32]); K10XOR(DB11, db[EF31+32]); K43XOR(DB12, db[EF32+32]); K28XOR(DB13, db[EF33+32]); K30XOR(DB14, db[EF34+32]); K07XOR(DB15, db[EF35+32]);
 				} else {
-					DB00 = w(EF24+32, 42); DB01 = w(EF25+32, 22); DB02 = w(EF26+32, 30); DB03 = w(EF27+32, 17); DB04 = w(EF28+32,  0); DB05 = w(EF29+32,  1);
-					DB10 = w(EF30+32, 37); DB11 = w(EF31+32, 49); DB12 = w(EF32+32, 29); DB13 = w(EF33+32, 14); DB14 = w(EF34+32, 16); DB15 = w(EF35+32, 50);
+					K42XOR(DB00, db[EF24+32]); K22XOR(DB01, db[EF25+32]); K30XOR(DB02, db[EF26+32]); K17XOR(DB03, db[EF27+32]); K00XOR(DB04, db[EF28+32]); K01XOR(DB05, db[EF29+32]);
+					K37XOR(DB10, db[EF30+32]); K49XOR(DB11, db[EF31+32]); K29XOR(DB12, db[EF32+32]); K14XOR(DB13, db[EF33+32]); K16XOR(DB14, db[EF34+32]); K50XOR(DB15, db[EF35+32]);
 				}
 			} else {
 				if (round == 10) {
-					DB00 = w(EF24+32, 28); DB01 = w(EF25+32,  8); DB02 = w(EF26+32, 16); DB03 = w(EF27+32,  3); DB04 = w(EF28+32, 43); DB05 = w(EF29+32, 44);
-					DB10 = w(EF30+32, 23); DB11 = w(EF31+32, 35); DB12 = w(EF32+32, 15); DB13 = w(EF33+32,  0); DB14 = w(EF34+32,  2); DB15 = w(EF35+32, 36);
+					K28XOR(DB00, db[EF24+32]); K08XOR(DB01, db[EF25+32]); K16XOR(DB02, db[EF26+32]); K03XOR(DB03, db[EF27+32]); K43XOR(DB04, db[EF28+32]); K44XOR(DB05, db[EF29+32]);
+					K23XOR(DB10, db[EF30+32]); K35XOR(DB11, db[EF31+32]); K15XOR(DB12, db[EF32+32]); K00XOR(DB13, db[EF33+32]); K02XOR(DB14, db[EF34+32]); K36XOR(DB15, db[EF35+32]);
 				} else {
-					DB00 = w(EF24+32, 14); DB01 = w(EF25+32, 51); DB02 = w(EF26+32,  2); DB03 = w(EF27+32, 42); DB04 = w(EF28+32, 29); DB05 = w(EF29+32, 30);
-					DB10 = w(EF30+32,  9); DB11 = w(EF31+32, 21); DB12 = w(EF32+32,  1); DB13 = w(EF33+32, 43); DB14 = w(EF34+32, 17); DB15 = w(EF35+32, 22);
+					K14XOR(DB00, db[EF24+32]); K51XOR(DB01, db[EF25+32]); K02XOR(DB02, db[EF26+32]); K42XOR(DB03, db[EF27+32]); K29XOR(DB04, db[EF28+32]); K30XOR(DB05, db[EF29+32]);
+					K09XOR(DB10, db[EF30+32]); K21XOR(DB11, db[EF31+32]); K01XOR(DB12, db[EF32+32]); K43XOR(DB13, db[EF33+32]); K17XOR(DB14, db[EF34+32]); K22XOR(DB15, db[EF35+32]);
 				}
 			}
 		} else {
 			if (round < 14) {
 				if (round == 12) {
-					DB00 = w(EF24+32,  0); DB01 = w(EF25+32, 37); DB02 = w(EF26+32, 17); DB03 = w(EF27+32, 28); DB04 = w(EF28+32, 15); DB05 = w(EF29+32, 16);
-					DB10 = w(EF30+32, 24); DB11 = w(EF31+32,  7); DB12 = w(EF32+32, 44); DB13 = w(EF33+32, 29); DB14 = w(EF34+32,  3); DB15 = w(EF35+32,  8);
+					K00XOR(DB00, db[EF24+32]); K37XOR(DB01, db[EF25+32]); K17XOR(DB02, db[EF26+32]); K28XOR(DB03, db[EF27+32]); K15XOR(DB04, db[EF28+32]); K16XOR(DB05, db[EF29+32]);
+					K24XOR(DB10, db[EF30+32]); K07XOR(DB11, db[EF31+32]); K44XOR(DB12, db[EF32+32]); K29XOR(DB13, db[EF33+32]); K03XOR(DB14, db[EF34+32]); K08XOR(DB15, db[EF35+32]);
 				} else {
-					DB00 = w(EF24+32, 43); DB01 = w(EF25+32, 23); DB02 = w(EF26+32,  3); DB03 = w(EF27+32, 14); DB04 = w(EF28+32,  1); DB05 = w(EF29+32,  2);
-					DB10 = w(EF30+32, 10); DB11 = w(EF31+32, 50); DB12 = w(EF32+32, 30); DB13 = w(EF33+32, 15); DB14 = w(EF34+32, 42); DB15 = w(EF35+32, 51);
+					K43XOR(DB00, db[EF24+32]); K23XOR(DB01, db[EF25+32]); K03XOR(DB02, db[EF26+32]); K14XOR(DB03, db[EF27+32]); K01XOR(DB04, db[EF28+32]); K02XOR(DB05, db[EF29+32]);
+					K10XOR(DB10, db[EF30+32]); K50XOR(DB11, db[EF31+32]); K30XOR(DB12, db[EF32+32]); K15XOR(DB13, db[EF33+32]); K42XOR(DB14, db[EF34+32]); K51XOR(DB15, db[EF35+32]);
 				}
 			} else {
 				if (round == 14) {
-					DB00 = w(EF24+32, 29); DB01 = w(EF25+32,  9); DB02 = w(EF26+32, 42); DB03 = w(EF27+32,  0); DB04 = w(EF28+32, 44); DB05 = w(EF29+32, 17);
-					DB10 = w(EF30+32, 49); DB11 = w(EF31+32, 36); DB12 = w(EF32+32, 16); DB13 = w(EF33+32,  1); DB14 = w(EF34+32, 28); DB15 = w(EF35+32, 37);
+					K29XOR(DB00, db[EF24+32]); K09XOR(DB01, db[EF25+32]); K42XOR(DB02, db[EF26+32]); K00XOR(DB03, db[EF27+32]); K44XOR(DB04, db[EF28+32]); K17XOR(DB05, db[EF29+32]);
+					K49XOR(DB10, db[EF30+32]); K36XOR(DB11, db[EF31+32]); K16XOR(DB12, db[EF32+32]); K01XOR(DB13, db[EF33+32]); K28XOR(DB14, db[EF34+32]); K37XOR(DB15, db[EF35+32]);
 				} else {
-					DB00 = w(EF24+32, 22); DB01 = w(EF25+32,  2); DB02 = w(EF26+32, 35); DB03 = w(EF27+32, 50); DB04 = w(EF28+32, 37); DB05 = w(EF29+32, 10);
-					DB10 = w(EF30+32, 42); DB11 = w(EF31+32, 29); DB12 = w(EF32+32,  9); DB13 = w(EF33+32, 51); DB14 = w(EF34+32, 21); DB15 = w(EF35+32, 30);
+					K22XOR(DB00, db[EF24+32]); K02XOR(DB01, db[EF25+32]); K35XOR(DB02, db[EF26+32]); K50XOR(DB03, db[EF27+32]); K37XOR(DB04, db[EF28+32]); K10XOR(DB05, db[EF29+32]);
+					K42XOR(DB10, db[EF30+32]); K29XOR(DB11, db[EF31+32]); K09XOR(DB12, db[EF32+32]); K51XOR(DB13, db[EF33+32]); K21XOR(DB14, db[EF34+32]); K30XOR(DB15, db[EF35+32]);
 				}
 			}
 		}	
@@ -1180,37 +1213,37 @@ swap:
 		if (round < 4) {
 			if (round < 2) {
 				if (round == 0) {
-					DB00 = w(  23+32, 51); DB01 = w(  24+32, 16); DB02 = w(  25+32, 29); DB03 = w(  26+32, 49); DB04 = w(  27+32,  7); DB05 = w(  28+32, 17);
-					DB10 = w(  27+32, 37); DB11 = w(  28+32,  8); DB12 = w(  29+32,  9); DB13 = w(  30+32, 50); DB14 = w(  31+32, 42); DB15 = w(   0+32, 21);
+					K51XOR(DB00, db[  23+32]); K16XOR(DB01, db[  24+32]); K29XOR(DB02, db[  25+32]); K49XOR(DB03, db[  26+32]); K07XOR(DB04, db[  27+32]); K17XOR(DB05, db[  28+32]);
+					K37XOR(DB10, db[  27+32]); K08XOR(DB11, db[  28+32]); K09XOR(DB12, db[  29+32]); K50XOR(DB13, db[  30+32]); K42XOR(DB14, db[  31+32]); K21XOR(DB15, db[   0+32]);
 				} else {
-					DB00 = w(  23+32, 44); DB01 = w(  24+32,  9); DB02 = w(  25+32, 22); DB03 = w(  26+32, 42); DB04 = w(  27+32,  0); DB05 = w(  28+32, 10);
-					DB10 = w(  27+32, 30); DB11 = w(  28+32,  1); DB12 = w(  29+32,  2); DB13 = w(  30+32, 43); DB14 = w(  31+32, 35); DB15 = w(   0+32, 14);
+					K44XOR(DB00, db[  23+32]); K09XOR(DB01, db[  24+32]); K22XOR(DB02, db[  25+32]); K42XOR(DB03, db[  26+32]); K00XOR(DB04, db[  27+32]); K10XOR(DB05, db[  28+32]);
+					K30XOR(DB10, db[  27+32]); K01XOR(DB11, db[  28+32]); K02XOR(DB12, db[  29+32]); K43XOR(DB13, db[  30+32]); K35XOR(DB14, db[  31+32]); K14XOR(DB15, db[   0+32]);
 				}
 			} else {
 				if (round == 2) {
-					DB00 = w(  23+32, 30); DB01 = w(  24+32, 24); DB02 = w(  25+32,  8); DB03 = w(  26+32, 28); DB04 = w(  27+32, 43); DB05 = w(  28+32, 49);
-					DB10 = w(  27+32, 16); DB11 = w(  28+32, 44); DB12 = w(  29+32, 17); DB13 = w(  30+32, 29); DB14 = w(  31+32, 21); DB15 = w(   0+32,  0);
+					K30XOR(DB00, db[  23+32]); K24XOR(DB01, db[  24+32]); K08XOR(DB02, db[  25+32]); K28XOR(DB03, db[  26+32]); K43XOR(DB04, db[  27+32]); K49XOR(DB05, db[  28+32]);
+					K16XOR(DB10, db[  27+32]); K44XOR(DB11, db[  28+32]); K17XOR(DB12, db[  29+32]); K29XOR(DB13, db[  30+32]); K21XOR(DB14, db[  31+32]); K00XOR(DB15, db[   0+32]);
 				} else {
-					DB00 = w(  23+32, 16); DB01 = w(  24+32, 10); DB02 = w(  25+32, 51); DB03 = w(  26+32, 14); DB04 = w(  27+32, 29); DB05 = w(  28+32, 35);
-					DB10 = w(  27+32,  2); DB11 = w(  28+32, 30); DB12 = w(  29+32,  3); DB13 = w(  30+32, 15); DB14 = w(  31+32,  7); DB15 = w(   0+32, 43);
+					K16XOR(DB00, db[  23+32]); K10XOR(DB01, db[  24+32]); K51XOR(DB02, db[  25+32]); K14XOR(DB03, db[  26+32]); K29XOR(DB04, db[  27+32]); K35XOR(DB05, db[  28+32]);
+					K02XOR(DB10, db[  27+32]); K30XOR(DB11, db[  28+32]); K03XOR(DB12, db[  29+32]); K15XOR(DB13, db[  30+32]); K07XOR(DB14, db[  31+32]); K43XOR(DB15, db[   0+32]);
 				}
 			}
 		} else {
 			if (round < 6) {
 				if (round == 4) {
-					DB00 = w(  23+32,  2); DB01 = w(  24+32, 49); DB02 = w(  25+32, 37); DB03 = w(  26+32,  0); DB04 = w(  27+32, 15); DB05 = w(  28+32, 21);
-					DB10 = w(  27+32, 17); DB11 = w(  28+32, 16); DB12 = w(  29+32, 42); DB13 = w(  30+32,  1); DB14 = w(  31+32, 50); DB15 = w(   0+32, 29);
+					K02XOR(DB00, db[  23+32]); K49XOR(DB01, db[  24+32]); K37XOR(DB02, db[  25+32]); K00XOR(DB03, db[  26+32]); K15XOR(DB04, db[  27+32]); K21XOR(DB05, db[  28+32]);
+					K17XOR(DB10, db[  27+32]); K16XOR(DB11, db[  28+32]); K42XOR(DB12, db[  29+32]); K01XOR(DB13, db[  30+32]); K50XOR(DB14, db[  31+32]); K29XOR(DB15, db[   0+32]);
 				} else {
-					DB00 = w(  23+32, 17); DB01 = w(  24+32, 35); DB02 = w(  25+32, 23); DB03 = w(  26+32, 43); DB04 = w(  27+32,  1); DB05 = w(  28+32,  7);
-					DB10 = w(  27+32,  3); DB11 = w(  28+32,  2); DB12 = w(  29+32, 28); DB13 = w(  30+32, 44); DB14 = w(  31+32, 36); DB15 = w(   0+32, 15);
+					K17XOR(DB00, db[  23+32]); K35XOR(DB01, db[  24+32]); K23XOR(DB02, db[  25+32]); K43XOR(DB03, db[  26+32]); K01XOR(DB04, db[  27+32]); K07XOR(DB05, db[  28+32]);
+					K03XOR(DB10, db[  27+32]); K02XOR(DB11, db[  28+32]); K28XOR(DB12, db[  29+32]); K44XOR(DB13, db[  30+32]); K36XOR(DB14, db[  31+32]); K15XOR(DB15, db[   0+32]);
 				}
 			} else {
 				if (round == 6) {
-					DB00 = w(  23+32,  3); DB01 = w(  24+32, 21); DB02 = w(  25+32,  9); DB03 = w(  26+32, 29); DB04 = w(  27+32, 44); DB05 = w(  28+32, 50);
-					DB10 = w(  27+32, 42); DB11 = w(  28+32, 17); DB12 = w(  29+32, 14); DB13 = w(  30+32, 30); DB14 = w(  31+32, 22); DB15 = w(   0+32,  1);
+					K03XOR(DB00, db[  23+32]); K21XOR(DB01, db[  24+32]); K09XOR(DB02, db[  25+32]); K29XOR(DB03, db[  26+32]); K44XOR(DB04, db[  27+32]); K50XOR(DB05, db[  28+32]);
+					K42XOR(DB10, db[  27+32]); K17XOR(DB11, db[  28+32]); K14XOR(DB12, db[  29+32]); K30XOR(DB13, db[  30+32]); K22XOR(DB14, db[  31+32]); K01XOR(DB15, db[   0+32]);
 				} else {
-					DB00 = w(  23+32, 42); DB01 = w(  24+32,  7); DB02 = w(  25+32, 24); DB03 = w(  26+32, 15); DB04 = w(  27+32, 30); DB05 = w(  28+32, 36);
-					DB10 = w(  27+32, 28); DB11 = w(  28+32,  3); DB12 = w(  29+32,  0); DB13 = w(  30+32, 16); DB14 = w(  31+32,  8); DB15 = w(   0+32, 44);
+					K42XOR(DB00, db[  23+32]); K07XOR(DB01, db[  24+32]); K24XOR(DB02, db[  25+32]); K15XOR(DB03, db[  26+32]); K30XOR(DB04, db[  27+32]); K36XOR(DB05, db[  28+32]);
+					K28XOR(DB10, db[  27+32]); K03XOR(DB11, db[  28+32]); K00XOR(DB12, db[  29+32]); K16XOR(DB13, db[  30+32]); K08XOR(DB14, db[  31+32]); K44XOR(DB15, db[   0+32]);
 				}
 			}
 		}
@@ -1218,37 +1251,37 @@ swap:
 		if (round < 12) {
 			if (round < 10) {
 				if (round == 8) {
-					DB00 = w(  23+32, 35); DB01 = w(  24+32,  0); DB02 = w(  25+32, 17); DB03 = w(  26+32,  8); DB04 = w(  27+32, 23); DB05 = w(  28+32, 29);
-					DB10 = w(  27+32, 21); DB11 = w(  28+32, 49); DB12 = w(  29+32, 50); DB13 = w(  30+32,  9); DB14 = w(  31+32,  1); DB15 = w(   0+32, 37);
+					K35XOR(DB00, db[  23+32]); K00XOR(DB01, db[  24+32]); K17XOR(DB02, db[  25+32]); K08XOR(DB03, db[  26+32]); K23XOR(DB04, db[  27+32]); K29XOR(DB05, db[  28+32]);
+					K21XOR(DB10, db[  27+32]); K49XOR(DB11, db[  28+32]); K50XOR(DB12, db[  29+32]); K09XOR(DB13, db[  30+32]); K01XOR(DB14, db[  31+32]); K37XOR(DB15, db[   0+32]);
 				} else {
-					DB00 = w(  23+32, 21); DB01 = w(  24+32, 43); DB02 = w(  25+32,  3); DB03 = w(  26+32, 51); DB04 = w(  27+32,  9); DB05 = w(  28+32, 15);
-					DB10 = w(  27+32,  7); DB11 = w(  28+32, 35); DB12 = w(  29+32, 36); DB13 = w(  30+32, 24); DB14 = w(  31+32, 44); DB15 = w(   0+32, 23);
+					K21XOR(DB00, db[  23+32]); K43XOR(DB01, db[  24+32]); K03XOR(DB02, db[  25+32]); K51XOR(DB03, db[  26+32]); K09XOR(DB04, db[  27+32]); K15XOR(DB05, db[  28+32]);
+					K07XOR(DB10, db[  27+32]); K35XOR(DB11, db[  28+32]); K36XOR(DB12, db[  29+32]); K24XOR(DB13, db[  30+32]); K44XOR(DB14, db[  31+32]); K23XOR(DB15, db[   0+32]);
 				}
 			} else {
 				if (round == 10) {
-					DB00 = w(  23+32,  7); DB01 = w(  24+32, 29); DB02 = w(  25+32, 42); DB03 = w(  26+32, 37); DB04 = w(  27+32, 24); DB05 = w(  28+32,  1);
-					DB10 = w(  27+32, 50); DB11 = w(  28+32, 21); DB12 = w(  29+32, 22); DB13 = w(  30+32, 10); DB14 = w(  31+32, 30); DB15 = w(   0+32,  9);
+					K07XOR(DB00, db[  23+32]); K29XOR(DB01, db[  24+32]); K42XOR(DB02, db[  25+32]); K37XOR(DB03, db[  26+32]); K24XOR(DB04, db[  27+32]); K01XOR(DB05, db[  28+32]);
+					K50XOR(DB10, db[  27+32]); K21XOR(DB11, db[  28+32]); K22XOR(DB12, db[  29+32]); K10XOR(DB13, db[  30+32]); K30XOR(DB14, db[  31+32]); K09XOR(DB15, db[   0+32]);
 				} else {
-					DB00 = w(  23+32, 50); DB01 = w(  24+32, 15); DB02 = w(  25+32, 28); DB03 = w(  26+32, 23); DB04 = w(  27+32, 10); DB05 = w(  28+32, 44);
-					DB10 = w(  27+32, 36); DB11 = w(  28+32,  7); DB12 = w(  29+32,  8); DB13 = w(  30+32, 49); DB14 = w(  31+32, 16); DB15 = w(   0+32, 24);
+					K50XOR(DB00, db[  23+32]); K15XOR(DB01, db[  24+32]); K28XOR(DB02, db[  25+32]); K23XOR(DB03, db[  26+32]); K10XOR(DB04, db[  27+32]); K44XOR(DB05, db[  28+32]);
+					K36XOR(DB10, db[  27+32]); K07XOR(DB11, db[  28+32]); K08XOR(DB12, db[  29+32]); K49XOR(DB13, db[  30+32]); K16XOR(DB14, db[  31+32]); K24XOR(DB15, db[   0+32]);
 				}
 			}
 		} else {
 			if (round < 14) {
 				if (round == 12) {
-					DB00 = w(  23+32, 36); DB01 = w(  24+32,  1); DB02 = w(  25+32, 14); DB03 = w(  26+32,  9); DB04 = w(  27+32, 49); DB05 = w(  28+32, 30);
-					DB10 = w(  27+32, 22); DB11 = w(  28+32, 50); DB12 = w(  29+32, 51); DB13 = w(  30+32, 35); DB14 = w(  31+32,  2); DB15 = w(   0+32, 10);
+					K36XOR(DB00, db[  23+32]); K01XOR(DB01, db[  24+32]); K14XOR(DB02, db[  25+32]); K09XOR(DB03, db[  26+32]); K49XOR(DB04, db[  27+32]); K30XOR(DB05, db[  28+32]);
+					K22XOR(DB10, db[  27+32]); K50XOR(DB11, db[  28+32]); K51XOR(DB12, db[  29+32]); K35XOR(DB13, db[  30+32]); K02XOR(DB14, db[  31+32]); K10XOR(DB15, db[   0+32]);
 				} else {
-					DB00 = w(  23+32, 22); DB01 = w(  24+32, 44); DB02 = w(  25+32,  0); DB03 = w(  26+32, 24); DB04 = w(  27+32, 35); DB05 = w(  28+32, 16);
-					DB10 = w(  27+32,  8); DB11 = w(  28+32, 36); DB12 = w(  29+32, 37); DB13 = w(  30+32, 21); DB14 = w(  31+32, 17); DB15 = w(   0+32, 49);
+					K22XOR(DB00, db[  23+32]); K44XOR(DB01, db[  24+32]); K00XOR(DB02, db[  25+32]); K24XOR(DB03, db[  26+32]); K35XOR(DB04, db[  27+32]); K16XOR(DB05, db[  28+32]);
+					K08XOR(DB10, db[  27+32]); K36XOR(DB11, db[  28+32]); K37XOR(DB12, db[  29+32]); K21XOR(DB13, db[  30+32]); K17XOR(DB14, db[  31+32]); K49XOR(DB15, db[   0+32]);
 				}
 			} else {
 				if (round == 14) {
-					DB00 = w(  23+32,  8); DB01 = w(  24+32, 30); DB02 = w(  25+32, 43); DB03 = w(  26+32, 10); DB04 = w(  27+32, 21); DB05 = w(  28+32,  2);
-					DB10 = w(  27+32, 51); DB11 = w(  28+32, 22); DB12 = w(  29+32, 23); DB13 = w(  30+32,  7); DB14 = w(  31+32,  3); DB15 = w(   0+32, 35);
+					K08XOR(DB00, db[  23+32]); K30XOR(DB01, db[  24+32]); K43XOR(DB02, db[  25+32]); K10XOR(DB03, db[  26+32]); K21XOR(DB04, db[  27+32]); K02XOR(DB05, db[  28+32]);
+					K51XOR(DB10, db[  27+32]); K22XOR(DB11, db[  28+32]); K23XOR(DB12, db[  29+32]); K07XOR(DB13, db[  30+32]); K03XOR(DB14, db[  31+32]); K35XOR(DB15, db[   0+32]);
 				} else {
-					DB00 = w(  23+32,  1); DB01 = w(  24+32, 23); DB02 = w(  25+32, 36); DB03 = w(  26+32,  3); DB04 = w(  27+32, 14); DB05 = w(  28+32, 24);
-					DB10 = w(  27+32, 44); DB11 = w(  28+32, 15); DB12 = w(  29+32, 16); DB13 = w(  30+32,  0); DB14 = w(  31+32, 49); DB15 = w(   0+32, 28);
+					K01XOR(DB00, db[  23+32]); K23XOR(DB01, db[  24+32]); K36XOR(DB02, db[  25+32]); K03XOR(DB03, db[  26+32]); K14XOR(DB04, db[  27+32]); K24XOR(DB05, db[  28+32]);
+					K44XOR(DB10, db[  27+32]); K15XOR(DB11, db[  28+32]); K16XOR(DB12, db[  29+32]); K00XOR(DB13, db[  30+32]); K49XOR(DB14, db[  31+32]); K28XOR(DB15, db[   0+32]);
 				}
 			}
 		}	
@@ -1273,144 +1306,44 @@ next:
 	goto start;
 }
 
-#define GET_TRIPCODE_CHAR_INDEX(r, t, i0, i1, i2, i3, i4, i5, pos)         \
-	(  ((((r)[i0] & (0x01 << (t))) ? (0x1) : (0x0)) << (5 + ((pos) * 6)))  \
-	 | ((((r)[i1] & (0x01 << (t))) ? (0x1) : (0x0)) << (4 + ((pos) * 6)))  \
-	 | ((((r)[i2] & (0x01 << (t))) ? (0x1) : (0x0)) << (3 + ((pos) * 6)))  \
-	 | ((((r)[i3] & (0x01 << (t))) ? (0x1) : (0x0)) << (2 + ((pos) * 6)))  \
-	 | ((((r)[i4] & (0x01 << (t))) ? (0x1) : (0x0)) << (1 + ((pos) * 6)))  \
-	 | ((((r)[i5] & (0x01 << (t))) ? (0x1) : (0x0)) << (0 + ((pos) * 6)))) \
-
-#define GET_TRIPCODE_CHAR_INDEX_LAST(r, t, i0, i1, i2, i3) \
-	(  ((((r)[i0] & (0x01 << (t))) ? (0x1) : (0x0)) << 5)  \
-	 | ((((r)[i1] & (0x01 << (t))) ? (0x1) : (0x0)) << 4)  \
-	 | ((((r)[i2] & (0x01 << (t))) ? (0x1) : (0x0)) << 3)  \
-	 | ((((r)[i3] & (0x01 << (t))) ? (0x1) : (0x0)) << 2)) \
-
-#define SET_ALL_BITS_FOR_KEY(i, j, k) \
-	if (key[j] & (0x1 << (k)))        \
-		DES_keys[i - 28] = 0xffffffff      \
-		
-#define SET_BIT_FOR_KEY(i, j, k)            \
-	if (key[j] & (0x1 << (k)))              \
-		DES_keys[i - 28] |= 0x1 << tripcodeIndex \
-
-void DES_GetTripcode(DES_DATA_BLOCKS_SPACE vtype *DES_dataBlocks, int tripcodeIndex, __global unsigned char *tripcode)
-{
-	// Perform the final permutation as necessary.
-  	tripcode[0] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0)];
-  	tripcode[1] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 0)];
-  	tripcode[2] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 0)];
-  	tripcode[3] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 0)];
-  	tripcode[4] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0)];
-  	tripcode[5] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 0)];
-  	tripcode[6] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 0)];
-  	tripcode[7] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 0)];
-  	tripcode[8] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 0)];
-	tripcode[9] = indexToCharTable[GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24)];
-}
-
-#define SET_KEY_CHAR(var, flag, table, value)   \
-	if (!(flag)) {                              \
-		var = (table)[(value)];                 \
-		isSecondByte = IS_FIRST_BYTE_SJIS(var); \
-	} else {                                    \
-		var = keyCharTable_SecondByte[(value)]; \
-		isSecondByte = FALSE;                   \
-	}                                           \
-		
-#define OPENCL_DES_DEFINE_SEARCH_FUNCTION(functionName)                                                    \
-	__kernel void functionName(                                                                            \
+#define OPENCL_DES_DEFINE_SEARCH_FUNCTION                                                                  \
+	__kernel void OpenCL_DES_PerformSearching(                                                             \
 		__global   GPUOutput                * const outputArray,                                           \
 		__constant KeyInfo                  *       keyInfo,                                               \
 		__global   const unsigned int       * const tripcodeChunkArray,                                    \
 				   const unsigned int               numTripcodeChunk,                                      \
-		__constant const unsigned char      * const keyCharTableForKey7,                                   \
  		__constant const unsigned char      * const smallKeyBitmap,                                        \
- 		__global   const unsigned char      * const keyBitmap,                                             \
+  		__constant const unsigned int       * const compactMediumKeyBitmap,                                \
+		__global   const unsigned char      * const keyBitmap,                                             \
 		__global   const PartialKeyFrom3To6 * const partialKeyFrom3To6Array,                               \
-		__local    const unsigned int       * const localBuffer,                                           \
-                   const unsigned int               keyFirst28bits                                         \
+                   const unsigned int               keyFrom00To27                                          \
 	) {                                                                                                    \
 		__global              GPUOutput     *output = &outputArray[get_global_id(0)];                      \
-		__private             unsigned char  key[8];                                                       \
-							  unsigned char  tripcodeIndex;                                                \
+							  int  tripcodeIndex;                                                          \
 		DES_DATA_BLOCKS_SPACE vtype          DES_dataBlocks[64];                                           \
-		DES_KEYS_SPACE        vtype          *DES_keys = localBuffer + 29 * get_local_id(0);               \
 		__global unsigned char *partialKeyFrom3To6 = partialKeyFrom3To6Array[get_global_id(0)].partialKeyFrom3To6; \
 		output->numMatchingTripcodes = 0;                                                                  \
+		unsigned int keyFrom28To48 = ((partialKeyFrom3To6[3] & 0x7f) << 14) | ((partialKeyFrom3To6[2] & 0x7f) << 7) | (partialKeyFrom3To6[1] & 0x7f); \
 		                                                                                                   \
-		for (int i = 0; i < DES_NUM_BITS_IN_KEY; ++i)                                                      \
-			DES_keys[i] = 0x0;                                                                             \
-																										   \
-		key[0] = keyInfo->partialKeyAndRandomBytes[0];                                                     \
-		key[1] = keyInfo->partialKeyAndRandomBytes[1];                                                     \
-		key[2] = keyInfo->partialKeyAndRandomBytes[2];                                                     \
-		key[3] = keyInfo->partialKeyAndRandomBytes[3];                                                     \
-		                                                                                                   \
-		key[4] = partialKeyFrom3To6[1];                                                                    \
-		SET_ALL_BITS_FOR_KEY(28, 4, 0);                                                                    \
-		SET_ALL_BITS_FOR_KEY(29, 4, 1);                                                                    \
-		SET_ALL_BITS_FOR_KEY(30, 4, 2);                                                                    \
-		SET_ALL_BITS_FOR_KEY(31, 4, 3);                                                                    \
-		SET_ALL_BITS_FOR_KEY(32, 4, 4);                                                                    \
-		SET_ALL_BITS_FOR_KEY(33, 4, 5);                                                                    \
-		SET_ALL_BITS_FOR_KEY(34, 4, 6);                                                                    \
-	                                                                                                       \
-		key[5] = partialKeyFrom3To6[2];                                                                    \
-		SET_ALL_BITS_FOR_KEY(35, 5, 0);                                                                    \
-		SET_ALL_BITS_FOR_KEY(36, 5, 1);                                                                    \
-		SET_ALL_BITS_FOR_KEY(37, 5, 2);                                                                    \
-		SET_ALL_BITS_FOR_KEY(38, 5, 3);                                                                    \
-		SET_ALL_BITS_FOR_KEY(39, 5, 4);                                                                    \
-		SET_ALL_BITS_FOR_KEY(40, 5, 5);                                                                    \
-		SET_ALL_BITS_FOR_KEY(41, 5, 6);                                                                    \
-		                                                                                                   \
-		key[6] = partialKeyFrom3To6[3];                                                                    \
-		SET_ALL_BITS_FOR_KEY(42, 6, 0);                                                                    \
-		SET_ALL_BITS_FOR_KEY(43, 6, 1);                                                                    \
-		SET_ALL_BITS_FOR_KEY(44, 6, 2);                                                                    \
-		SET_ALL_BITS_FOR_KEY(45, 6, 3);                                                                    \
-		SET_ALL_BITS_FOR_KEY(46, 6, 4);                                                                    \
-		SET_ALL_BITS_FOR_KEY(47, 6, 5);                                                                    \
-		SET_ALL_BITS_FOR_KEY(48, 6, 6);                                                                    \
-		                                                                                                   \
-		for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {                    \
-			key[7] = keyCharTableForKey7[keyInfo->partialKeyAndRandomBytes[7] + (tripcodeIndex & 0x3f)];  \
-			SET_BIT_FOR_KEY(49, 7, 0);                                                                     \
-			SET_BIT_FOR_KEY(50, 7, 1);                                                                     \
-			SET_BIT_FOR_KEY(51, 7, 2);                                                                     \
-			SET_BIT_FOR_KEY(52, 7, 3);                                                                     \
-			SET_BIT_FOR_KEY(53, 7, 4);                                                                     \
-			SET_BIT_FOR_KEY(54, 7, 5);                                                                     \
-			SET_BIT_FOR_KEY(55, 7, 6);                                                                     \
-		}                                                                                                  \
-		                                                                                                   \
-		DES_Crypt(DES_dataBlocks, (DES_KEYS_SPACE const vtype *)DES_keys, keyFirst28bits);                 \
+		DES_Crypt(DES_dataBlocks, keyFrom00To27, keyFrom28To48);                                           \
 		                                                                                                   \
 		BOOL found = FALSE;                                                                                \
 
-#define OPENCL_DES_END_OF_SEAERCH_FUNCTION                                                                             \
-	quit_loops:                                                                                                        \
-		if (found == TRUE) {                                                                                           \
-			output->numMatchingTripcodes = 1;                                                                          \
-			DES_GetTripcode(DES_dataBlocks, tripcodeIndex, output->pair.tripcode.c);                                   \
-			output->pair.key.c[0] = key[0];                                                                           \
-			output->pair.key.c[1] = key[1];                                                                            \
-			output->pair.key.c[2] = key[2];                                                                            \
-			output->pair.key.c[3] = key[3];                                                                            \
-			output->pair.key.c[4] = key[4];                                                                            \
-			output->pair.key.c[5] = key[5];                                                                            \
-			output->pair.key.c[6] = key[6];                                                                            \
-			output->pair.key.c[7] = keyCharTableForKey7[keyInfo->partialKeyAndRandomBytes[7] + (tripcodeIndex & 0x3f)]; \
-		}                                                                                                              \
-		output->numGeneratedTripcodes = OPENCL_DES_BS_DEPTH;                                                           \
-	}                                                                                                                  \
-
-
+#define OPENCL_DES_END_OF_SEAERCH_FUNCTION                                                                 \
+	quit_loops:                                                                                            \
+		if (found == TRUE) {                                                                               \
+			output->numMatchingTripcodes = 1;                                                              \
+			output->pair.key.c[7] = key7Array[tripcodeIndex];                                              \
+		}                                                                                                  \
+		output->numGeneratedTripcodes = OPENCL_DES_BS_DEPTH;                                               \
+	}                                                                                                      \
 
 #define OPENCL_DES_USE_SMALL_KEY_BITMAP                                           \
 	if (smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) \
+		continue;                                                                 \
+
+#define OPENCL_DES_USE_MEDIUM_KEY_BITMAP                                          \
+	if (compactMediumKeyBitmap[tripcodeChunk >> ((5 - MEDIUM_KEY_BITMAP_LEN_STRING) * 6 + 5)] & (0x1 << (tripcodeChunk >> ((5 - MEDIUM_KEY_BITMAP_LEN_STRING) * 6) & 0x1f))) \
 		continue;                                                                 \
 
 #define OPENCL_DES_USE_KEY_BITMAP                                                 \
@@ -1440,9 +1373,23 @@ void DES_GetTripcode(DES_DATA_BLOCKS_SPACE vtype *DES_dataBlocks, int tripcodeIn
 		goto quit_loops;                                                    \
 	}                                                                       \
 
+#define GET_TRIPCODE_CHAR_INDEX(r, t, i0, i1, i2, i3, i4, i5, pos)         \
+	(  ((((r)[i0] & (0x01U << (t))) ? (0x1) : (0x0)) << (5 + ((pos) * 6)))  \
+	 | ((((r)[i1] & (0x01U << (t))) ? (0x1) : (0x0)) << (4 + ((pos) * 6)))  \
+	 | ((((r)[i2] & (0x01U << (t))) ? (0x1) : (0x0)) << (3 + ((pos) * 6)))  \
+	 | ((((r)[i3] & (0x01U << (t))) ? (0x1) : (0x0)) << (2 + ((pos) * 6)))  \
+	 | ((((r)[i4] & (0x01U << (t))) ? (0x1) : (0x0)) << (1 + ((pos) * 6)))  \
+	 | ((((r)[i5] & (0x01U << (t))) ? (0x1) : (0x0)) << (0 + ((pos) * 6)))) \
 
+#define GET_TRIPCODE_CHAR_INDEX_LAST(r, t, i0, i1, i2, i3) \
+	(  ((((r)[i0] & (0x01U << (t))) ? (0x1) : (0x0)) << 5)  \
+	 | ((((r)[i1] & (0x01U << (t))) ? (0x1) : (0x0)) << 4)  \
+	 | ((((r)[i2] & (0x01U << (t))) ? (0x1) : (0x0)) << 3)  \
+	 | ((((r)[i3] & (0x01U << (t))) ? (0x1) : (0x0)) << 2)) \
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardMatching_1Chunk)
+#if defined(FORWARD_MATCHING_1CHUNK)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		if (GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0) != ((tripcodeChunkArray[0] >> (6 * 4)) & 0x3f)) continue;
 		if (GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 0) != ((tripcodeChunkArray[0] >> (6 * 3)) & 0x3f)) continue;
@@ -1454,7 +1401,9 @@ OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardMatching_1C
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardMatching_Simple)
+#elif defined(FORWARD_MATCHING_SIMPLE)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
@@ -1466,20 +1415,28 @@ OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardMatching_Si
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardMatching)
+#elif defined(FORWARD_MATCHING)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
+		// all:                                  2181M (10m)
+		// w/o OPENCL_DES_USE_SMALL_KEY_BITMAP:  2160M (10m)
+		// w/o OPENCL_DES_USE_MEDIUM_KEY_BITMAP: 2142M (10m)
 		OPENCL_DES_USE_SMALL_KEY_BITMAP
+		OPENCL_DES_USE_MEDIUM_KEY_BITMAP
 		OPENCL_DES_USE_KEY_BITMAP
 		OPENCL_DES_PERFORM_BINARY_SEARCH
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_BackwardMatching_Simple)
+#elif defined(BACKWARD_MATCHING_SIMPLE)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 4)
 		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 3)
@@ -1491,7 +1448,9 @@ OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_BackwardMatching_S
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_BackwardMatching)
+#elif defined(BACKWARD_MATCHING)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 4)
 		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 3)
@@ -1504,7 +1463,9 @@ OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_BackwardMatching)
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardAndBackwardMatching_Simple)
+#elif defined(FORWARD_AND_BACKWARD_MATCHING_SIMPLE)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
@@ -1526,7 +1487,9 @@ OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardAndBackward
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardAndBackwardMatching)
+#elif defined(FORWARD_AND_BACKWARD_MATCHING)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
@@ -1550,7 +1513,9 @@ OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_ForwardAndBackward
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_Flexible_Simple)
+#elif defined(FLEXIBLE_SIMPLE)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
@@ -1576,7 +1541,9 @@ OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_Flexible_Simple)
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
 
-OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_Flexible)
+#elif defined(FLEXIBLE)
+
+OPENCL_DES_DEFINE_SEARCH_FUNCTION
 	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
 		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
 						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
@@ -1619,3 +1586,5 @@ OPENCL_DES_DEFINE_SEARCH_FUNCTION(OpenCL_DES_PerformSearching_Flexible)
 		}
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
+
+#endif

@@ -1,5 +1,5 @@
-// Meriken's Tripcode Engine 1.1.2
-// Copyright (c) 2011-2014 Meriken//XXX <meriken.2ch@gmail.com>
+// Meriken's Tripcode Engine 2.0.0
+// Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -96,8 +96,9 @@ void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
     char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
     BOOL fillRestWithZero = FALSE;
         
-    strcpy(actualKey, (char *)key);
-    for (int i = 0; i < lenTripcodeKey; ++i) {
+    memcpy(actualKey, (char *)key, 8);
+	actualKey[8] = '\0';
+	for (int i = 0; i < lenTripcodeKey; ++i) {
             if (fillRestWithZero) {
                     actualKey[i] = 0x00;
             } else if (actualKey[i] == 0x80) {
