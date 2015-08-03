@@ -1,2 +1,2 @@
-#noregex
-TEST/
+#regex
+^TEST/

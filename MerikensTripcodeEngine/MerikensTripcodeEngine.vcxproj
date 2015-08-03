@@ -67,22 +67,22 @@
     <ClCompile Include="Source Files\VerificationDuplicates.cpp" />
     <ClCompile Include="Source Files\Verification12.cpp" />
     <CudaCompile Include="Source Files\CUDA10.cu">
-      <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </MaxRegCount>
-      <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </MaxRegCount>
-      <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </MaxRegCount>
-      <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Release|x64'">42</MaxRegCount>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_10,sm_10;compute_20,sm_20;compute_20,sm_21;compute_30,sm_30;compute_35,sm_35;</CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_10,sm_10;compute_20,sm_20;compute_20,sm_21;compute_30,sm_30;compute_35,sm_35;</CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_10,sm_10;compute_20,sm_20;compute_20,sm_21;compute_30,sm_30;compute_35,sm_35;</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">compute_20,sm_20;compute_30,sm_30;compute_32,sm_32;compute_35,sm_35;compute_37,sm_37;compute_50,sm_50;compute_52,sm_52;compute_53,sm_53;</CodeGeneration>
+      <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">40</MaxRegCount>
+      <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Release|x64'">40</MaxRegCount>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_20,sm_20;compute_30,sm_30;compute_32,sm_32;compute_35,sm_35;compute_37,sm_37;compute_50,sm_50;compute_52,sm_52;compute_53,sm_53;</CodeGeneration>
     </CudaCompile>
-    <CudaCompile Include="Source Files\CUDA12.cu" />
+    <CudaCompile Include="Source Files\CUDA12.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_20,sm_20;compute_30,sm_30;compute_32,sm_32;compute_35,sm_35;compute_37,sm_37;compute_50,sm_50;compute_52,sm_52;compute_53,sm_53;</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">compute_20,sm_20;compute_30,sm_30;compute_32,sm_32;compute_35,sm_35;compute_37,sm_37;compute_50,sm_50;compute_52,sm_52;compute_53,sm_53;</CodeGeneration>
+    </CudaCompile>
     <ClCompile Include="Source Files\Main.cpp">
       <FileType>Document</FileType>
     </ClCompile>
-    <CudaCompile Include="Source Files\Testing.cpp" />
+    <CudaCompile Include="Source Files\Testing.cpp">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">compute_20,sm_20;compute_30,sm_30;compute_32,sm_32;compute_35,sm_35;compute_50,sm_50;compute_52,sm_52;compute_53,sm_53;</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_20,sm_20;compute_30,sm_30;compute_32,sm_32;compute_35,sm_35;compute_50,sm_50;compute_52,sm_52;compute_53,sm_53;</CodeGeneration>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="Source Files\CPU10_x64_AVX.asm">
@@ -187,7 +187,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.props" />
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 7.0.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -361,6 +361,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.targets" />
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 7.0.targets" />
   </ImportGroup>
 </Project>

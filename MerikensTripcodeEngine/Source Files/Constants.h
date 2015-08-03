@@ -169,11 +169,6 @@
 #define CUDA_OPTIMIZATION_THRESHOLD         0.001
 #define CUDA_SHA1_MAX_PASS_COUNT            2048  // Be VERY CAREFUL when you change this constant.
 #define CUDA_SHA1_NUM_THREADS_PER_BLOCK     128
-#define CUDA_DES_BS_DEPTH                   32
-#define CUDA_DES_MAX_PASS_COUNT             10    // Optimized for GTX 580.
-#define CUDA_DES_NUM_THREADS_PER_BLOCK      256
-#define CUDA_DES_NUM_THREADS_FOR_BITSLICE   8
-#define CUDA_DES_NUM_BITSLICE_DES_CONTEXTS_PER_BLOCK (CUDA_DES_NUM_THREADS_PER_BLOCK / CUDA_DES_NUM_THREADS_FOR_BITSLICE)
 
 // OpenCL
 #define OPENCL_VENDOR_AMD                       "Advanced Micro Devices, Inc."
