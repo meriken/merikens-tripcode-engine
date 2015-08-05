@@ -124,6 +124,7 @@ const unsigned char expansionTable[48] = {
 	27, 28, 29, 30, 31,  0
 };
 
+__device__ __constant__ unsigned char CUDA_smallKeyBitmap[SMALL_KEY_BITMAP_SIZE];
 __device__ __constant__ unsigned char CUDA_expansionFunction[96];
 __device__ __constant__ unsigned char CUDA_key7Array[CUDA_DES_BS_DEPTH];
 __device__ __constant__ DES_Vector    CUDA_keyFrom49To55Array[7];
@@ -1269,7 +1270,7 @@ void DES_Crypt(volatile unsigned int keyFrom00To27, volatile unsigned int keyFro
 #define K54XOR(val) ((val) ^ CUDA_keyFrom49To55Array[5])
 #define K55XOR(val) ((val) ^ CUDA_keyFrom49To55Array[6])
 
-#pragma unroll(0)
+#pragma unroll 1 // Do not unroll.
 	for (int i = 0; i < 13; ++i) {
 		// ROUND_A(0);
 		switch (threadIdx.y) {
@@ -1837,6 +1838,8 @@ CUDA_DES_DEFINE_SEARCH_FUNCTION(CUDA_PerformSearching_DES_ForwardOrBackwardMatch
 	unsigned int tripcodeChunk;
 CUDA_DES_BEFORE_SEARCHING
 	DES_GetTripcodeChunks(tripcodeIndex, &tripcodeChunk, searchMode);
+	if (CUDA_smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)])
+		continue;
 	for (int j = 0; j < numTripcodeChunk; ++j){
 		if (tripcodeChunkArray[j] == tripcodeChunk) {
 			found = TRUE;
@@ -1849,22 +1852,20 @@ CUDA_DES_DEFINE_SEARCH_FUNCTION(CUDA_PerformSearching_DES_ForwardOrBackwardMatch
 	unsigned int tripcodeChunk;
 CUDA_DES_BEFORE_SEARCHING
 	DES_GetTripcodeChunks(tripcodeIndex, &tripcodeChunk, searchMode);
-	if (keyBitmap[tripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)])
+	if (CUDA_smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)] || keyBitmap[tripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)])
 		continue;
-	for (int j = 0; j < numTripcodeChunk; ++j){
-		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;
-		while (tripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {
-			middle = (lower + upper) >> 1;
-			if (tripcodeChunk > tripcodeChunkArray[middle]) {
-				lower = middle + 1;
-			} else {
-				upper = middle - 1;
-			}
+	int lower = 0, upper = numTripcodeChunk - 1, middle = lower;
+	while (tripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {
+		middle = (lower + upper) >> 1;
+		if (tripcodeChunk > tripcodeChunkArray[middle]) {
+			lower = middle + 1;
+		} else {
+			upper = middle - 1;
 		}
-		if (tripcodeChunk == tripcodeChunkArray[middle]) {
-			found = TRUE;
-			goto quit_loops;
-		}
+	}
+	if (tripcodeChunk == tripcodeChunkArray[middle]) {
+		found = TRUE;
+		goto quit_loops;
 	}
 CUDA_DES_END_OF_SEAERCH_FUNCTION
 
@@ -1909,6 +1910,8 @@ CUDA_DES_DEFINE_SEARCH_FUNCTION(CUDA_PerformSearching_DES_Flexible_Simple)
 CUDA_DES_BEFORE_SEARCHING
 	DES_GetTripcodeChunks(tripcodeIndex, generatedTripcodeChunkArray, searchMode);
 	for (int pos = 0; pos < 6; ++pos) {
+		if (CUDA_smallKeyBitmap[generatedTripcodeChunkArray[pos] >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)])
+			continue;
 		for (int j = 0; j < numTripcodeChunk; ++j){
 			if (tripcodeChunkArray[j] == generatedTripcodeChunkArray[pos]) {
 				found = TRUE;
@@ -1924,22 +1927,21 @@ CUDA_DES_BEFORE_SEARCHING
 	DES_GetTripcodeChunks(tripcodeIndex, generatedTripcodeChunkArray, searchMode);
 	for (int pos = 0; pos < 6; ++pos) {
 		unsigned int generatedTripcodeChunk = generatedTripcodeChunkArray[pos];
-		if (keyBitmap[generatedTripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)])
+		if (   CUDA_smallKeyBitmap[generatedTripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)] 
+		    || keyBitmap[generatedTripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)])
 			continue;
-		for (int j = 0; j < numTripcodeChunk; ++j){
-			int lower = 0, upper = numTripcodeChunk - 1, middle = lower;
-			while (generatedTripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {
-				middle = (lower + upper) >> 1;
-				if (generatedTripcodeChunk > tripcodeChunkArray[middle]) {
-					lower = middle + 1;
-				} else {
-					upper = middle - 1;
-				}
+		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;
+		while (generatedTripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {
+			middle = (lower + upper) >> 1;
+			if (generatedTripcodeChunk > tripcodeChunkArray[middle]) {
+				lower = middle + 1;
+			} else {
+				upper = middle - 1;
 			}
-			if (generatedTripcodeChunk == tripcodeChunkArray[middle]) {
-				found = TRUE;
-				goto quit_loops;
-			}
+		}
+		if (generatedTripcodeChunk == tripcodeChunkArray[middle]) {
+			found = TRUE;
+			goto quit_loops;
 		}
 	}
 CUDA_DES_END_OF_SEAERCH_FUNCTION
@@ -1949,17 +1951,21 @@ CUDA_DES_DEFINE_SEARCH_FUNCTION(CUDA_PerformSearching_DES_ForwardAndBackwardMatc
 CUDA_DES_BEFORE_SEARCHING
 	DES_GetTripcodeChunks(tripcodeIndex, generatedTripcodeChunkArray, searchMode);
 	//
-	for (int j = 0; j < numTripcodeChunk; ++j){
-		if (tripcodeChunkArray[j] == generatedTripcodeChunkArray[0]) {
-			found = TRUE;
-			goto quit_loops;
+	if (!CUDA_smallKeyBitmap[generatedTripcodeChunkArray[0] >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) {
+		for (int j = 0; j < numTripcodeChunk; ++j){
+			if (tripcodeChunkArray[j] == generatedTripcodeChunkArray[0]) {
+				found = TRUE;
+				goto quit_loops;
+			}
 		}
 	}
 	//
-	for (int j = 0; j < numTripcodeChunk; ++j){
-		if (tripcodeChunkArray[j] == generatedTripcodeChunkArray[1]) {
-			found = TRUE;
-			goto quit_loops;
+	if (!CUDA_smallKeyBitmap[generatedTripcodeChunkArray[1] >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) {
+		for (int j = 0; j < numTripcodeChunk; ++j){
+			if (tripcodeChunkArray[j] == generatedTripcodeChunkArray[1]) {
+				found = TRUE;
+				goto quit_loops;
+			}
 		}
 	}
 CUDA_DES_END_OF_SEAERCH_FUNCTION
@@ -1971,40 +1977,36 @@ CUDA_DES_BEFORE_SEARCHING
 	DES_GetTripcodeChunks(tripcodeIndex, generatedTripcodeChunkArray, searchMode);
 	//
 	generatedTripcodeChunk = generatedTripcodeChunkArray[0];
-	if (!keyBitmap[generatedTripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)]) {
-		for (int j = 0; j < numTripcodeChunk; ++j){
-			int lower = 0, upper = numTripcodeChunk - 1, middle = lower;
-			while (generatedTripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {
-				middle = (lower + upper) >> 1;
-				if (generatedTripcodeChunk > tripcodeChunkArray[middle]) {
-					lower = middle + 1;
-				} else {
-					upper = middle - 1;
-				}
+	if (!CUDA_smallKeyBitmap[generatedTripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)] && !keyBitmap[generatedTripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)]) {
+		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;
+		while (generatedTripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {
+			middle = (lower + upper) >> 1;
+			if (generatedTripcodeChunk > tripcodeChunkArray[middle]) {
+				lower = middle + 1;
+			} else {
+				upper = middle - 1;
 			}
-			if (generatedTripcodeChunk == tripcodeChunkArray[middle]) {
-				found = TRUE;
-				goto quit_loops;
-			}
+		}
+		if (generatedTripcodeChunk == tripcodeChunkArray[middle]) {
+			found = TRUE;
+			goto quit_loops;
 		}
 	}
 	//
 	generatedTripcodeChunk = generatedTripcodeChunkArray[1];
-	if (!keyBitmap[generatedTripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)]) {
-		for (int j = 0; j < numTripcodeChunk; ++j) {
-			int lower = 0, upper = numTripcodeChunk - 1, middle = lower;
-			while (generatedTripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {
-				middle = (lower + upper) >> 1;
-				if (generatedTripcodeChunk > tripcodeChunkArray[middle]) {
-					lower = middle + 1;
-				} else {
-					upper = middle - 1;
-				}
+	if (!CUDA_smallKeyBitmap[generatedTripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)] && !keyBitmap[generatedTripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)]) {
+		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;
+		while (generatedTripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {
+			middle = (lower + upper) >> 1;
+			if (generatedTripcodeChunk > tripcodeChunkArray[middle]) {
+				lower = middle + 1;
+			} else {
+				upper = middle - 1;
 			}
-			if (generatedTripcodeChunk == tripcodeChunkArray[middle]) {
-				found = TRUE;
-				goto quit_loops;
-			}
+		}
+		if (generatedTripcodeChunk == tripcodeChunkArray[middle]) {
+			found = TRUE;
+			goto quit_loops;
 		}
 	}
 CUDA_DES_END_OF_SEAERCH_FUNCTION
@@ -2087,6 +2089,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_keyCharTable_OneByte, keyCharTable_OneByte, SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_keyCharTable_FirstByte,   keyCharTable_FirstByte,   SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_keyCharTable_SecondByte,  keyCharTable_SecondByte,  SIZE_KEY_CHAR_TABLE));
+	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_smallKeyBitmap, smallKeyBitmap, SMALL_KEY_BITMAP_SIZE));
 	
 	startingTime = timeGetTime();
 

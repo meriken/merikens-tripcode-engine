@@ -167,8 +167,6 @@
 #define CUDA_SIMPLE_SEARCH_THRESHOLD        4
 #define CUDA_OPTIMIZATION_SUBPHASE_DURATION 60.0
 #define CUDA_OPTIMIZATION_THRESHOLD         0.001
-#define CUDA_SHA1_MAX_PASS_COUNT            2048  // Be VERY CAREFUL when you change this constant.
-#define CUDA_SHA1_NUM_THREADS_PER_BLOCK     128
 
 // OpenCL
 #define OPENCL_VENDOR_AMD                       "Advanced Micro Devices, Inc."

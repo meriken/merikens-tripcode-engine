@@ -38,6 +38,11 @@
 
 
 
+#define CUDA_SHA1_MAX_PASS_COUNT            2048  // Be VERY CAREFUL when you change this constant.
+#define CUDA_SHA1_NUM_THREADS_PER_BLOCK     128
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // VARIABLES FOR CUDA CODES                                                  //
 ///////////////////////////////////////////////////////////////////////////////
@@ -161,7 +166,7 @@ __global__ void (functionName)(\
 	tableForKey2 = (isSecondByte) ? (CUDA_keyCharTable_SecondByte) : (CUDA_keyCharTable_FirstByte);        \
 	key11 = CUDA_keyCharTable_SecondByteAndOneByte[CUDA_key[11] + (blockIdx.x & 0x3f)];                    \
 	                                                                                                       \
-	__shared__ unsigned int PW[80];                                                                        \
+	__shared__ unsigned int PW[80+1];                                                                        \
 	__shared__ unsigned char smallKeyBitmap[SMALL_KEY_BITMAP_SIZE];                                        \
 	if (threadIdx.x == 0) {                                                                                \
 		PW[0]  = 0;                                                                                        \
