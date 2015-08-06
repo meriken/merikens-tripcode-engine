@@ -1358,6 +1358,35 @@ void ProcessMatch(unsigned char *tripcode, unsigned char *key)
 	}
 }
 
+BOOL IsTripcodeChunkValid(unsigned char *tripcode)
+{
+	for (int i = 0; i <= lenTripcode - 5; ++i) {
+		unsigned int tripcodeChunk;
+		CreateTripcodeChunk(tripcode + i, &tripcodeChunk, FALSE);
+		if (0 < i && searchMode == SEARCH_MODE_FORWARD_MATCHING)
+			continue;
+		if (0 < i && i < lenTripcode - 5 && searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)
+			continue;
+		if (i < lenTripcode - 5 && searchMode == SEARCH_MODE_BACKWARD_MATCHING)
+			continue;
+		if (   smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]
+			&&      keyBitmap[tripcodeChunk >> ((5 -       KEY_BITMAP_LEN_STRING) * 6)])
+			continue;
+		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;                                            
+		while (lower <= upper) {
+			middle = (lower + upper) >> 1;                                                                      
+			if (tripcodeChunk > tripcodeChunkArray[middle]) {                                  
+				lower = middle + 1;                                                                             
+			} else if (tripcodeChunk < tripcodeChunkArray[middle]) {                           
+				upper = middle - 1;                                                                             
+			} else {                                                                                            
+				return TRUE;                                                                                          
+			}                                                                                                   
+		}                                                                                                       
+	}
+	return FALSE;
+}
+
 void ProcessPossibleMatch(unsigned char *tripcode, unsigned char *key)
 {
 #if FALSE

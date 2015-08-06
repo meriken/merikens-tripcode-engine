@@ -81,7 +81,7 @@ __device__ __constant__ unsigned char   CUDA_key[12];
 #define CUDA_DES_NUM_THREADS_PER_BLOCK      512 // dummy value to make nvcc happy
 #endif
 #define CUDA_DES_NUM_BITSLICE_DES_CONTEXTS_PER_BLOCK (CUDA_DES_NUM_THREADS_PER_BLOCK / NUM_THREADS_PER_BITSICE_DES)
-#define NUM_CONTEXTS CUDA_DES_NUM_BITSLICE_DES_CONTEXTS_PER_BLOCK
+#define N CUDA_DES_NUM_BITSLICE_DES_CONTEXTS_PER_BLOCK
 
 #define CUDA_DES_BS_DEPTH                   32
 #define CUDA_DES_MAX_PASS_COUNT             10
@@ -105,7 +105,7 @@ typedef int           DES_Vector;
 #define DES_VECTOR_SEL(dst, a, b, c)  (dst) = (((a) & ~(c)) ^ ((b) & (c)))
 #define DES_VECTOR_XOR_FUNC(a, b)              ((a) ^  (b))
 #define DES_VECTOR_XOR(dst, a, b)     (dst) = DES_VECTOR_XOR_FUNC((a), (b))
-#define DES_VECTOR_SET(dst, ofs, src) *((DES_Vector *)((DES_Vector *)&(dst) + ((ofs) * NUM_CONTEXTS))) = (src)
+#define DES_VECTOR_SET(dst, ofs, src) *((DES_Vector *)((DES_Vector *)&(dst) + ((ofs) * N))) = (src)
 
 #define DES_CONSTANT_QUALIFIERS      __device__ __constant__
 #define DES_FUNCTION_QUALIFIERS      __device__ __forceinline__
@@ -1100,14 +1100,14 @@ s8(DES_Vector a1, DES_Vector a2, DES_Vector a3, DES_Vector a4, DES_Vector a5, DE
 }
 
 #define CLEAR_BLOCK_8(i)                                                             \
-	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*NUM_CONTEXTS)] , 0, DES_VECTOR_ZERO); \
-	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*NUM_CONTEXTS)] , 1, DES_VECTOR_ZERO); \
-	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*NUM_CONTEXTS)] , 2, DES_VECTOR_ZERO); \
-	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*NUM_CONTEXTS)] , 3, DES_VECTOR_ZERO); \
-	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*NUM_CONTEXTS)] , 4, DES_VECTOR_ZERO); \
-	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*NUM_CONTEXTS)] , 5, DES_VECTOR_ZERO); \
-	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*NUM_CONTEXTS)] , 6, DES_VECTOR_ZERO); \
-	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*NUM_CONTEXTS)] , 7, DES_VECTOR_ZERO); \
+	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*N)] , 0, DES_VECTOR_ZERO); \
+	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*N)] , 1, DES_VECTOR_ZERO); \
+	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*N)] , 2, DES_VECTOR_ZERO); \
+	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*N)] , 3, DES_VECTOR_ZERO); \
+	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*N)] , 4, DES_VECTOR_ZERO); \
+	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*N)] , 5, DES_VECTOR_ZERO); \
+	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*N)] , 6, DES_VECTOR_ZERO); \
+	DES_VECTOR_SET(dataBlocks[threadIdx.x + (i*N)] , 7, DES_VECTOR_ZERO); \
 
 #define CLEAR_BLOCK()  \
 	CLEAR_BLOCK_8(0);  \
@@ -1130,36 +1130,36 @@ void DES_Crypt(volatile unsigned int keyFrom00To27, volatile unsigned int keyFro
 
 	switch (threadIdx.y) {
 	case 0: 
-		E0 = CUDA_expansionFunction[0]*NUM_CONTEXTS;
-		E1 = CUDA_expansionFunction[1]*NUM_CONTEXTS;
-		E2 = CUDA_expansionFunction[2]*NUM_CONTEXTS;
-		E3 = CUDA_expansionFunction[3]*NUM_CONTEXTS;
-		E4 = CUDA_expansionFunction[4]*NUM_CONTEXTS;
-		E5 = CUDA_expansionFunction[5]*NUM_CONTEXTS;
+		E0 = CUDA_expansionFunction[0]*N;
+		E1 = CUDA_expansionFunction[1]*N;
+		E2 = CUDA_expansionFunction[2]*N;
+		E3 = CUDA_expansionFunction[3]*N;
+		E4 = CUDA_expansionFunction[4]*N;
+		E5 = CUDA_expansionFunction[5]*N;
 		break;
 	case 1: 
-		E0 = CUDA_expansionFunction[6]*NUM_CONTEXTS;
-		E1 = CUDA_expansionFunction[7]*NUM_CONTEXTS;
-		E2 = CUDA_expansionFunction[8]*NUM_CONTEXTS;
-		E3 = CUDA_expansionFunction[9]*NUM_CONTEXTS;
-		E4 = CUDA_expansionFunction[10]*NUM_CONTEXTS;
-		E5 = CUDA_expansionFunction[11]*NUM_CONTEXTS;
+		E0 = CUDA_expansionFunction[6]*N;
+		E1 = CUDA_expansionFunction[7]*N;
+		E2 = CUDA_expansionFunction[8]*N;
+		E3 = CUDA_expansionFunction[9]*N;
+		E4 = CUDA_expansionFunction[10]*N;
+		E5 = CUDA_expansionFunction[11]*N;
 		break;
 	case 2: 
-		E0 = CUDA_expansionFunction[24]*NUM_CONTEXTS;
-		E1 = CUDA_expansionFunction[25]*NUM_CONTEXTS;
-		E2 = CUDA_expansionFunction[26]*NUM_CONTEXTS;
-		E3 = CUDA_expansionFunction[27]*NUM_CONTEXTS;
-		E4 = CUDA_expansionFunction[28]*NUM_CONTEXTS;
-		E5 = CUDA_expansionFunction[29]*NUM_CONTEXTS;
+		E0 = CUDA_expansionFunction[24]*N;
+		E1 = CUDA_expansionFunction[25]*N;
+		E2 = CUDA_expansionFunction[26]*N;
+		E3 = CUDA_expansionFunction[27]*N;
+		E4 = CUDA_expansionFunction[28]*N;
+		E5 = CUDA_expansionFunction[29]*N;
 		break;
 	case 3: 
-		E0 = CUDA_expansionFunction[30]*NUM_CONTEXTS;
-		E1 = CUDA_expansionFunction[31]*NUM_CONTEXTS;
-		E2 = CUDA_expansionFunction[32]*NUM_CONTEXTS;
-		E3 = CUDA_expansionFunction[33]*NUM_CONTEXTS;
-		E4 = CUDA_expansionFunction[34]*NUM_CONTEXTS;
-		E5 = CUDA_expansionFunction[35]*NUM_CONTEXTS;
+		E0 = CUDA_expansionFunction[30]*N;
+		E1 = CUDA_expansionFunction[31]*N;
+		E2 = CUDA_expansionFunction[32]*N;
+		E3 = CUDA_expansionFunction[33]*N;
+		E4 = CUDA_expansionFunction[34]*N;
+		E5 = CUDA_expansionFunction[35]*N;
 		break;
 	}
 	
@@ -1270,213 +1270,215 @@ void DES_Crypt(volatile unsigned int keyFrom00To27, volatile unsigned int keyFro
 #define K54XOR(val) ((val) ^ CUDA_keyFrom49To55Array[5])
 #define K55XOR(val) ((val) ^ CUDA_keyFrom49To55Array[6])
 
+#if FALSE
+
 #pragma unroll 1 // Do not unroll.
 	for (int i = 0; i < 13; ++i) {
 		// ROUND_A(0);
 		switch (threadIdx.y) {
-		case 0: s1(K12XOR(db[E0]), K46XOR(db[E1]), K33XOR(db[E2]), K52XOR(db[E3]), K48XOR(db[E4]), K20XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K53XOR(db[11*NUM_CONTEXTS]), K06XOR(db[12*NUM_CONTEXTS]), K31XOR(db[13*NUM_CONTEXTS]), K25XOR(db[14*NUM_CONTEXTS]), K19XOR(db[15*NUM_CONTEXTS]), K41XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K04XOR(db[ 7*NUM_CONTEXTS]), K32XOR(db[ 8*NUM_CONTEXTS]), K26XOR(db[ 9*NUM_CONTEXTS]), K27XOR(db[10*NUM_CONTEXTS]), K38XOR(db[11*NUM_CONTEXTS]), K54XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K34XOR(db[E0]), K55XOR(db[E1]), K05XOR(db[E2]), K13XOR(db[E3]), K18XOR(db[E4]), K40XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K15XOR(db[E0]), K24XOR(db[E1]), K28XOR(db[E2]), K43XOR(db[E3]), K30XOR(db[E4]), K03XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K37XOR(db[27*NUM_CONTEXTS]), K08XOR(db[28*NUM_CONTEXTS]), K09XOR(db[29*NUM_CONTEXTS]), K50XOR(db[30*NUM_CONTEXTS]), K42XOR(db[31*NUM_CONTEXTS]), K21XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K51XOR(db[23*NUM_CONTEXTS]), K16XOR(db[24*NUM_CONTEXTS]), K29XOR(db[25*NUM_CONTEXTS]), K49XOR(db[26*NUM_CONTEXTS]), K07XOR(db[27*NUM_CONTEXTS]), K17XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K35XOR(db[E0]), K22XOR(db[E1]), K02XOR(db[E2]), K44XOR(db[E3]), K14XOR(db[E4]), K23XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K12XOR(db[E0]), K46XOR(db[E1]), K33XOR(db[E2]), K52XOR(db[E3]), K48XOR(db[E4]), K20XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K53XOR(db[11*N]), K06XOR(db[12*N]), K31XOR(db[13*N]), K25XOR(db[14*N]), K19XOR(db[15*N]), K41XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K04XOR(db[ 7*N]), K32XOR(db[ 8*N]), K26XOR(db[ 9*N]), K27XOR(db[10*N]), K38XOR(db[11*N]), K54XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K34XOR(db[E0]), K55XOR(db[E1]), K05XOR(db[E2]), K13XOR(db[E3]), K18XOR(db[E4]), K40XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K15XOR(db[E0]), K24XOR(db[E1]), K28XOR(db[E2]), K43XOR(db[E3]), K30XOR(db[E4]), K03XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K37XOR(db[27*N]), K08XOR(db[28*N]), K09XOR(db[29*N]), K50XOR(db[30*N]), K42XOR(db[31*N]), K21XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K51XOR(db[23*N]), K16XOR(db[24*N]), K29XOR(db[25*N]), K49XOR(db[26*N]), K07XOR(db[27*N]), K17XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K35XOR(db[E0]), K22XOR(db[E1]), K02XOR(db[E2]), K44XOR(db[E3]), K14XOR(db[E4]), K23XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(0);
 		switch (threadIdx.y) {
-		case 0: s1(K05XOR(db[(E0)+(32*NUM_CONTEXTS)]), K39XOR(db[(E1)+(32*NUM_CONTEXTS)]), K26XOR(db[(E2)+(32*NUM_CONTEXTS)]), K45XOR(db[(E3)+(32*NUM_CONTEXTS)]), K41XOR(db[(E4)+(32*NUM_CONTEXTS)]), K13XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K46XOR(db[43*NUM_CONTEXTS]), K54XOR(db[44*NUM_CONTEXTS]), K55XOR(db[45*NUM_CONTEXTS]), K18XOR(db[46*NUM_CONTEXTS]), K12XOR(db[47*NUM_CONTEXTS]), K34XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K52XOR(db[39*NUM_CONTEXTS]), K25XOR(db[40*NUM_CONTEXTS]), K19XOR(db[41*NUM_CONTEXTS]), K20XOR(db[42*NUM_CONTEXTS]), K31XOR(db[43*NUM_CONTEXTS]), K47XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K27XOR(db[(E0)+(32*NUM_CONTEXTS)]), K48XOR(db[(E1)+(32*NUM_CONTEXTS)]), K53XOR(db[(E2)+(32*NUM_CONTEXTS)]), K06XOR(db[(E3)+(32*NUM_CONTEXTS)]), K11XOR(db[(E4)+(32*NUM_CONTEXTS)]), K33XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K08XOR(db[(E0)+(32*NUM_CONTEXTS)]), K17XOR(db[(E1)+(32*NUM_CONTEXTS)]), K21XOR(db[(E2)+(32*NUM_CONTEXTS)]), K36XOR(db[(E3)+(32*NUM_CONTEXTS)]), K23XOR(db[(E4)+(32*NUM_CONTEXTS)]), K49XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K30XOR(db[59*NUM_CONTEXTS]), K01XOR(db[60*NUM_CONTEXTS]), K02XOR(db[61*NUM_CONTEXTS]), K43XOR(db[62*NUM_CONTEXTS]), K35XOR(db[63*NUM_CONTEXTS]), K14XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K44XOR(db[55*NUM_CONTEXTS]), K09XOR(db[56*NUM_CONTEXTS]), K22XOR(db[57*NUM_CONTEXTS]), K42XOR(db[58*NUM_CONTEXTS]), K00XOR(db[59*NUM_CONTEXTS]), K10XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K28XOR(db[(E0)+(32*NUM_CONTEXTS)]), K15XOR(db[(E1)+(32*NUM_CONTEXTS)]), K24XOR(db[(E2)+(32*NUM_CONTEXTS)]), K37XOR(db[(E3)+(32*NUM_CONTEXTS)]), K07XOR(db[(E4)+(32*NUM_CONTEXTS)]), K16XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K05XOR(db[(E0)+(32*N)]), K39XOR(db[(E1)+(32*N)]), K26XOR(db[(E2)+(32*N)]), K45XOR(db[(E3)+(32*N)]), K41XOR(db[(E4)+(32*N)]), K13XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K46XOR(db[43*N]), K54XOR(db[44*N]), K55XOR(db[45*N]), K18XOR(db[46*N]), K12XOR(db[47*N]), K34XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K52XOR(db[39*N]), K25XOR(db[40*N]), K19XOR(db[41*N]), K20XOR(db[42*N]), K31XOR(db[43*N]), K47XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K27XOR(db[(E0)+(32*N)]), K48XOR(db[(E1)+(32*N)]), K53XOR(db[(E2)+(32*N)]), K06XOR(db[(E3)+(32*N)]), K11XOR(db[(E4)+(32*N)]), K33XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K08XOR(db[(E0)+(32*N)]), K17XOR(db[(E1)+(32*N)]), K21XOR(db[(E2)+(32*N)]), K36XOR(db[(E3)+(32*N)]), K23XOR(db[(E4)+(32*N)]), K49XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K30XOR(db[59*N]), K01XOR(db[60*N]), K02XOR(db[61*N]), K43XOR(db[62*N]), K35XOR(db[63*N]), K14XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K44XOR(db[55*N]), K09XOR(db[56*N]), K22XOR(db[57*N]), K42XOR(db[58*N]), K00XOR(db[59*N]), K10XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K28XOR(db[(E0)+(32*N)]), K15XOR(db[(E1)+(32*N)]), K24XOR(db[(E2)+(32*N)]), K37XOR(db[(E3)+(32*N)]), K07XOR(db[(E4)+(32*N)]), K16XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(96);
 		switch (threadIdx.y) {
-		case 0: s1(K46XOR(db[E0]), K25XOR(db[E1]), K12XOR(db[E2]), K31XOR(db[E3]), K27XOR(db[E4]), K54XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K32XOR(db[11*NUM_CONTEXTS]), K40XOR(db[12*NUM_CONTEXTS]), K41XOR(db[13*NUM_CONTEXTS]), K04XOR(db[14*NUM_CONTEXTS]), K53XOR(db[15*NUM_CONTEXTS]), K20XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K38XOR(db[ 7*NUM_CONTEXTS]), K11XOR(db[ 8*NUM_CONTEXTS]), K05XOR(db[ 9*NUM_CONTEXTS]), K06XOR(db[10*NUM_CONTEXTS]), K48XOR(db[11*NUM_CONTEXTS]), K33XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K13XOR(db[E0]), K34XOR(db[E1]), K39XOR(db[E2]), K47XOR(db[E3]), K52XOR(db[E4]), K19XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K51XOR(db[E0]), K03XOR(db[E1]), K07XOR(db[E2]), K22XOR(db[E3]), K09XOR(db[E4]), K35XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K16XOR(db[27*NUM_CONTEXTS]), K44XOR(db[28*NUM_CONTEXTS]), K17XOR(db[29*NUM_CONTEXTS]), K29XOR(db[30*NUM_CONTEXTS]), K21XOR(db[31*NUM_CONTEXTS]), K00XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K30XOR(db[23*NUM_CONTEXTS]), K24XOR(db[24*NUM_CONTEXTS]), K08XOR(db[25*NUM_CONTEXTS]), K28XOR(db[26*NUM_CONTEXTS]), K43XOR(db[27*NUM_CONTEXTS]), K49XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K14XOR(db[E0]), K01XOR(db[E1]), K10XOR(db[E2]), K23XOR(db[E3]), K50XOR(db[E4]), K02XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K46XOR(db[E0]), K25XOR(db[E1]), K12XOR(db[E2]), K31XOR(db[E3]), K27XOR(db[E4]), K54XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K32XOR(db[11*N]), K40XOR(db[12*N]), K41XOR(db[13*N]), K04XOR(db[14*N]), K53XOR(db[15*N]), K20XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K38XOR(db[ 7*N]), K11XOR(db[ 8*N]), K05XOR(db[ 9*N]), K06XOR(db[10*N]), K48XOR(db[11*N]), K33XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K13XOR(db[E0]), K34XOR(db[E1]), K39XOR(db[E2]), K47XOR(db[E3]), K52XOR(db[E4]), K19XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K51XOR(db[E0]), K03XOR(db[E1]), K07XOR(db[E2]), K22XOR(db[E3]), K09XOR(db[E4]), K35XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K16XOR(db[27*N]), K44XOR(db[28*N]), K17XOR(db[29*N]), K29XOR(db[30*N]), K21XOR(db[31*N]), K00XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K30XOR(db[23*N]), K24XOR(db[24*N]), K08XOR(db[25*N]), K28XOR(db[26*N]), K43XOR(db[27*N]), K49XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K14XOR(db[E0]), K01XOR(db[E1]), K10XOR(db[E2]), K23XOR(db[E3]), K50XOR(db[E4]), K02XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(96);
 		switch (threadIdx.y) {
-		case 0: s1(K32XOR(db[(E0)+(32*NUM_CONTEXTS)]), K11XOR(db[(E1)+(32*NUM_CONTEXTS)]), K53XOR(db[(E2)+(32*NUM_CONTEXTS)]), K48XOR(db[(E3)+(32*NUM_CONTEXTS)]), K13XOR(db[(E4)+(32*NUM_CONTEXTS)]), K40XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K18XOR(db[43*NUM_CONTEXTS]), K26XOR(db[44*NUM_CONTEXTS]), K27XOR(db[45*NUM_CONTEXTS]), K45XOR(db[46*NUM_CONTEXTS]), K39XOR(db[47*NUM_CONTEXTS]), K06XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K55XOR(db[39*NUM_CONTEXTS]), K52XOR(db[40*NUM_CONTEXTS]), K46XOR(db[41*NUM_CONTEXTS]), K47XOR(db[42*NUM_CONTEXTS]), K34XOR(db[43*NUM_CONTEXTS]), K19XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K54XOR(db[(E0)+(32*NUM_CONTEXTS)]), K20XOR(db[(E1)+(32*NUM_CONTEXTS)]), K25XOR(db[(E2)+(32*NUM_CONTEXTS)]), K33XOR(db[(E3)+(32*NUM_CONTEXTS)]), K38XOR(db[(E4)+(32*NUM_CONTEXTS)]), K05XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K37XOR(db[(E0)+(32*NUM_CONTEXTS)]), K42XOR(db[(E1)+(32*NUM_CONTEXTS)]), K50XOR(db[(E2)+(32*NUM_CONTEXTS)]), K08XOR(db[(E3)+(32*NUM_CONTEXTS)]), K24XOR(db[(E4)+(32*NUM_CONTEXTS)]), K21XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K02XOR(db[59*NUM_CONTEXTS]), K30XOR(db[60*NUM_CONTEXTS]), K03XOR(db[61*NUM_CONTEXTS]), K15XOR(db[62*NUM_CONTEXTS]), K07XOR(db[63*NUM_CONTEXTS]), K43XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K16XOR(db[55*NUM_CONTEXTS]), K10XOR(db[56*NUM_CONTEXTS]), K51XOR(db[57*NUM_CONTEXTS]), K14XOR(db[58*NUM_CONTEXTS]), K29XOR(db[59*NUM_CONTEXTS]), K35XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K00XOR(db[(E0)+(32*NUM_CONTEXTS)]), K44XOR(db[(E1)+(32*NUM_CONTEXTS)]), K49XOR(db[(E2)+(32*NUM_CONTEXTS)]), K09XOR(db[(E3)+(32*NUM_CONTEXTS)]), K36XOR(db[(E4)+(32*NUM_CONTEXTS)]), K17XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K32XOR(db[(E0)+(32*N)]), K11XOR(db[(E1)+(32*N)]), K53XOR(db[(E2)+(32*N)]), K48XOR(db[(E3)+(32*N)]), K13XOR(db[(E4)+(32*N)]), K40XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K18XOR(db[43*N]), K26XOR(db[44*N]), K27XOR(db[45*N]), K45XOR(db[46*N]), K39XOR(db[47*N]), K06XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K55XOR(db[39*N]), K52XOR(db[40*N]), K46XOR(db[41*N]), K47XOR(db[42*N]), K34XOR(db[43*N]), K19XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K54XOR(db[(E0)+(32*N)]), K20XOR(db[(E1)+(32*N)]), K25XOR(db[(E2)+(32*N)]), K33XOR(db[(E3)+(32*N)]), K38XOR(db[(E4)+(32*N)]), K05XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K37XOR(db[(E0)+(32*N)]), K42XOR(db[(E1)+(32*N)]), K50XOR(db[(E2)+(32*N)]), K08XOR(db[(E3)+(32*N)]), K24XOR(db[(E4)+(32*N)]), K21XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K02XOR(db[59*N]), K30XOR(db[60*N]), K03XOR(db[61*N]), K15XOR(db[62*N]), K07XOR(db[63*N]), K43XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K16XOR(db[55*N]), K10XOR(db[56*N]), K51XOR(db[57*N]), K14XOR(db[58*N]), K29XOR(db[59*N]), K35XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K00XOR(db[(E0)+(32*N)]), K44XOR(db[(E1)+(32*N)]), K49XOR(db[(E2)+(32*N)]), K09XOR(db[(E3)+(32*N)]), K36XOR(db[(E4)+(32*N)]), K17XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(192);
 		switch (threadIdx.y) {
-		case 0: s1(K18XOR(db[E0]), K52XOR(db[E1]), K39XOR(db[E2]), K34XOR(db[E3]), K54XOR(db[E4]), K26XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K04XOR(db[11*NUM_CONTEXTS]), K12XOR(db[12*NUM_CONTEXTS]), K13XOR(db[13*NUM_CONTEXTS]), K31XOR(db[14*NUM_CONTEXTS]), K25XOR(db[15*NUM_CONTEXTS]), K47XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K41XOR(db[ 7*NUM_CONTEXTS]), K38XOR(db[ 8*NUM_CONTEXTS]), K32XOR(db[ 9*NUM_CONTEXTS]), K33XOR(db[10*NUM_CONTEXTS]), K20XOR(db[11*NUM_CONTEXTS]), K05XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K40XOR(db[E0]), K06XOR(db[E1]), K11XOR(db[E2]), K19XOR(db[E3]), K55XOR(db[E4]), K46XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K23XOR(db[E0]), K28XOR(db[E1]), K36XOR(db[E2]), K51XOR(db[E3]), K10XOR(db[E4]), K07XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K17XOR(db[27*NUM_CONTEXTS]), K16XOR(db[28*NUM_CONTEXTS]), K42XOR(db[29*NUM_CONTEXTS]), K01XOR(db[30*NUM_CONTEXTS]), K50XOR(db[31*NUM_CONTEXTS]), K29XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K02XOR(db[23*NUM_CONTEXTS]), K49XOR(db[24*NUM_CONTEXTS]), K37XOR(db[25*NUM_CONTEXTS]), K00XOR(db[26*NUM_CONTEXTS]), K15XOR(db[27*NUM_CONTEXTS]), K21XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K43XOR(db[E0]), K30XOR(db[E1]), K35XOR(db[E2]), K24XOR(db[E3]), K22XOR(db[E4]), K03XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K18XOR(db[E0]), K52XOR(db[E1]), K39XOR(db[E2]), K34XOR(db[E3]), K54XOR(db[E4]), K26XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K04XOR(db[11*N]), K12XOR(db[12*N]), K13XOR(db[13*N]), K31XOR(db[14*N]), K25XOR(db[15*N]), K47XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K41XOR(db[ 7*N]), K38XOR(db[ 8*N]), K32XOR(db[ 9*N]), K33XOR(db[10*N]), K20XOR(db[11*N]), K05XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K40XOR(db[E0]), K06XOR(db[E1]), K11XOR(db[E2]), K19XOR(db[E3]), K55XOR(db[E4]), K46XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K23XOR(db[E0]), K28XOR(db[E1]), K36XOR(db[E2]), K51XOR(db[E3]), K10XOR(db[E4]), K07XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K17XOR(db[27*N]), K16XOR(db[28*N]), K42XOR(db[29*N]), K01XOR(db[30*N]), K50XOR(db[31*N]), K29XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K02XOR(db[23*N]), K49XOR(db[24*N]), K37XOR(db[25*N]), K00XOR(db[26*N]), K15XOR(db[27*N]), K21XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K43XOR(db[E0]), K30XOR(db[E1]), K35XOR(db[E2]), K24XOR(db[E3]), K22XOR(db[E4]), K03XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(192);
 		switch (threadIdx.y) {
-		case 0: s1(K04XOR(db[(E0)+(32*NUM_CONTEXTS)]), K38XOR(db[(E1)+(32*NUM_CONTEXTS)]), K25XOR(db[(E2)+(32*NUM_CONTEXTS)]), K20XOR(db[(E3)+(32*NUM_CONTEXTS)]), K40XOR(db[(E4)+(32*NUM_CONTEXTS)]), K12XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K45XOR(db[43*NUM_CONTEXTS]), K53XOR(db[44*NUM_CONTEXTS]), K54XOR(db[45*NUM_CONTEXTS]), K48XOR(db[46*NUM_CONTEXTS]), K11XOR(db[47*NUM_CONTEXTS]), K33XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K27XOR(db[39*NUM_CONTEXTS]), K55XOR(db[40*NUM_CONTEXTS]), K18XOR(db[41*NUM_CONTEXTS]), K19XOR(db[42*NUM_CONTEXTS]), K06XOR(db[43*NUM_CONTEXTS]), K46XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K26XOR(db[(E0)+(32*NUM_CONTEXTS)]), K47XOR(db[(E1)+(32*NUM_CONTEXTS)]), K52XOR(db[(E2)+(32*NUM_CONTEXTS)]), K05XOR(db[(E3)+(32*NUM_CONTEXTS)]), K41XOR(db[(E4)+(32*NUM_CONTEXTS)]), K32XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K09XOR(db[(E0)+(32*NUM_CONTEXTS)]), K14XOR(db[(E1)+(32*NUM_CONTEXTS)]), K22XOR(db[(E2)+(32*NUM_CONTEXTS)]), K37XOR(db[(E3)+(32*NUM_CONTEXTS)]), K49XOR(db[(E4)+(32*NUM_CONTEXTS)]), K50XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K03XOR(db[59*NUM_CONTEXTS]), K02XOR(db[60*NUM_CONTEXTS]), K28XOR(db[61*NUM_CONTEXTS]), K44XOR(db[62*NUM_CONTEXTS]), K36XOR(db[63*NUM_CONTEXTS]), K15XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K17XOR(db[55*NUM_CONTEXTS]), K35XOR(db[56*NUM_CONTEXTS]), K23XOR(db[57*NUM_CONTEXTS]), K43XOR(db[58*NUM_CONTEXTS]), K01XOR(db[59*NUM_CONTEXTS]), K07XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K29XOR(db[(E0)+(32*NUM_CONTEXTS)]), K16XOR(db[(E1)+(32*NUM_CONTEXTS)]), K21XOR(db[(E2)+(32*NUM_CONTEXTS)]), K10XOR(db[(E3)+(32*NUM_CONTEXTS)]), K08XOR(db[(E4)+(32*NUM_CONTEXTS)]), K42XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K04XOR(db[(E0)+(32*N)]), K38XOR(db[(E1)+(32*N)]), K25XOR(db[(E2)+(32*N)]), K20XOR(db[(E3)+(32*N)]), K40XOR(db[(E4)+(32*N)]), K12XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K45XOR(db[43*N]), K53XOR(db[44*N]), K54XOR(db[45*N]), K48XOR(db[46*N]), K11XOR(db[47*N]), K33XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K27XOR(db[39*N]), K55XOR(db[40*N]), K18XOR(db[41*N]), K19XOR(db[42*N]), K06XOR(db[43*N]), K46XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K26XOR(db[(E0)+(32*N)]), K47XOR(db[(E1)+(32*N)]), K52XOR(db[(E2)+(32*N)]), K05XOR(db[(E3)+(32*N)]), K41XOR(db[(E4)+(32*N)]), K32XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K09XOR(db[(E0)+(32*N)]), K14XOR(db[(E1)+(32*N)]), K22XOR(db[(E2)+(32*N)]), K37XOR(db[(E3)+(32*N)]), K49XOR(db[(E4)+(32*N)]), K50XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K03XOR(db[59*N]), K02XOR(db[60*N]), K28XOR(db[61*N]), K44XOR(db[62*N]), K36XOR(db[63*N]), K15XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K17XOR(db[55*N]), K35XOR(db[56*N]), K23XOR(db[57*N]), K43XOR(db[58*N]), K01XOR(db[59*N]), K07XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K29XOR(db[(E0)+(32*N)]), K16XOR(db[(E1)+(32*N)]), K21XOR(db[(E2)+(32*N)]), K10XOR(db[(E3)+(32*N)]), K08XOR(db[(E4)+(32*N)]), K42XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(288);
 		switch (threadIdx.y) {
-		case 0: s1(K45XOR(db[E0]), K55XOR(db[E1]), K11XOR(db[E2]), K06XOR(db[E3]), K26XOR(db[E4]), K53XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K31XOR(db[11*NUM_CONTEXTS]), K39XOR(db[12*NUM_CONTEXTS]), K40XOR(db[13*NUM_CONTEXTS]), K34XOR(db[14*NUM_CONTEXTS]), K52XOR(db[15*NUM_CONTEXTS]), K19XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K13XOR(db[ 7*NUM_CONTEXTS]), K41XOR(db[ 8*NUM_CONTEXTS]), K04XOR(db[ 9*NUM_CONTEXTS]), K05XOR(db[10*NUM_CONTEXTS]), K47XOR(db[11*NUM_CONTEXTS]), K32XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K12XOR(db[E0]), K33XOR(db[E1]), K38XOR(db[E2]), K46XOR(db[E3]), K27XOR(db[E4]), K18XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K24XOR(db[E0]), K00XOR(db[E1]), K08XOR(db[E2]), K23XOR(db[E3]), K35XOR(db[E4]), K36XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K42XOR(db[27*NUM_CONTEXTS]), K17XOR(db[28*NUM_CONTEXTS]), K14XOR(db[29*NUM_CONTEXTS]), K30XOR(db[30*NUM_CONTEXTS]), K22XOR(db[31*NUM_CONTEXTS]), K01XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K03XOR(db[23*NUM_CONTEXTS]), K21XOR(db[24*NUM_CONTEXTS]), K09XOR(db[25*NUM_CONTEXTS]), K29XOR(db[26*NUM_CONTEXTS]), K44XOR(db[27*NUM_CONTEXTS]), K50XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K15XOR(db[E0]), K02XOR(db[E1]), K07XOR(db[E2]), K49XOR(db[E3]), K51XOR(db[E4]), K28XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K45XOR(db[E0]), K55XOR(db[E1]), K11XOR(db[E2]), K06XOR(db[E3]), K26XOR(db[E4]), K53XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K31XOR(db[11*N]), K39XOR(db[12*N]), K40XOR(db[13*N]), K34XOR(db[14*N]), K52XOR(db[15*N]), K19XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K13XOR(db[ 7*N]), K41XOR(db[ 8*N]), K04XOR(db[ 9*N]), K05XOR(db[10*N]), K47XOR(db[11*N]), K32XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K12XOR(db[E0]), K33XOR(db[E1]), K38XOR(db[E2]), K46XOR(db[E3]), K27XOR(db[E4]), K18XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K24XOR(db[E0]), K00XOR(db[E1]), K08XOR(db[E2]), K23XOR(db[E3]), K35XOR(db[E4]), K36XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K42XOR(db[27*N]), K17XOR(db[28*N]), K14XOR(db[29*N]), K30XOR(db[30*N]), K22XOR(db[31*N]), K01XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K03XOR(db[23*N]), K21XOR(db[24*N]), K09XOR(db[25*N]), K29XOR(db[26*N]), K44XOR(db[27*N]), K50XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K15XOR(db[E0]), K02XOR(db[E1]), K07XOR(db[E2]), K49XOR(db[E3]), K51XOR(db[E4]), K28XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(288);
 		switch (threadIdx.y) {
-		case 0: s1(K31XOR(db[(E0)+(32*NUM_CONTEXTS)]), K41XOR(db[(E1)+(32*NUM_CONTEXTS)]), K52XOR(db[(E2)+(32*NUM_CONTEXTS)]), K47XOR(db[(E3)+(32*NUM_CONTEXTS)]), K12XOR(db[(E4)+(32*NUM_CONTEXTS)]), K39XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K48XOR(db[43*NUM_CONTEXTS]), K25XOR(db[44*NUM_CONTEXTS]), K26XOR(db[45*NUM_CONTEXTS]), K20XOR(db[46*NUM_CONTEXTS]), K38XOR(db[47*NUM_CONTEXTS]), K05XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K54XOR(db[39*NUM_CONTEXTS]), K27XOR(db[40*NUM_CONTEXTS]), K45XOR(db[41*NUM_CONTEXTS]), K46XOR(db[42*NUM_CONTEXTS]), K33XOR(db[43*NUM_CONTEXTS]), K18XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K53XOR(db[(E0)+(32*NUM_CONTEXTS)]), K19XOR(db[(E1)+(32*NUM_CONTEXTS)]), K55XOR(db[(E2)+(32*NUM_CONTEXTS)]), K32XOR(db[(E3)+(32*NUM_CONTEXTS)]), K13XOR(db[(E4)+(32*NUM_CONTEXTS)]), K04XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K10XOR(db[(E0)+(32*NUM_CONTEXTS)]), K43XOR(db[(E1)+(32*NUM_CONTEXTS)]), K51XOR(db[(E2)+(32*NUM_CONTEXTS)]), K09XOR(db[(E3)+(32*NUM_CONTEXTS)]), K21XOR(db[(E4)+(32*NUM_CONTEXTS)]), K22XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K28XOR(db[59*NUM_CONTEXTS]), K03XOR(db[60*NUM_CONTEXTS]), K00XOR(db[61*NUM_CONTEXTS]), K16XOR(db[62*NUM_CONTEXTS]), K08XOR(db[63*NUM_CONTEXTS]), K44XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K42XOR(db[55*NUM_CONTEXTS]), K07XOR(db[56*NUM_CONTEXTS]), K24XOR(db[57*NUM_CONTEXTS]), K15XOR(db[58*NUM_CONTEXTS]), K30XOR(db[59*NUM_CONTEXTS]), K36XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K01XOR(db[(E0)+(32*NUM_CONTEXTS)]), K17XOR(db[(E1)+(32*NUM_CONTEXTS)]), K50XOR(db[(E2)+(32*NUM_CONTEXTS)]), K35XOR(db[(E3)+(32*NUM_CONTEXTS)]), K37XOR(db[(E4)+(32*NUM_CONTEXTS)]), K14XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K31XOR(db[(E0)+(32*N)]), K41XOR(db[(E1)+(32*N)]), K52XOR(db[(E2)+(32*N)]), K47XOR(db[(E3)+(32*N)]), K12XOR(db[(E4)+(32*N)]), K39XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K48XOR(db[43*N]), K25XOR(db[44*N]), K26XOR(db[45*N]), K20XOR(db[46*N]), K38XOR(db[47*N]), K05XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K54XOR(db[39*N]), K27XOR(db[40*N]), K45XOR(db[41*N]), K46XOR(db[42*N]), K33XOR(db[43*N]), K18XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K53XOR(db[(E0)+(32*N)]), K19XOR(db[(E1)+(32*N)]), K55XOR(db[(E2)+(32*N)]), K32XOR(db[(E3)+(32*N)]), K13XOR(db[(E4)+(32*N)]), K04XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K10XOR(db[(E0)+(32*N)]), K43XOR(db[(E1)+(32*N)]), K51XOR(db[(E2)+(32*N)]), K09XOR(db[(E3)+(32*N)]), K21XOR(db[(E4)+(32*N)]), K22XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K28XOR(db[59*N]), K03XOR(db[60*N]), K00XOR(db[61*N]), K16XOR(db[62*N]), K08XOR(db[63*N]), K44XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K42XOR(db[55*N]), K07XOR(db[56*N]), K24XOR(db[57*N]), K15XOR(db[58*N]), K30XOR(db[59*N]), K36XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K01XOR(db[(E0)+(32*N)]), K17XOR(db[(E1)+(32*N)]), K50XOR(db[(E2)+(32*N)]), K35XOR(db[(E3)+(32*N)]), K37XOR(db[(E4)+(32*N)]), K14XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(384);
 		switch (threadIdx.y) {
-		case 0: s1(K55XOR(db[E0]), K34XOR(db[E1]), K45XOR(db[E2]), K40XOR(db[E3]), K05XOR(db[E4]), K32XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K41XOR(db[11*NUM_CONTEXTS]), K18XOR(db[12*NUM_CONTEXTS]), K19XOR(db[13*NUM_CONTEXTS]), K13XOR(db[14*NUM_CONTEXTS]), K31XOR(db[15*NUM_CONTEXTS]), K53XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K47XOR(db[ 7*NUM_CONTEXTS]), K20XOR(db[ 8*NUM_CONTEXTS]), K38XOR(db[ 9*NUM_CONTEXTS]), K39XOR(db[10*NUM_CONTEXTS]), K26XOR(db[11*NUM_CONTEXTS]), K11XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K46XOR(db[E0]), K12XOR(db[E1]), K48XOR(db[E2]), K25XOR(db[E3]), K06XOR(db[E4]), K52XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K03XOR(db[E0]), K36XOR(db[E1]), K44XOR(db[E2]), K02XOR(db[E3]), K14XOR(db[E4]), K15XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K21XOR(db[27*NUM_CONTEXTS]), K49XOR(db[28*NUM_CONTEXTS]), K50XOR(db[29*NUM_CONTEXTS]), K09XOR(db[30*NUM_CONTEXTS]), K01XOR(db[31*NUM_CONTEXTS]), K37XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K35XOR(db[23*NUM_CONTEXTS]), K00XOR(db[24*NUM_CONTEXTS]), K17XOR(db[25*NUM_CONTEXTS]), K08XOR(db[26*NUM_CONTEXTS]), K23XOR(db[27*NUM_CONTEXTS]), K29XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K51XOR(db[E0]), K10XOR(db[E1]), K43XOR(db[E2]), K28XOR(db[E3]), K30XOR(db[E4]), K07XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K55XOR(db[E0]), K34XOR(db[E1]), K45XOR(db[E2]), K40XOR(db[E3]), K05XOR(db[E4]), K32XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K41XOR(db[11*N]), K18XOR(db[12*N]), K19XOR(db[13*N]), K13XOR(db[14*N]), K31XOR(db[15*N]), K53XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K47XOR(db[ 7*N]), K20XOR(db[ 8*N]), K38XOR(db[ 9*N]), K39XOR(db[10*N]), K26XOR(db[11*N]), K11XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K46XOR(db[E0]), K12XOR(db[E1]), K48XOR(db[E2]), K25XOR(db[E3]), K06XOR(db[E4]), K52XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K03XOR(db[E0]), K36XOR(db[E1]), K44XOR(db[E2]), K02XOR(db[E3]), K14XOR(db[E4]), K15XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K21XOR(db[27*N]), K49XOR(db[28*N]), K50XOR(db[29*N]), K09XOR(db[30*N]), K01XOR(db[31*N]), K37XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K35XOR(db[23*N]), K00XOR(db[24*N]), K17XOR(db[25*N]), K08XOR(db[26*N]), K23XOR(db[27*N]), K29XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K51XOR(db[E0]), K10XOR(db[E1]), K43XOR(db[E2]), K28XOR(db[E3]), K30XOR(db[E4]), K07XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(384);
 		switch (threadIdx.y) {
-		case 0: s1(K41XOR(db[(E0)+(32*NUM_CONTEXTS)]), K20XOR(db[(E1)+(32*NUM_CONTEXTS)]), K31XOR(db[(E2)+(32*NUM_CONTEXTS)]), K26XOR(db[(E3)+(32*NUM_CONTEXTS)]), K46XOR(db[(E4)+(32*NUM_CONTEXTS)]), K18XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K27XOR(db[43*NUM_CONTEXTS]), K04XOR(db[44*NUM_CONTEXTS]), K05XOR(db[45*NUM_CONTEXTS]), K54XOR(db[46*NUM_CONTEXTS]), K48XOR(db[47*NUM_CONTEXTS]), K39XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K33XOR(db[39*NUM_CONTEXTS]), K06XOR(db[40*NUM_CONTEXTS]), K55XOR(db[41*NUM_CONTEXTS]), K25XOR(db[42*NUM_CONTEXTS]), K12XOR(db[43*NUM_CONTEXTS]), K52XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K32XOR(db[(E0)+(32*NUM_CONTEXTS)]), K53XOR(db[(E1)+(32*NUM_CONTEXTS)]), K34XOR(db[(E2)+(32*NUM_CONTEXTS)]), K11XOR(db[(E3)+(32*NUM_CONTEXTS)]), K47XOR(db[(E4)+(32*NUM_CONTEXTS)]), K38XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K42XOR(db[(E0)+(32*NUM_CONTEXTS)]), K22XOR(db[(E1)+(32*NUM_CONTEXTS)]), K30XOR(db[(E2)+(32*NUM_CONTEXTS)]), K17XOR(db[(E3)+(32*NUM_CONTEXTS)]), K00XOR(db[(E4)+(32*NUM_CONTEXTS)]), K01XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K07XOR(db[59*NUM_CONTEXTS]), K35XOR(db[60*NUM_CONTEXTS]), K36XOR(db[61*NUM_CONTEXTS]), K24XOR(db[62*NUM_CONTEXTS]), K44XOR(db[63*NUM_CONTEXTS]), K23XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K21XOR(db[55*NUM_CONTEXTS]), K43XOR(db[56*NUM_CONTEXTS]), K03XOR(db[57*NUM_CONTEXTS]), K51XOR(db[58*NUM_CONTEXTS]), K09XOR(db[59*NUM_CONTEXTS]), K15XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K37XOR(db[(E0)+(32*NUM_CONTEXTS)]), K49XOR(db[(E1)+(32*NUM_CONTEXTS)]), K29XOR(db[(E2)+(32*NUM_CONTEXTS)]), K14XOR(db[(E3)+(32*NUM_CONTEXTS)]), K16XOR(db[(E4)+(32*NUM_CONTEXTS)]), K50XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K41XOR(db[(E0)+(32*N)]), K20XOR(db[(E1)+(32*N)]), K31XOR(db[(E2)+(32*N)]), K26XOR(db[(E3)+(32*N)]), K46XOR(db[(E4)+(32*N)]), K18XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K27XOR(db[43*N]), K04XOR(db[44*N]), K05XOR(db[45*N]), K54XOR(db[46*N]), K48XOR(db[47*N]), K39XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K33XOR(db[39*N]), K06XOR(db[40*N]), K55XOR(db[41*N]), K25XOR(db[42*N]), K12XOR(db[43*N]), K52XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K32XOR(db[(E0)+(32*N)]), K53XOR(db[(E1)+(32*N)]), K34XOR(db[(E2)+(32*N)]), K11XOR(db[(E3)+(32*N)]), K47XOR(db[(E4)+(32*N)]), K38XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K42XOR(db[(E0)+(32*N)]), K22XOR(db[(E1)+(32*N)]), K30XOR(db[(E2)+(32*N)]), K17XOR(db[(E3)+(32*N)]), K00XOR(db[(E4)+(32*N)]), K01XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K07XOR(db[59*N]), K35XOR(db[60*N]), K36XOR(db[61*N]), K24XOR(db[62*N]), K44XOR(db[63*N]), K23XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K21XOR(db[55*N]), K43XOR(db[56*N]), K03XOR(db[57*N]), K51XOR(db[58*N]), K09XOR(db[59*N]), K15XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K37XOR(db[(E0)+(32*N)]), K49XOR(db[(E1)+(32*N)]), K29XOR(db[(E2)+(32*N)]), K14XOR(db[(E3)+(32*N)]), K16XOR(db[(E4)+(32*N)]), K50XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(480);
 		switch (threadIdx.y) {
-		case 0: s1(K27XOR(db[E0]), K06XOR(db[E1]), K48XOR(db[E2]), K12XOR(db[E3]), K32XOR(db[E4]), K04XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K13XOR(db[11*NUM_CONTEXTS]), K45XOR(db[12*NUM_CONTEXTS]), K46XOR(db[13*NUM_CONTEXTS]), K40XOR(db[14*NUM_CONTEXTS]), K34XOR(db[15*NUM_CONTEXTS]), K25XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K19XOR(db[ 7*NUM_CONTEXTS]), K47XOR(db[ 8*NUM_CONTEXTS]), K41XOR(db[ 9*NUM_CONTEXTS]), K11XOR(db[10*NUM_CONTEXTS]), K53XOR(db[11*NUM_CONTEXTS]), K38XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K18XOR(db[E0]), K39XOR(db[E1]), K20XOR(db[E2]), K52XOR(db[E3]), K33XOR(db[E4]), K55XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K28XOR(db[E0]), K08XOR(db[E1]), K16XOR(db[E2]), K03XOR(db[E3]), K43XOR(db[E4]), K44XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K50XOR(db[27*NUM_CONTEXTS]), K21XOR(db[28*NUM_CONTEXTS]), K22XOR(db[29*NUM_CONTEXTS]), K10XOR(db[30*NUM_CONTEXTS]), K30XOR(db[31*NUM_CONTEXTS]), K09XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K07XOR(db[23*NUM_CONTEXTS]), K29XOR(db[24*NUM_CONTEXTS]), K42XOR(db[25*NUM_CONTEXTS]), K37XOR(db[26*NUM_CONTEXTS]), K24XOR(db[27*NUM_CONTEXTS]), K01XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K23XOR(db[E0]), K35XOR(db[E1]), K15XOR(db[E2]), K00XOR(db[E3]), K02XOR(db[E4]), K36XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K27XOR(db[E0]), K06XOR(db[E1]), K48XOR(db[E2]), K12XOR(db[E3]), K32XOR(db[E4]), K04XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K13XOR(db[11*N]), K45XOR(db[12*N]), K46XOR(db[13*N]), K40XOR(db[14*N]), K34XOR(db[15*N]), K25XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K19XOR(db[ 7*N]), K47XOR(db[ 8*N]), K41XOR(db[ 9*N]), K11XOR(db[10*N]), K53XOR(db[11*N]), K38XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K18XOR(db[E0]), K39XOR(db[E1]), K20XOR(db[E2]), K52XOR(db[E3]), K33XOR(db[E4]), K55XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K28XOR(db[E0]), K08XOR(db[E1]), K16XOR(db[E2]), K03XOR(db[E3]), K43XOR(db[E4]), K44XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K50XOR(db[27*N]), K21XOR(db[28*N]), K22XOR(db[29*N]), K10XOR(db[30*N]), K30XOR(db[31*N]), K09XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K07XOR(db[23*N]), K29XOR(db[24*N]), K42XOR(db[25*N]), K37XOR(db[26*N]), K24XOR(db[27*N]), K01XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K23XOR(db[E0]), K35XOR(db[E1]), K15XOR(db[E2]), K00XOR(db[E3]), K02XOR(db[E4]), K36XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(480);
 		switch (threadIdx.y) {
-		case 0: s1(K13XOR(db[(E0)+(32*NUM_CONTEXTS)]), K47XOR(db[(E1)+(32*NUM_CONTEXTS)]), K34XOR(db[(E2)+(32*NUM_CONTEXTS)]), K53XOR(db[(E3)+(32*NUM_CONTEXTS)]), K18XOR(db[(E4)+(32*NUM_CONTEXTS)]), K45XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K54XOR(db[43*NUM_CONTEXTS]), K31XOR(db[44*NUM_CONTEXTS]), K32XOR(db[45*NUM_CONTEXTS]), K26XOR(db[46*NUM_CONTEXTS]), K20XOR(db[47*NUM_CONTEXTS]), K11XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K05XOR(db[39*NUM_CONTEXTS]), K33XOR(db[40*NUM_CONTEXTS]), K27XOR(db[41*NUM_CONTEXTS]), K52XOR(db[42*NUM_CONTEXTS]), K39XOR(db[43*NUM_CONTEXTS]), K55XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K04XOR(db[(E0)+(32*NUM_CONTEXTS)]), K25XOR(db[(E1)+(32*NUM_CONTEXTS)]), K06XOR(db[(E2)+(32*NUM_CONTEXTS)]), K38XOR(db[(E3)+(32*NUM_CONTEXTS)]), K19XOR(db[(E4)+(32*NUM_CONTEXTS)]), K41XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K14XOR(db[(E0)+(32*NUM_CONTEXTS)]), K51XOR(db[(E1)+(32*NUM_CONTEXTS)]), K02XOR(db[(E2)+(32*NUM_CONTEXTS)]), K42XOR(db[(E3)+(32*NUM_CONTEXTS)]), K29XOR(db[(E4)+(32*NUM_CONTEXTS)]), K30XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K36XOR(db[59*NUM_CONTEXTS]), K07XOR(db[60*NUM_CONTEXTS]), K08XOR(db[61*NUM_CONTEXTS]), K49XOR(db[62*NUM_CONTEXTS]), K16XOR(db[63*NUM_CONTEXTS]), K24XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K50XOR(db[55*NUM_CONTEXTS]), K15XOR(db[56*NUM_CONTEXTS]), K28XOR(db[57*NUM_CONTEXTS]), K23XOR(db[58*NUM_CONTEXTS]), K10XOR(db[59*NUM_CONTEXTS]), K44XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K09XOR(db[(E0)+(32*NUM_CONTEXTS)]), K21XOR(db[(E1)+(32*NUM_CONTEXTS)]), K01XOR(db[(E2)+(32*NUM_CONTEXTS)]), K43XOR(db[(E3)+(32*NUM_CONTEXTS)]), K17XOR(db[(E4)+(32*NUM_CONTEXTS)]), K22XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K13XOR(db[(E0)+(32*N)]), K47XOR(db[(E1)+(32*N)]), K34XOR(db[(E2)+(32*N)]), K53XOR(db[(E3)+(32*N)]), K18XOR(db[(E4)+(32*N)]), K45XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K54XOR(db[43*N]), K31XOR(db[44*N]), K32XOR(db[45*N]), K26XOR(db[46*N]), K20XOR(db[47*N]), K11XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K05XOR(db[39*N]), K33XOR(db[40*N]), K27XOR(db[41*N]), K52XOR(db[42*N]), K39XOR(db[43*N]), K55XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K04XOR(db[(E0)+(32*N)]), K25XOR(db[(E1)+(32*N)]), K06XOR(db[(E2)+(32*N)]), K38XOR(db[(E3)+(32*N)]), K19XOR(db[(E4)+(32*N)]), K41XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K14XOR(db[(E0)+(32*N)]), K51XOR(db[(E1)+(32*N)]), K02XOR(db[(E2)+(32*N)]), K42XOR(db[(E3)+(32*N)]), K29XOR(db[(E4)+(32*N)]), K30XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K36XOR(db[59*N]), K07XOR(db[60*N]), K08XOR(db[61*N]), K49XOR(db[62*N]), K16XOR(db[63*N]), K24XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K50XOR(db[55*N]), K15XOR(db[56*N]), K28XOR(db[57*N]), K23XOR(db[58*N]), K10XOR(db[59*N]), K44XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K09XOR(db[(E0)+(32*N)]), K21XOR(db[(E1)+(32*N)]), K01XOR(db[(E2)+(32*N)]), K43XOR(db[(E3)+(32*N)]), K17XOR(db[(E4)+(32*N)]), K22XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(576);
 		switch (threadIdx.y) {
-		case 0: s1(K54XOR(db[E0]), K33XOR(db[E1]), K20XOR(db[E2]), K39XOR(db[E3]), K04XOR(db[E4]), K31XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K40XOR(db[11*NUM_CONTEXTS]), K48XOR(db[12*NUM_CONTEXTS]), K18XOR(db[13*NUM_CONTEXTS]), K12XOR(db[14*NUM_CONTEXTS]), K06XOR(db[15*NUM_CONTEXTS]), K52XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K46XOR(db[ 7*NUM_CONTEXTS]), K19XOR(db[ 8*NUM_CONTEXTS]), K13XOR(db[ 9*NUM_CONTEXTS]), K38XOR(db[10*NUM_CONTEXTS]), K25XOR(db[11*NUM_CONTEXTS]), K41XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K45XOR(db[E0]), K11XOR(db[E1]), K47XOR(db[E2]), K55XOR(db[E3]), K05XOR(db[E4]), K27XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K00XOR(db[E0]), K37XOR(db[E1]), K17XOR(db[E2]), K28XOR(db[E3]), K15XOR(db[E4]), K16XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K22XOR(db[27*NUM_CONTEXTS]), K50XOR(db[28*NUM_CONTEXTS]), K51XOR(db[29*NUM_CONTEXTS]), K35XOR(db[30*NUM_CONTEXTS]), K02XOR(db[31*NUM_CONTEXTS]), K10XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K36XOR(db[23*NUM_CONTEXTS]), K01XOR(db[24*NUM_CONTEXTS]), K14XOR(db[25*NUM_CONTEXTS]), K09XOR(db[26*NUM_CONTEXTS]), K49XOR(db[27*NUM_CONTEXTS]), K30XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K24XOR(db[E0]), K07XOR(db[E1]), K44XOR(db[E2]), K29XOR(db[E3]), K03XOR(db[E4]), K08XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K54XOR(db[E0]), K33XOR(db[E1]), K20XOR(db[E2]), K39XOR(db[E3]), K04XOR(db[E4]), K31XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K40XOR(db[11*N]), K48XOR(db[12*N]), K18XOR(db[13*N]), K12XOR(db[14*N]), K06XOR(db[15*N]), K52XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K46XOR(db[ 7*N]), K19XOR(db[ 8*N]), K13XOR(db[ 9*N]), K38XOR(db[10*N]), K25XOR(db[11*N]), K41XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K45XOR(db[E0]), K11XOR(db[E1]), K47XOR(db[E2]), K55XOR(db[E3]), K05XOR(db[E4]), K27XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K00XOR(db[E0]), K37XOR(db[E1]), K17XOR(db[E2]), K28XOR(db[E3]), K15XOR(db[E4]), K16XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K22XOR(db[27*N]), K50XOR(db[28*N]), K51XOR(db[29*N]), K35XOR(db[30*N]), K02XOR(db[31*N]), K10XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K36XOR(db[23*N]), K01XOR(db[24*N]), K14XOR(db[25*N]), K09XOR(db[26*N]), K49XOR(db[27*N]), K30XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K24XOR(db[E0]), K07XOR(db[E1]), K44XOR(db[E2]), K29XOR(db[E3]), K03XOR(db[E4]), K08XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(576);
 		switch (threadIdx.y) {
-		case 0: s1(K40XOR(db[(E0)+(32*NUM_CONTEXTS)]), K19XOR(db[(E1)+(32*NUM_CONTEXTS)]), K06XOR(db[(E2)+(32*NUM_CONTEXTS)]), K25XOR(db[(E3)+(32*NUM_CONTEXTS)]), K45XOR(db[(E4)+(32*NUM_CONTEXTS)]), K48XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K26XOR(db[43*NUM_CONTEXTS]), K34XOR(db[44*NUM_CONTEXTS]), K04XOR(db[45*NUM_CONTEXTS]), K53XOR(db[46*NUM_CONTEXTS]), K47XOR(db[47*NUM_CONTEXTS]), K38XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K32XOR(db[39*NUM_CONTEXTS]), K05XOR(db[40*NUM_CONTEXTS]), K54XOR(db[41*NUM_CONTEXTS]), K55XOR(db[42*NUM_CONTEXTS]), K11XOR(db[43*NUM_CONTEXTS]), K27XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K31XOR(db[(E0)+(32*NUM_CONTEXTS)]), K52XOR(db[(E1)+(32*NUM_CONTEXTS)]), K33XOR(db[(E2)+(32*NUM_CONTEXTS)]), K41XOR(db[(E3)+(32*NUM_CONTEXTS)]), K46XOR(db[(E4)+(32*NUM_CONTEXTS)]), K13XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K43XOR(db[(E0)+(32*NUM_CONTEXTS)]), K23XOR(db[(E1)+(32*NUM_CONTEXTS)]), K03XOR(db[(E2)+(32*NUM_CONTEXTS)]), K14XOR(db[(E3)+(32*NUM_CONTEXTS)]), K01XOR(db[(E4)+(32*NUM_CONTEXTS)]), K02XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K08XOR(db[59*NUM_CONTEXTS]), K36XOR(db[60*NUM_CONTEXTS]), K37XOR(db[61*NUM_CONTEXTS]), K21XOR(db[62*NUM_CONTEXTS]), K17XOR(db[63*NUM_CONTEXTS]), K49XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K22XOR(db[55*NUM_CONTEXTS]), K44XOR(db[56*NUM_CONTEXTS]), K00XOR(db[57*NUM_CONTEXTS]), K24XOR(db[58*NUM_CONTEXTS]), K35XOR(db[59*NUM_CONTEXTS]), K16XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K10XOR(db[(E0)+(32*NUM_CONTEXTS)]), K50XOR(db[(E1)+(32*NUM_CONTEXTS)]), K30XOR(db[(E2)+(32*NUM_CONTEXTS)]), K15XOR(db[(E3)+(32*NUM_CONTEXTS)]), K42XOR(db[(E4)+(32*NUM_CONTEXTS)]), K51XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K40XOR(db[(E0)+(32*N)]), K19XOR(db[(E1)+(32*N)]), K06XOR(db[(E2)+(32*N)]), K25XOR(db[(E3)+(32*N)]), K45XOR(db[(E4)+(32*N)]), K48XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K26XOR(db[43*N]), K34XOR(db[44*N]), K04XOR(db[45*N]), K53XOR(db[46*N]), K47XOR(db[47*N]), K38XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K32XOR(db[39*N]), K05XOR(db[40*N]), K54XOR(db[41*N]), K55XOR(db[42*N]), K11XOR(db[43*N]), K27XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K31XOR(db[(E0)+(32*N)]), K52XOR(db[(E1)+(32*N)]), K33XOR(db[(E2)+(32*N)]), K41XOR(db[(E3)+(32*N)]), K46XOR(db[(E4)+(32*N)]), K13XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K43XOR(db[(E0)+(32*N)]), K23XOR(db[(E1)+(32*N)]), K03XOR(db[(E2)+(32*N)]), K14XOR(db[(E3)+(32*N)]), K01XOR(db[(E4)+(32*N)]), K02XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K08XOR(db[59*N]), K36XOR(db[60*N]), K37XOR(db[61*N]), K21XOR(db[62*N]), K17XOR(db[63*N]), K49XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K22XOR(db[55*N]), K44XOR(db[56*N]), K00XOR(db[57*N]), K24XOR(db[58*N]), K35XOR(db[59*N]), K16XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K10XOR(db[(E0)+(32*N)]), K50XOR(db[(E1)+(32*N)]), K30XOR(db[(E2)+(32*N)]), K15XOR(db[(E3)+(32*N)]), K42XOR(db[(E4)+(32*N)]), K51XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(672);
 		switch (threadIdx.y) {
-		case 0: s1(K26XOR(db[E0]), K05XOR(db[E1]), K47XOR(db[E2]), K11XOR(db[E3]), K31XOR(db[E4]), K34XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K12XOR(db[11*NUM_CONTEXTS]), K20XOR(db[12*NUM_CONTEXTS]), K45XOR(db[13*NUM_CONTEXTS]), K39XOR(db[14*NUM_CONTEXTS]), K33XOR(db[15*NUM_CONTEXTS]), K55XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K18XOR(db[ 7*NUM_CONTEXTS]), K46XOR(db[ 8*NUM_CONTEXTS]), K40XOR(db[ 9*NUM_CONTEXTS]), K41XOR(db[10*NUM_CONTEXTS]), K52XOR(db[11*NUM_CONTEXTS]), K13XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K48XOR(db[E0]), K38XOR(db[E1]), K19XOR(db[E2]), K27XOR(db[E3]), K32XOR(db[E4]), K54XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K29XOR(db[E0]), K09XOR(db[E1]), K42XOR(db[E2]), K00XOR(db[E3]), K44XOR(db[E4]), K17XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K51XOR(db[27*NUM_CONTEXTS]), K22XOR(db[28*NUM_CONTEXTS]), K23XOR(db[29*NUM_CONTEXTS]), K07XOR(db[30*NUM_CONTEXTS]), K03XOR(db[31*NUM_CONTEXTS]), K35XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K08XOR(db[23*NUM_CONTEXTS]), K30XOR(db[24*NUM_CONTEXTS]), K43XOR(db[25*NUM_CONTEXTS]), K10XOR(db[26*NUM_CONTEXTS]), K21XOR(db[27*NUM_CONTEXTS]), K02XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K49XOR(db[E0]), K36XOR(db[E1]), K16XOR(db[E2]), K01XOR(db[E3]), K28XOR(db[E4]), K37XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K26XOR(db[E0]), K05XOR(db[E1]), K47XOR(db[E2]), K11XOR(db[E3]), K31XOR(db[E4]), K34XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K12XOR(db[11*N]), K20XOR(db[12*N]), K45XOR(db[13*N]), K39XOR(db[14*N]), K33XOR(db[15*N]), K55XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K18XOR(db[ 7*N]), K46XOR(db[ 8*N]), K40XOR(db[ 9*N]), K41XOR(db[10*N]), K52XOR(db[11*N]), K13XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K48XOR(db[E0]), K38XOR(db[E1]), K19XOR(db[E2]), K27XOR(db[E3]), K32XOR(db[E4]), K54XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K29XOR(db[E0]), K09XOR(db[E1]), K42XOR(db[E2]), K00XOR(db[E3]), K44XOR(db[E4]), K17XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K51XOR(db[27*N]), K22XOR(db[28*N]), K23XOR(db[29*N]), K07XOR(db[30*N]), K03XOR(db[31*N]), K35XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K08XOR(db[23*N]), K30XOR(db[24*N]), K43XOR(db[25*N]), K10XOR(db[26*N]), K21XOR(db[27*N]), K02XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K49XOR(db[E0]), K36XOR(db[E1]), K16XOR(db[E2]), K01XOR(db[E3]), K28XOR(db[E4]), K37XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(672);
 		switch (threadIdx.y) {
-		case 0: s1(K19XOR(db[(E0)+(32*NUM_CONTEXTS)]), K53XOR(db[(E1)+(32*NUM_CONTEXTS)]), K40XOR(db[(E2)+(32*NUM_CONTEXTS)]), K04XOR(db[(E3)+(32*NUM_CONTEXTS)]), K55XOR(db[(E4)+(32*NUM_CONTEXTS)]), K27XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K05XOR(db[43*NUM_CONTEXTS]), K13XOR(db[44*NUM_CONTEXTS]), K38XOR(db[45*NUM_CONTEXTS]), K32XOR(db[46*NUM_CONTEXTS]), K26XOR(db[47*NUM_CONTEXTS]), K48XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K11XOR(db[39*NUM_CONTEXTS]), K39XOR(db[40*NUM_CONTEXTS]), K33XOR(db[41*NUM_CONTEXTS]), K34XOR(db[42*NUM_CONTEXTS]), K45XOR(db[43*NUM_CONTEXTS]), K06XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K41XOR(db[(E0)+(32*NUM_CONTEXTS)]), K31XOR(db[(E1)+(32*NUM_CONTEXTS)]), K12XOR(db[(E2)+(32*NUM_CONTEXTS)]), K20XOR(db[(E3)+(32*NUM_CONTEXTS)]), K25XOR(db[(E4)+(32*NUM_CONTEXTS)]), K47XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K22XOR(db[(E0)+(32*NUM_CONTEXTS)]), K02XOR(db[(E1)+(32*NUM_CONTEXTS)]), K35XOR(db[(E2)+(32*NUM_CONTEXTS)]), K50XOR(db[(E3)+(32*NUM_CONTEXTS)]), K37XOR(db[(E4)+(32*NUM_CONTEXTS)]), K10XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K44XOR(db[59*NUM_CONTEXTS]), K15XOR(db[60*NUM_CONTEXTS]), K16XOR(db[61*NUM_CONTEXTS]), K00XOR(db[62*NUM_CONTEXTS]), K49XOR(db[63*NUM_CONTEXTS]), K28XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K01XOR(db[55*NUM_CONTEXTS]), K23XOR(db[56*NUM_CONTEXTS]), K36XOR(db[57*NUM_CONTEXTS]), K03XOR(db[58*NUM_CONTEXTS]), K14XOR(db[59*NUM_CONTEXTS]), K24XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K42XOR(db[(E0)+(32*NUM_CONTEXTS)]), K29XOR(db[(E1)+(32*NUM_CONTEXTS)]), K09XOR(db[(E2)+(32*NUM_CONTEXTS)]), K51XOR(db[(E3)+(32*NUM_CONTEXTS)]), K21XOR(db[(E4)+(32*NUM_CONTEXTS)]), K30XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K19XOR(db[(E0)+(32*N)]), K53XOR(db[(E1)+(32*N)]), K40XOR(db[(E2)+(32*N)]), K04XOR(db[(E3)+(32*N)]), K55XOR(db[(E4)+(32*N)]), K27XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K05XOR(db[43*N]), K13XOR(db[44*N]), K38XOR(db[45*N]), K32XOR(db[46*N]), K26XOR(db[47*N]), K48XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K11XOR(db[39*N]), K39XOR(db[40*N]), K33XOR(db[41*N]), K34XOR(db[42*N]), K45XOR(db[43*N]), K06XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K41XOR(db[(E0)+(32*N)]), K31XOR(db[(E1)+(32*N)]), K12XOR(db[(E2)+(32*N)]), K20XOR(db[(E3)+(32*N)]), K25XOR(db[(E4)+(32*N)]), K47XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K22XOR(db[(E0)+(32*N)]), K02XOR(db[(E1)+(32*N)]), K35XOR(db[(E2)+(32*N)]), K50XOR(db[(E3)+(32*N)]), K37XOR(db[(E4)+(32*N)]), K10XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K44XOR(db[59*N]), K15XOR(db[60*N]), K16XOR(db[61*N]), K00XOR(db[62*N]), K49XOR(db[63*N]), K28XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K01XOR(db[55*N]), K23XOR(db[56*N]), K36XOR(db[57*N]), K03XOR(db[58*N]), K14XOR(db[59*N]), K24XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K42XOR(db[(E0)+(32*N)]), K29XOR(db[(E1)+(32*N)]), K09XOR(db[(E2)+(32*N)]), K51XOR(db[(E3)+(32*N)]), K21XOR(db[(E4)+(32*N)]), K30XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
@@ -1485,227 +1487,639 @@ void DES_Crypt(volatile unsigned int keyFrom00To27, volatile unsigned int keyFro
 
 		// ROUND_B(-48);
 		switch (threadIdx.y) {
-		case 0: s1(K12XOR(db[(E0)+(32*NUM_CONTEXTS)]), K46XOR(db[(E1)+(32*NUM_CONTEXTS)]), K33XOR(db[(E2)+(32*NUM_CONTEXTS)]), K52XOR(db[(E3)+(32*NUM_CONTEXTS)]), K48XOR(db[(E4)+(32*NUM_CONTEXTS)]), K20XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K53XOR(db[43*NUM_CONTEXTS]), K06XOR(db[44*NUM_CONTEXTS]), K31XOR(db[45*NUM_CONTEXTS]), K25XOR(db[46*NUM_CONTEXTS]), K19XOR(db[47*NUM_CONTEXTS]), K41XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K04XOR(db[39*NUM_CONTEXTS]), K32XOR(db[40*NUM_CONTEXTS]), K26XOR(db[41*NUM_CONTEXTS]), K27XOR(db[42*NUM_CONTEXTS]), K38XOR(db[43*NUM_CONTEXTS]), K54XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K34XOR(db[(E0)+(32*NUM_CONTEXTS)]), K55XOR(db[(E1)+(32*NUM_CONTEXTS)]), K05XOR(db[(E2)+(32*NUM_CONTEXTS)]), K13XOR(db[(E3)+(32*NUM_CONTEXTS)]), K18XOR(db[(E4)+(32*NUM_CONTEXTS)]), K40XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K15XOR(db[(E0)+(32*NUM_CONTEXTS)]), K24XOR(db[(E1)+(32*NUM_CONTEXTS)]), K28XOR(db[(E2)+(32*NUM_CONTEXTS)]), K43XOR(db[(E3)+(32*NUM_CONTEXTS)]), K30XOR(db[(E4)+(32*NUM_CONTEXTS)]), K03XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K37XOR(db[59*NUM_CONTEXTS]), K08XOR(db[60*NUM_CONTEXTS]), K09XOR(db[61*NUM_CONTEXTS]), K50XOR(db[62*NUM_CONTEXTS]), K42XOR(db[63*NUM_CONTEXTS]), K21XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K51XOR(db[55*NUM_CONTEXTS]), K16XOR(db[56*NUM_CONTEXTS]), K29XOR(db[57*NUM_CONTEXTS]), K49XOR(db[58*NUM_CONTEXTS]), K07XOR(db[59*NUM_CONTEXTS]), K17XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K35XOR(db[(E0)+(32*NUM_CONTEXTS)]), K22XOR(db[(E1)+(32*NUM_CONTEXTS)]), K02XOR(db[(E2)+(32*NUM_CONTEXTS)]), K44XOR(db[(E3)+(32*NUM_CONTEXTS)]), K14XOR(db[(E4)+(32*NUM_CONTEXTS)]), K23XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K12XOR(db[(E0)+(32*N)]), K46XOR(db[(E1)+(32*N)]), K33XOR(db[(E2)+(32*N)]), K52XOR(db[(E3)+(32*N)]), K48XOR(db[(E4)+(32*N)]), K20XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K53XOR(db[43*N]), K06XOR(db[44*N]), K31XOR(db[45*N]), K25XOR(db[46*N]), K19XOR(db[47*N]), K41XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K04XOR(db[39*N]), K32XOR(db[40*N]), K26XOR(db[41*N]), K27XOR(db[42*N]), K38XOR(db[43*N]), K54XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K34XOR(db[(E0)+(32*N)]), K55XOR(db[(E1)+(32*N)]), K05XOR(db[(E2)+(32*N)]), K13XOR(db[(E3)+(32*N)]), K18XOR(db[(E4)+(32*N)]), K40XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K15XOR(db[(E0)+(32*N)]), K24XOR(db[(E1)+(32*N)]), K28XOR(db[(E2)+(32*N)]), K43XOR(db[(E3)+(32*N)]), K30XOR(db[(E4)+(32*N)]), K03XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K37XOR(db[59*N]), K08XOR(db[60*N]), K09XOR(db[61*N]), K50XOR(db[62*N]), K42XOR(db[63*N]), K21XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K51XOR(db[55*N]), K16XOR(db[56*N]), K29XOR(db[57*N]), K49XOR(db[58*N]), K07XOR(db[59*N]), K17XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K35XOR(db[(E0)+(32*N)]), K22XOR(db[(E1)+(32*N)]), K02XOR(db[(E2)+(32*N)]), K44XOR(db[(E3)+(32*N)]), K14XOR(db[(E4)+(32*N)]), K23XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(48);
 		switch (threadIdx.y) {
-		case 0: s1(K05XOR(db[E0]), K39XOR(db[E1]), K26XOR(db[E2]), K45XOR(db[E3]), K41XOR(db[E4]), K13XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K46XOR(db[11*NUM_CONTEXTS]), K54XOR(db[12*NUM_CONTEXTS]), K55XOR(db[13*NUM_CONTEXTS]), K18XOR(db[14*NUM_CONTEXTS]), K12XOR(db[15*NUM_CONTEXTS]), K34XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K52XOR(db[ 7*NUM_CONTEXTS]), K25XOR(db[ 8*NUM_CONTEXTS]), K19XOR(db[ 9*NUM_CONTEXTS]), K20XOR(db[10*NUM_CONTEXTS]), K31XOR(db[11*NUM_CONTEXTS]), K47XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K27XOR(db[E0]), K48XOR(db[E1]), K53XOR(db[E2]), K06XOR(db[E3]), K11XOR(db[E4]), K33XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K08XOR(db[E0]), K17XOR(db[E1]), K21XOR(db[E2]), K36XOR(db[E3]), K23XOR(db[E4]), K49XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K30XOR(db[27*NUM_CONTEXTS]), K01XOR(db[28*NUM_CONTEXTS]), K02XOR(db[29*NUM_CONTEXTS]), K43XOR(db[30*NUM_CONTEXTS]), K35XOR(db[31*NUM_CONTEXTS]), K14XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K44XOR(db[23*NUM_CONTEXTS]), K09XOR(db[24*NUM_CONTEXTS]), K22XOR(db[25*NUM_CONTEXTS]), K42XOR(db[26*NUM_CONTEXTS]), K00XOR(db[27*NUM_CONTEXTS]), K10XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K28XOR(db[E0]), K15XOR(db[E1]), K24XOR(db[E2]), K37XOR(db[E3]), K07XOR(db[E4]), K16XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K05XOR(db[E0]), K39XOR(db[E1]), K26XOR(db[E2]), K45XOR(db[E3]), K41XOR(db[E4]), K13XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K46XOR(db[11*N]), K54XOR(db[12*N]), K55XOR(db[13*N]), K18XOR(db[14*N]), K12XOR(db[15*N]), K34XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K52XOR(db[ 7*N]), K25XOR(db[ 8*N]), K19XOR(db[ 9*N]), K20XOR(db[10*N]), K31XOR(db[11*N]), K47XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K27XOR(db[E0]), K48XOR(db[E1]), K53XOR(db[E2]), K06XOR(db[E3]), K11XOR(db[E4]), K33XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K08XOR(db[E0]), K17XOR(db[E1]), K21XOR(db[E2]), K36XOR(db[E3]), K23XOR(db[E4]), K49XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K30XOR(db[27*N]), K01XOR(db[28*N]), K02XOR(db[29*N]), K43XOR(db[30*N]), K35XOR(db[31*N]), K14XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K44XOR(db[23*N]), K09XOR(db[24*N]), K22XOR(db[25*N]), K42XOR(db[26*N]), K00XOR(db[27*N]), K10XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K28XOR(db[E0]), K15XOR(db[E1]), K24XOR(db[E2]), K37XOR(db[E3]), K07XOR(db[E4]), K16XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(48);
 		switch (threadIdx.y) {
-		case 0: s1(K46XOR(db[(E0)+(32*NUM_CONTEXTS)]), K25XOR(db[(E1)+(32*NUM_CONTEXTS)]), K12XOR(db[(E2)+(32*NUM_CONTEXTS)]), K31XOR(db[(E3)+(32*NUM_CONTEXTS)]), K27XOR(db[(E4)+(32*NUM_CONTEXTS)]), K54XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K32XOR(db[43*NUM_CONTEXTS]), K40XOR(db[44*NUM_CONTEXTS]), K41XOR(db[45*NUM_CONTEXTS]), K04XOR(db[46*NUM_CONTEXTS]), K53XOR(db[47*NUM_CONTEXTS]), K20XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K38XOR(db[39*NUM_CONTEXTS]), K11XOR(db[40*NUM_CONTEXTS]), K05XOR(db[41*NUM_CONTEXTS]), K06XOR(db[42*NUM_CONTEXTS]), K48XOR(db[43*NUM_CONTEXTS]), K33XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K13XOR(db[(E0)+(32*NUM_CONTEXTS)]), K34XOR(db[(E1)+(32*NUM_CONTEXTS)]), K39XOR(db[(E2)+(32*NUM_CONTEXTS)]), K47XOR(db[(E3)+(32*NUM_CONTEXTS)]), K52XOR(db[(E4)+(32*NUM_CONTEXTS)]), K19XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K51XOR(db[(E0)+(32*NUM_CONTEXTS)]), K03XOR(db[(E1)+(32*NUM_CONTEXTS)]), K07XOR(db[(E2)+(32*NUM_CONTEXTS)]), K22XOR(db[(E3)+(32*NUM_CONTEXTS)]), K09XOR(db[(E4)+(32*NUM_CONTEXTS)]), K35XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K16XOR(db[59*NUM_CONTEXTS]), K44XOR(db[60*NUM_CONTEXTS]), K17XOR(db[61*NUM_CONTEXTS]), K29XOR(db[62*NUM_CONTEXTS]), K21XOR(db[63*NUM_CONTEXTS]), K00XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K30XOR(db[55*NUM_CONTEXTS]), K24XOR(db[56*NUM_CONTEXTS]), K08XOR(db[57*NUM_CONTEXTS]), K28XOR(db[58*NUM_CONTEXTS]), K43XOR(db[59*NUM_CONTEXTS]), K49XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K14XOR(db[(E0)+(32*NUM_CONTEXTS)]), K01XOR(db[(E1)+(32*NUM_CONTEXTS)]), K10XOR(db[(E2)+(32*NUM_CONTEXTS)]), K23XOR(db[(E3)+(32*NUM_CONTEXTS)]), K50XOR(db[(E4)+(32*NUM_CONTEXTS)]), K02XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K46XOR(db[(E0)+(32*N)]), K25XOR(db[(E1)+(32*N)]), K12XOR(db[(E2)+(32*N)]), K31XOR(db[(E3)+(32*N)]), K27XOR(db[(E4)+(32*N)]), K54XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K32XOR(db[43*N]), K40XOR(db[44*N]), K41XOR(db[45*N]), K04XOR(db[46*N]), K53XOR(db[47*N]), K20XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K38XOR(db[39*N]), K11XOR(db[40*N]), K05XOR(db[41*N]), K06XOR(db[42*N]), K48XOR(db[43*N]), K33XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K13XOR(db[(E0)+(32*N)]), K34XOR(db[(E1)+(32*N)]), K39XOR(db[(E2)+(32*N)]), K47XOR(db[(E3)+(32*N)]), K52XOR(db[(E4)+(32*N)]), K19XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K51XOR(db[(E0)+(32*N)]), K03XOR(db[(E1)+(32*N)]), K07XOR(db[(E2)+(32*N)]), K22XOR(db[(E3)+(32*N)]), K09XOR(db[(E4)+(32*N)]), K35XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K16XOR(db[59*N]), K44XOR(db[60*N]), K17XOR(db[61*N]), K29XOR(db[62*N]), K21XOR(db[63*N]), K00XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K30XOR(db[55*N]), K24XOR(db[56*N]), K08XOR(db[57*N]), K28XOR(db[58*N]), K43XOR(db[59*N]), K49XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K14XOR(db[(E0)+(32*N)]), K01XOR(db[(E1)+(32*N)]), K10XOR(db[(E2)+(32*N)]), K23XOR(db[(E3)+(32*N)]), K50XOR(db[(E4)+(32*N)]), K02XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(144);
 		switch (threadIdx.y) {
-		case 0: s1(K32XOR(db[E0]), K11XOR(db[E1]), K53XOR(db[E2]), K48XOR(db[E3]), K13XOR(db[E4]), K40XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K18XOR(db[11*NUM_CONTEXTS]), K26XOR(db[12*NUM_CONTEXTS]), K27XOR(db[13*NUM_CONTEXTS]), K45XOR(db[14*NUM_CONTEXTS]), K39XOR(db[15*NUM_CONTEXTS]), K06XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K55XOR(db[ 7*NUM_CONTEXTS]), K52XOR(db[ 8*NUM_CONTEXTS]), K46XOR(db[ 9*NUM_CONTEXTS]), K47XOR(db[10*NUM_CONTEXTS]), K34XOR(db[11*NUM_CONTEXTS]), K19XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K54XOR(db[E0]), K20XOR(db[E1]), K25XOR(db[E2]), K33XOR(db[E3]), K38XOR(db[E4]), K05XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K37XOR(db[E0]), K42XOR(db[E1]), K50XOR(db[E2]), K08XOR(db[E3]), K24XOR(db[E4]), K21XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K02XOR(db[27*NUM_CONTEXTS]), K30XOR(db[28*NUM_CONTEXTS]), K03XOR(db[29*NUM_CONTEXTS]), K15XOR(db[30*NUM_CONTEXTS]), K07XOR(db[31*NUM_CONTEXTS]), K43XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K16XOR(db[23*NUM_CONTEXTS]), K10XOR(db[24*NUM_CONTEXTS]), K51XOR(db[25*NUM_CONTEXTS]), K14XOR(db[26*NUM_CONTEXTS]), K29XOR(db[27*NUM_CONTEXTS]), K35XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K00XOR(db[E0]), K44XOR(db[E1]), K49XOR(db[E2]), K09XOR(db[E3]), K36XOR(db[E4]), K17XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K32XOR(db[E0]), K11XOR(db[E1]), K53XOR(db[E2]), K48XOR(db[E3]), K13XOR(db[E4]), K40XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K18XOR(db[11*N]), K26XOR(db[12*N]), K27XOR(db[13*N]), K45XOR(db[14*N]), K39XOR(db[15*N]), K06XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K55XOR(db[ 7*N]), K52XOR(db[ 8*N]), K46XOR(db[ 9*N]), K47XOR(db[10*N]), K34XOR(db[11*N]), K19XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K54XOR(db[E0]), K20XOR(db[E1]), K25XOR(db[E2]), K33XOR(db[E3]), K38XOR(db[E4]), K05XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K37XOR(db[E0]), K42XOR(db[E1]), K50XOR(db[E2]), K08XOR(db[E3]), K24XOR(db[E4]), K21XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K02XOR(db[27*N]), K30XOR(db[28*N]), K03XOR(db[29*N]), K15XOR(db[30*N]), K07XOR(db[31*N]), K43XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K16XOR(db[23*N]), K10XOR(db[24*N]), K51XOR(db[25*N]), K14XOR(db[26*N]), K29XOR(db[27*N]), K35XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K00XOR(db[E0]), K44XOR(db[E1]), K49XOR(db[E2]), K09XOR(db[E3]), K36XOR(db[E4]), K17XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(144);
 		switch (threadIdx.y) {
-		case 0: s1(K18XOR(db[(E0)+(32*NUM_CONTEXTS)]), K52XOR(db[(E1)+(32*NUM_CONTEXTS)]), K39XOR(db[(E2)+(32*NUM_CONTEXTS)]), K34XOR(db[(E3)+(32*NUM_CONTEXTS)]), K54XOR(db[(E4)+(32*NUM_CONTEXTS)]), K26XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K04XOR(db[43*NUM_CONTEXTS]), K12XOR(db[44*NUM_CONTEXTS]), K13XOR(db[45*NUM_CONTEXTS]), K31XOR(db[46*NUM_CONTEXTS]), K25XOR(db[47*NUM_CONTEXTS]), K47XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K41XOR(db[39*NUM_CONTEXTS]), K38XOR(db[40*NUM_CONTEXTS]), K32XOR(db[41*NUM_CONTEXTS]), K33XOR(db[42*NUM_CONTEXTS]), K20XOR(db[43*NUM_CONTEXTS]), K05XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K40XOR(db[(E0)+(32*NUM_CONTEXTS)]), K06XOR(db[(E1)+(32*NUM_CONTEXTS)]), K11XOR(db[(E2)+(32*NUM_CONTEXTS)]), K19XOR(db[(E3)+(32*NUM_CONTEXTS)]), K55XOR(db[(E4)+(32*NUM_CONTEXTS)]), K46XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K23XOR(db[(E0)+(32*NUM_CONTEXTS)]), K28XOR(db[(E1)+(32*NUM_CONTEXTS)]), K36XOR(db[(E2)+(32*NUM_CONTEXTS)]), K51XOR(db[(E3)+(32*NUM_CONTEXTS)]), K10XOR(db[(E4)+(32*NUM_CONTEXTS)]), K07XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K17XOR(db[59*NUM_CONTEXTS]), K16XOR(db[60*NUM_CONTEXTS]), K42XOR(db[61*NUM_CONTEXTS]), K01XOR(db[62*NUM_CONTEXTS]), K50XOR(db[63*NUM_CONTEXTS]), K29XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K02XOR(db[55*NUM_CONTEXTS]), K49XOR(db[56*NUM_CONTEXTS]), K37XOR(db[57*NUM_CONTEXTS]), K00XOR(db[58*NUM_CONTEXTS]), K15XOR(db[59*NUM_CONTEXTS]), K21XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K43XOR(db[(E0)+(32*NUM_CONTEXTS)]), K30XOR(db[(E1)+(32*NUM_CONTEXTS)]), K35XOR(db[(E2)+(32*NUM_CONTEXTS)]), K24XOR(db[(E3)+(32*NUM_CONTEXTS)]), K22XOR(db[(E4)+(32*NUM_CONTEXTS)]), K03XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K18XOR(db[(E0)+(32*N)]), K52XOR(db[(E1)+(32*N)]), K39XOR(db[(E2)+(32*N)]), K34XOR(db[(E3)+(32*N)]), K54XOR(db[(E4)+(32*N)]), K26XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K04XOR(db[43*N]), K12XOR(db[44*N]), K13XOR(db[45*N]), K31XOR(db[46*N]), K25XOR(db[47*N]), K47XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K41XOR(db[39*N]), K38XOR(db[40*N]), K32XOR(db[41*N]), K33XOR(db[42*N]), K20XOR(db[43*N]), K05XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K40XOR(db[(E0)+(32*N)]), K06XOR(db[(E1)+(32*N)]), K11XOR(db[(E2)+(32*N)]), K19XOR(db[(E3)+(32*N)]), K55XOR(db[(E4)+(32*N)]), K46XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K23XOR(db[(E0)+(32*N)]), K28XOR(db[(E1)+(32*N)]), K36XOR(db[(E2)+(32*N)]), K51XOR(db[(E3)+(32*N)]), K10XOR(db[(E4)+(32*N)]), K07XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K17XOR(db[59*N]), K16XOR(db[60*N]), K42XOR(db[61*N]), K01XOR(db[62*N]), K50XOR(db[63*N]), K29XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K02XOR(db[55*N]), K49XOR(db[56*N]), K37XOR(db[57*N]), K00XOR(db[58*N]), K15XOR(db[59*N]), K21XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K43XOR(db[(E0)+(32*N)]), K30XOR(db[(E1)+(32*N)]), K35XOR(db[(E2)+(32*N)]), K24XOR(db[(E3)+(32*N)]), K22XOR(db[(E4)+(32*N)]), K03XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(240);
 		switch (threadIdx.y) {
-		case 0: s1(K04XOR(db[E0]), K38XOR(db[E1]), K25XOR(db[E2]), K20XOR(db[E3]), K40XOR(db[E4]), K12XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K45XOR(db[11*NUM_CONTEXTS]), K53XOR(db[12*NUM_CONTEXTS]), K54XOR(db[13*NUM_CONTEXTS]), K48XOR(db[14*NUM_CONTEXTS]), K11XOR(db[15*NUM_CONTEXTS]), K33XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K27XOR(db[ 7*NUM_CONTEXTS]), K55XOR(db[ 8*NUM_CONTEXTS]), K18XOR(db[ 9*NUM_CONTEXTS]), K19XOR(db[10*NUM_CONTEXTS]), K06XOR(db[11*NUM_CONTEXTS]), K46XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K26XOR(db[E0]), K47XOR(db[E1]), K52XOR(db[E2]), K05XOR(db[E3]), K41XOR(db[E4]), K32XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K09XOR(db[E0]), K14XOR(db[E1]), K22XOR(db[E2]), K37XOR(db[E3]), K49XOR(db[E4]), K50XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K03XOR(db[27*NUM_CONTEXTS]), K02XOR(db[28*NUM_CONTEXTS]), K28XOR(db[29*NUM_CONTEXTS]), K44XOR(db[30*NUM_CONTEXTS]), K36XOR(db[31*NUM_CONTEXTS]), K15XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K17XOR(db[23*NUM_CONTEXTS]), K35XOR(db[24*NUM_CONTEXTS]), K23XOR(db[25*NUM_CONTEXTS]), K43XOR(db[26*NUM_CONTEXTS]), K01XOR(db[27*NUM_CONTEXTS]), K07XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K29XOR(db[E0]), K16XOR(db[E1]), K21XOR(db[E2]), K10XOR(db[E3]), K08XOR(db[E4]), K42XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K04XOR(db[E0]), K38XOR(db[E1]), K25XOR(db[E2]), K20XOR(db[E3]), K40XOR(db[E4]), K12XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K45XOR(db[11*N]), K53XOR(db[12*N]), K54XOR(db[13*N]), K48XOR(db[14*N]), K11XOR(db[15*N]), K33XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K27XOR(db[ 7*N]), K55XOR(db[ 8*N]), K18XOR(db[ 9*N]), K19XOR(db[10*N]), K06XOR(db[11*N]), K46XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K26XOR(db[E0]), K47XOR(db[E1]), K52XOR(db[E2]), K05XOR(db[E3]), K41XOR(db[E4]), K32XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K09XOR(db[E0]), K14XOR(db[E1]), K22XOR(db[E2]), K37XOR(db[E3]), K49XOR(db[E4]), K50XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K03XOR(db[27*N]), K02XOR(db[28*N]), K28XOR(db[29*N]), K44XOR(db[30*N]), K36XOR(db[31*N]), K15XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K17XOR(db[23*N]), K35XOR(db[24*N]), K23XOR(db[25*N]), K43XOR(db[26*N]), K01XOR(db[27*N]), K07XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K29XOR(db[E0]), K16XOR(db[E1]), K21XOR(db[E2]), K10XOR(db[E3]), K08XOR(db[E4]), K42XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(240);
 		switch (threadIdx.y) {
-		case 0: s1(K45XOR(db[(E0)+(32*NUM_CONTEXTS)]), K55XOR(db[(E1)+(32*NUM_CONTEXTS)]), K11XOR(db[(E2)+(32*NUM_CONTEXTS)]), K06XOR(db[(E3)+(32*NUM_CONTEXTS)]), K26XOR(db[(E4)+(32*NUM_CONTEXTS)]), K53XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K31XOR(db[43*NUM_CONTEXTS]), K39XOR(db[44*NUM_CONTEXTS]), K40XOR(db[45*NUM_CONTEXTS]), K34XOR(db[46*NUM_CONTEXTS]), K52XOR(db[47*NUM_CONTEXTS]), K19XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K13XOR(db[39*NUM_CONTEXTS]), K41XOR(db[40*NUM_CONTEXTS]), K04XOR(db[41*NUM_CONTEXTS]), K05XOR(db[42*NUM_CONTEXTS]), K47XOR(db[43*NUM_CONTEXTS]), K32XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K12XOR(db[(E0)+(32*NUM_CONTEXTS)]), K33XOR(db[(E1)+(32*NUM_CONTEXTS)]), K38XOR(db[(E2)+(32*NUM_CONTEXTS)]), K46XOR(db[(E3)+(32*NUM_CONTEXTS)]), K27XOR(db[(E4)+(32*NUM_CONTEXTS)]), K18XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K24XOR(db[(E0)+(32*NUM_CONTEXTS)]), K00XOR(db[(E1)+(32*NUM_CONTEXTS)]), K08XOR(db[(E2)+(32*NUM_CONTEXTS)]), K23XOR(db[(E3)+(32*NUM_CONTEXTS)]), K35XOR(db[(E4)+(32*NUM_CONTEXTS)]), K36XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K42XOR(db[59*NUM_CONTEXTS]), K17XOR(db[60*NUM_CONTEXTS]), K14XOR(db[61*NUM_CONTEXTS]), K30XOR(db[62*NUM_CONTEXTS]), K22XOR(db[63*NUM_CONTEXTS]), K01XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K03XOR(db[55*NUM_CONTEXTS]), K21XOR(db[56*NUM_CONTEXTS]), K09XOR(db[57*NUM_CONTEXTS]), K29XOR(db[58*NUM_CONTEXTS]), K44XOR(db[59*NUM_CONTEXTS]), K50XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K15XOR(db[(E0)+(32*NUM_CONTEXTS)]), K02XOR(db[(E1)+(32*NUM_CONTEXTS)]), K07XOR(db[(E2)+(32*NUM_CONTEXTS)]), K49XOR(db[(E3)+(32*NUM_CONTEXTS)]), K51XOR(db[(E4)+(32*NUM_CONTEXTS)]), K28XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K45XOR(db[(E0)+(32*N)]), K55XOR(db[(E1)+(32*N)]), K11XOR(db[(E2)+(32*N)]), K06XOR(db[(E3)+(32*N)]), K26XOR(db[(E4)+(32*N)]), K53XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K31XOR(db[43*N]), K39XOR(db[44*N]), K40XOR(db[45*N]), K34XOR(db[46*N]), K52XOR(db[47*N]), K19XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K13XOR(db[39*N]), K41XOR(db[40*N]), K04XOR(db[41*N]), K05XOR(db[42*N]), K47XOR(db[43*N]), K32XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K12XOR(db[(E0)+(32*N)]), K33XOR(db[(E1)+(32*N)]), K38XOR(db[(E2)+(32*N)]), K46XOR(db[(E3)+(32*N)]), K27XOR(db[(E4)+(32*N)]), K18XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K24XOR(db[(E0)+(32*N)]), K00XOR(db[(E1)+(32*N)]), K08XOR(db[(E2)+(32*N)]), K23XOR(db[(E3)+(32*N)]), K35XOR(db[(E4)+(32*N)]), K36XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K42XOR(db[59*N]), K17XOR(db[60*N]), K14XOR(db[61*N]), K30XOR(db[62*N]), K22XOR(db[63*N]), K01XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K03XOR(db[55*N]), K21XOR(db[56*N]), K09XOR(db[57*N]), K29XOR(db[58*N]), K44XOR(db[59*N]), K50XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K15XOR(db[(E0)+(32*N)]), K02XOR(db[(E1)+(32*N)]), K07XOR(db[(E2)+(32*N)]), K49XOR(db[(E3)+(32*N)]), K51XOR(db[(E4)+(32*N)]), K28XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(336);
 		switch (threadIdx.y) {
-		case 0: s1(K31XOR(db[E0]), K41XOR(db[E1]), K52XOR(db[E2]), K47XOR(db[E3]), K12XOR(db[E4]), K39XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K48XOR(db[11*NUM_CONTEXTS]), K25XOR(db[12*NUM_CONTEXTS]), K26XOR(db[13*NUM_CONTEXTS]), K20XOR(db[14*NUM_CONTEXTS]), K38XOR(db[15*NUM_CONTEXTS]), K05XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K54XOR(db[ 7*NUM_CONTEXTS]), K27XOR(db[ 8*NUM_CONTEXTS]), K45XOR(db[ 9*NUM_CONTEXTS]), K46XOR(db[10*NUM_CONTEXTS]), K33XOR(db[11*NUM_CONTEXTS]), K18XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K53XOR(db[E0]), K19XOR(db[E1]), K55XOR(db[E2]), K32XOR(db[E3]), K13XOR(db[E4]), K04XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K10XOR(db[E0]), K43XOR(db[E1]), K51XOR(db[E2]), K09XOR(db[E3]), K21XOR(db[E4]), K22XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K28XOR(db[27*NUM_CONTEXTS]), K03XOR(db[28*NUM_CONTEXTS]), K00XOR(db[29*NUM_CONTEXTS]), K16XOR(db[30*NUM_CONTEXTS]), K08XOR(db[31*NUM_CONTEXTS]), K44XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K42XOR(db[23*NUM_CONTEXTS]), K07XOR(db[24*NUM_CONTEXTS]), K24XOR(db[25*NUM_CONTEXTS]), K15XOR(db[26*NUM_CONTEXTS]), K30XOR(db[27*NUM_CONTEXTS]), K36XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K01XOR(db[E0]), K17XOR(db[E1]), K50XOR(db[E2]), K35XOR(db[E3]), K37XOR(db[E4]), K14XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K31XOR(db[E0]), K41XOR(db[E1]), K52XOR(db[E2]), K47XOR(db[E3]), K12XOR(db[E4]), K39XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K48XOR(db[11*N]), K25XOR(db[12*N]), K26XOR(db[13*N]), K20XOR(db[14*N]), K38XOR(db[15*N]), K05XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K54XOR(db[ 7*N]), K27XOR(db[ 8*N]), K45XOR(db[ 9*N]), K46XOR(db[10*N]), K33XOR(db[11*N]), K18XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K53XOR(db[E0]), K19XOR(db[E1]), K55XOR(db[E2]), K32XOR(db[E3]), K13XOR(db[E4]), K04XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K10XOR(db[E0]), K43XOR(db[E1]), K51XOR(db[E2]), K09XOR(db[E3]), K21XOR(db[E4]), K22XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K28XOR(db[27*N]), K03XOR(db[28*N]), K00XOR(db[29*N]), K16XOR(db[30*N]), K08XOR(db[31*N]), K44XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K42XOR(db[23*N]), K07XOR(db[24*N]), K24XOR(db[25*N]), K15XOR(db[26*N]), K30XOR(db[27*N]), K36XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K01XOR(db[E0]), K17XOR(db[E1]), K50XOR(db[E2]), K35XOR(db[E3]), K37XOR(db[E4]), K14XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(336);
 		switch (threadIdx.y) {
-		case 0: s1(K55XOR(db[(E0)+(32*NUM_CONTEXTS)]), K34XOR(db[(E1)+(32*NUM_CONTEXTS)]), K45XOR(db[(E2)+(32*NUM_CONTEXTS)]), K40XOR(db[(E3)+(32*NUM_CONTEXTS)]), K05XOR(db[(E4)+(32*NUM_CONTEXTS)]), K32XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K41XOR(db[43*NUM_CONTEXTS]), K18XOR(db[44*NUM_CONTEXTS]), K19XOR(db[45*NUM_CONTEXTS]), K13XOR(db[46*NUM_CONTEXTS]), K31XOR(db[47*NUM_CONTEXTS]), K53XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K47XOR(db[39*NUM_CONTEXTS]), K20XOR(db[40*NUM_CONTEXTS]), K38XOR(db[41*NUM_CONTEXTS]), K39XOR(db[42*NUM_CONTEXTS]), K26XOR(db[43*NUM_CONTEXTS]), K11XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K46XOR(db[(E0)+(32*NUM_CONTEXTS)]), K12XOR(db[(E1)+(32*NUM_CONTEXTS)]), K48XOR(db[(E2)+(32*NUM_CONTEXTS)]), K25XOR(db[(E3)+(32*NUM_CONTEXTS)]), K06XOR(db[(E4)+(32*NUM_CONTEXTS)]), K52XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K03XOR(db[(E0)+(32*NUM_CONTEXTS)]), K36XOR(db[(E1)+(32*NUM_CONTEXTS)]), K44XOR(db[(E2)+(32*NUM_CONTEXTS)]), K02XOR(db[(E3)+(32*NUM_CONTEXTS)]), K14XOR(db[(E4)+(32*NUM_CONTEXTS)]), K15XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K21XOR(db[59*NUM_CONTEXTS]), K49XOR(db[60*NUM_CONTEXTS]), K50XOR(db[61*NUM_CONTEXTS]), K09XOR(db[62*NUM_CONTEXTS]), K01XOR(db[63*NUM_CONTEXTS]), K37XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K35XOR(db[55*NUM_CONTEXTS]), K00XOR(db[56*NUM_CONTEXTS]), K17XOR(db[57*NUM_CONTEXTS]), K08XOR(db[58*NUM_CONTEXTS]), K23XOR(db[59*NUM_CONTEXTS]), K29XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K51XOR(db[(E0)+(32*NUM_CONTEXTS)]), K10XOR(db[(E1)+(32*NUM_CONTEXTS)]), K43XOR(db[(E2)+(32*NUM_CONTEXTS)]), K28XOR(db[(E3)+(32*NUM_CONTEXTS)]), K30XOR(db[(E4)+(32*NUM_CONTEXTS)]), K07XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K55XOR(db[(E0)+(32*N)]), K34XOR(db[(E1)+(32*N)]), K45XOR(db[(E2)+(32*N)]), K40XOR(db[(E3)+(32*N)]), K05XOR(db[(E4)+(32*N)]), K32XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K41XOR(db[43*N]), K18XOR(db[44*N]), K19XOR(db[45*N]), K13XOR(db[46*N]), K31XOR(db[47*N]), K53XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K47XOR(db[39*N]), K20XOR(db[40*N]), K38XOR(db[41*N]), K39XOR(db[42*N]), K26XOR(db[43*N]), K11XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K46XOR(db[(E0)+(32*N)]), K12XOR(db[(E1)+(32*N)]), K48XOR(db[(E2)+(32*N)]), K25XOR(db[(E3)+(32*N)]), K06XOR(db[(E4)+(32*N)]), K52XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K03XOR(db[(E0)+(32*N)]), K36XOR(db[(E1)+(32*N)]), K44XOR(db[(E2)+(32*N)]), K02XOR(db[(E3)+(32*N)]), K14XOR(db[(E4)+(32*N)]), K15XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K21XOR(db[59*N]), K49XOR(db[60*N]), K50XOR(db[61*N]), K09XOR(db[62*N]), K01XOR(db[63*N]), K37XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K35XOR(db[55*N]), K00XOR(db[56*N]), K17XOR(db[57*N]), K08XOR(db[58*N]), K23XOR(db[59*N]), K29XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K51XOR(db[(E0)+(32*N)]), K10XOR(db[(E1)+(32*N)]), K43XOR(db[(E2)+(32*N)]), K28XOR(db[(E3)+(32*N)]), K30XOR(db[(E4)+(32*N)]), K07XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(432);
 		switch (threadIdx.y) {
-		case 0: s1(K41XOR(db[E0]), K20XOR(db[E1]), K31XOR(db[E2]), K26XOR(db[E3]), K46XOR(db[E4]), K18XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K27XOR(db[11*NUM_CONTEXTS]), K04XOR(db[12*NUM_CONTEXTS]), K05XOR(db[13*NUM_CONTEXTS]), K54XOR(db[14*NUM_CONTEXTS]), K48XOR(db[15*NUM_CONTEXTS]), K39XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K33XOR(db[ 7*NUM_CONTEXTS]), K06XOR(db[ 8*NUM_CONTEXTS]), K55XOR(db[ 9*NUM_CONTEXTS]), K25XOR(db[10*NUM_CONTEXTS]), K12XOR(db[11*NUM_CONTEXTS]), K52XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K32XOR(db[E0]), K53XOR(db[E1]), K34XOR(db[E2]), K11XOR(db[E3]), K47XOR(db[E4]), K38XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K42XOR(db[E0]), K22XOR(db[E1]), K30XOR(db[E2]), K17XOR(db[E3]), K00XOR(db[E4]), K01XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K07XOR(db[27*NUM_CONTEXTS]), K35XOR(db[28*NUM_CONTEXTS]), K36XOR(db[29*NUM_CONTEXTS]), K24XOR(db[30*NUM_CONTEXTS]), K44XOR(db[31*NUM_CONTEXTS]), K23XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K21XOR(db[23*NUM_CONTEXTS]), K43XOR(db[24*NUM_CONTEXTS]), K03XOR(db[25*NUM_CONTEXTS]), K51XOR(db[26*NUM_CONTEXTS]), K09XOR(db[27*NUM_CONTEXTS]), K15XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K37XOR(db[E0]), K49XOR(db[E1]), K29XOR(db[E2]), K14XOR(db[E3]), K16XOR(db[E4]), K50XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K41XOR(db[E0]), K20XOR(db[E1]), K31XOR(db[E2]), K26XOR(db[E3]), K46XOR(db[E4]), K18XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K27XOR(db[11*N]), K04XOR(db[12*N]), K05XOR(db[13*N]), K54XOR(db[14*N]), K48XOR(db[15*N]), K39XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K33XOR(db[ 7*N]), K06XOR(db[ 8*N]), K55XOR(db[ 9*N]), K25XOR(db[10*N]), K12XOR(db[11*N]), K52XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K32XOR(db[E0]), K53XOR(db[E1]), K34XOR(db[E2]), K11XOR(db[E3]), K47XOR(db[E4]), K38XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K42XOR(db[E0]), K22XOR(db[E1]), K30XOR(db[E2]), K17XOR(db[E3]), K00XOR(db[E4]), K01XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K07XOR(db[27*N]), K35XOR(db[28*N]), K36XOR(db[29*N]), K24XOR(db[30*N]), K44XOR(db[31*N]), K23XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K21XOR(db[23*N]), K43XOR(db[24*N]), K03XOR(db[25*N]), K51XOR(db[26*N]), K09XOR(db[27*N]), K15XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K37XOR(db[E0]), K49XOR(db[E1]), K29XOR(db[E2]), K14XOR(db[E3]), K16XOR(db[E4]), K50XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(432);
 		switch (threadIdx.y) {
-		case 0: s1(K27XOR(db[(E0)+(32*NUM_CONTEXTS)]), K06XOR(db[(E1)+(32*NUM_CONTEXTS)]), K48XOR(db[(E2)+(32*NUM_CONTEXTS)]), K12XOR(db[(E3)+(32*NUM_CONTEXTS)]), K32XOR(db[(E4)+(32*NUM_CONTEXTS)]), K04XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K13XOR(db[43*NUM_CONTEXTS]), K45XOR(db[44*NUM_CONTEXTS]), K46XOR(db[45*NUM_CONTEXTS]), K40XOR(db[46*NUM_CONTEXTS]), K34XOR(db[47*NUM_CONTEXTS]), K25XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K19XOR(db[39*NUM_CONTEXTS]), K47XOR(db[40*NUM_CONTEXTS]), K41XOR(db[41*NUM_CONTEXTS]), K11XOR(db[42*NUM_CONTEXTS]), K53XOR(db[43*NUM_CONTEXTS]), K38XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K18XOR(db[(E0)+(32*NUM_CONTEXTS)]), K39XOR(db[(E1)+(32*NUM_CONTEXTS)]), K20XOR(db[(E2)+(32*NUM_CONTEXTS)]), K52XOR(db[(E3)+(32*NUM_CONTEXTS)]), K33XOR(db[(E4)+(32*NUM_CONTEXTS)]), K55XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K28XOR(db[(E0)+(32*NUM_CONTEXTS)]), K08XOR(db[(E1)+(32*NUM_CONTEXTS)]), K16XOR(db[(E2)+(32*NUM_CONTEXTS)]), K03XOR(db[(E3)+(32*NUM_CONTEXTS)]), K43XOR(db[(E4)+(32*NUM_CONTEXTS)]), K44XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K50XOR(db[59*NUM_CONTEXTS]), K21XOR(db[60*NUM_CONTEXTS]), K22XOR(db[61*NUM_CONTEXTS]), K10XOR(db[62*NUM_CONTEXTS]), K30XOR(db[63*NUM_CONTEXTS]), K09XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K07XOR(db[55*NUM_CONTEXTS]), K29XOR(db[56*NUM_CONTEXTS]), K42XOR(db[57*NUM_CONTEXTS]), K37XOR(db[58*NUM_CONTEXTS]), K24XOR(db[59*NUM_CONTEXTS]), K01XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K23XOR(db[(E0)+(32*NUM_CONTEXTS)]), K35XOR(db[(E1)+(32*NUM_CONTEXTS)]), K15XOR(db[(E2)+(32*NUM_CONTEXTS)]), K00XOR(db[(E3)+(32*NUM_CONTEXTS)]), K02XOR(db[(E4)+(32*NUM_CONTEXTS)]), K36XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K27XOR(db[(E0)+(32*N)]), K06XOR(db[(E1)+(32*N)]), K48XOR(db[(E2)+(32*N)]), K12XOR(db[(E3)+(32*N)]), K32XOR(db[(E4)+(32*N)]), K04XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K13XOR(db[43*N]), K45XOR(db[44*N]), K46XOR(db[45*N]), K40XOR(db[46*N]), K34XOR(db[47*N]), K25XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K19XOR(db[39*N]), K47XOR(db[40*N]), K41XOR(db[41*N]), K11XOR(db[42*N]), K53XOR(db[43*N]), K38XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K18XOR(db[(E0)+(32*N)]), K39XOR(db[(E1)+(32*N)]), K20XOR(db[(E2)+(32*N)]), K52XOR(db[(E3)+(32*N)]), K33XOR(db[(E4)+(32*N)]), K55XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K28XOR(db[(E0)+(32*N)]), K08XOR(db[(E1)+(32*N)]), K16XOR(db[(E2)+(32*N)]), K03XOR(db[(E3)+(32*N)]), K43XOR(db[(E4)+(32*N)]), K44XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K50XOR(db[59*N]), K21XOR(db[60*N]), K22XOR(db[61*N]), K10XOR(db[62*N]), K30XOR(db[63*N]), K09XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K07XOR(db[55*N]), K29XOR(db[56*N]), K42XOR(db[57*N]), K37XOR(db[58*N]), K24XOR(db[59*N]), K01XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K23XOR(db[(E0)+(32*N)]), K35XOR(db[(E1)+(32*N)]), K15XOR(db[(E2)+(32*N)]), K00XOR(db[(E3)+(32*N)]), K02XOR(db[(E4)+(32*N)]), K36XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(528);
 		switch (threadIdx.y) {
-		case 0: s1(K13XOR(db[E0]), K47XOR(db[E1]), K34XOR(db[E2]), K53XOR(db[E3]), K18XOR(db[E4]), K45XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K54XOR(db[11*NUM_CONTEXTS]), K31XOR(db[12*NUM_CONTEXTS]), K32XOR(db[13*NUM_CONTEXTS]), K26XOR(db[14*NUM_CONTEXTS]), K20XOR(db[15*NUM_CONTEXTS]), K11XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K05XOR(db[ 7*NUM_CONTEXTS]), K33XOR(db[ 8*NUM_CONTEXTS]), K27XOR(db[ 9*NUM_CONTEXTS]), K52XOR(db[10*NUM_CONTEXTS]), K39XOR(db[11*NUM_CONTEXTS]), K55XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K04XOR(db[E0]), K25XOR(db[E1]), K06XOR(db[E2]), K38XOR(db[E3]), K19XOR(db[E4]), K41XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K14XOR(db[E0]), K51XOR(db[E1]), K02XOR(db[E2]), K42XOR(db[E3]), K29XOR(db[E4]), K30XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K36XOR(db[27*NUM_CONTEXTS]), K07XOR(db[28*NUM_CONTEXTS]), K08XOR(db[29*NUM_CONTEXTS]), K49XOR(db[30*NUM_CONTEXTS]), K16XOR(db[31*NUM_CONTEXTS]), K24XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K50XOR(db[23*NUM_CONTEXTS]), K15XOR(db[24*NUM_CONTEXTS]), K28XOR(db[25*NUM_CONTEXTS]), K23XOR(db[26*NUM_CONTEXTS]), K10XOR(db[27*NUM_CONTEXTS]), K44XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K09XOR(db[E0]), K21XOR(db[E1]), K01XOR(db[E2]), K43XOR(db[E3]), K17XOR(db[E4]), K22XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K13XOR(db[E0]), K47XOR(db[E1]), K34XOR(db[E2]), K53XOR(db[E3]), K18XOR(db[E4]), K45XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K54XOR(db[11*N]), K31XOR(db[12*N]), K32XOR(db[13*N]), K26XOR(db[14*N]), K20XOR(db[15*N]), K11XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K05XOR(db[ 7*N]), K33XOR(db[ 8*N]), K27XOR(db[ 9*N]), K52XOR(db[10*N]), K39XOR(db[11*N]), K55XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K04XOR(db[E0]), K25XOR(db[E1]), K06XOR(db[E2]), K38XOR(db[E3]), K19XOR(db[E4]), K41XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K14XOR(db[E0]), K51XOR(db[E1]), K02XOR(db[E2]), K42XOR(db[E3]), K29XOR(db[E4]), K30XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K36XOR(db[27*N]), K07XOR(db[28*N]), K08XOR(db[29*N]), K49XOR(db[30*N]), K16XOR(db[31*N]), K24XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K50XOR(db[23*N]), K15XOR(db[24*N]), K28XOR(db[25*N]), K23XOR(db[26*N]), K10XOR(db[27*N]), K44XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K09XOR(db[E0]), K21XOR(db[E1]), K01XOR(db[E2]), K43XOR(db[E3]), K17XOR(db[E4]), K22XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(528);
 		switch (threadIdx.y) {
-		case 0: s1(K54XOR(db[(E0)+(32*NUM_CONTEXTS)]), K33XOR(db[(E1)+(32*NUM_CONTEXTS)]), K20XOR(db[(E2)+(32*NUM_CONTEXTS)]), K39XOR(db[(E3)+(32*NUM_CONTEXTS)]), K04XOR(db[(E4)+(32*NUM_CONTEXTS)]), K31XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K40XOR(db[43*NUM_CONTEXTS]), K48XOR(db[44*NUM_CONTEXTS]), K18XOR(db[45*NUM_CONTEXTS]), K12XOR(db[46*NUM_CONTEXTS]), K06XOR(db[47*NUM_CONTEXTS]), K52XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K46XOR(db[39*NUM_CONTEXTS]), K19XOR(db[40*NUM_CONTEXTS]), K13XOR(db[41*NUM_CONTEXTS]), K38XOR(db[42*NUM_CONTEXTS]), K25XOR(db[43*NUM_CONTEXTS]), K41XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K45XOR(db[(E0)+(32*NUM_CONTEXTS)]), K11XOR(db[(E1)+(32*NUM_CONTEXTS)]), K47XOR(db[(E2)+(32*NUM_CONTEXTS)]), K55XOR(db[(E3)+(32*NUM_CONTEXTS)]), K05XOR(db[(E4)+(32*NUM_CONTEXTS)]), K27XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K00XOR(db[(E0)+(32*NUM_CONTEXTS)]), K37XOR(db[(E1)+(32*NUM_CONTEXTS)]), K17XOR(db[(E2)+(32*NUM_CONTEXTS)]), K28XOR(db[(E3)+(32*NUM_CONTEXTS)]), K15XOR(db[(E4)+(32*NUM_CONTEXTS)]), K16XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K22XOR(db[59*NUM_CONTEXTS]), K50XOR(db[60*NUM_CONTEXTS]), K51XOR(db[61*NUM_CONTEXTS]), K35XOR(db[62*NUM_CONTEXTS]), K02XOR(db[63*NUM_CONTEXTS]), K10XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K36XOR(db[55*NUM_CONTEXTS]), K01XOR(db[56*NUM_CONTEXTS]), K14XOR(db[57*NUM_CONTEXTS]), K09XOR(db[58*NUM_CONTEXTS]), K49XOR(db[59*NUM_CONTEXTS]), K30XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K24XOR(db[(E0)+(32*NUM_CONTEXTS)]), K07XOR(db[(E1)+(32*NUM_CONTEXTS)]), K44XOR(db[(E2)+(32*NUM_CONTEXTS)]), K29XOR(db[(E3)+(32*NUM_CONTEXTS)]), K03XOR(db[(E4)+(32*NUM_CONTEXTS)]), K08XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K54XOR(db[(E0)+(32*N)]), K33XOR(db[(E1)+(32*N)]), K20XOR(db[(E2)+(32*N)]), K39XOR(db[(E3)+(32*N)]), K04XOR(db[(E4)+(32*N)]), K31XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K40XOR(db[43*N]), K48XOR(db[44*N]), K18XOR(db[45*N]), K12XOR(db[46*N]), K06XOR(db[47*N]), K52XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K46XOR(db[39*N]), K19XOR(db[40*N]), K13XOR(db[41*N]), K38XOR(db[42*N]), K25XOR(db[43*N]), K41XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K45XOR(db[(E0)+(32*N)]), K11XOR(db[(E1)+(32*N)]), K47XOR(db[(E2)+(32*N)]), K55XOR(db[(E3)+(32*N)]), K05XOR(db[(E4)+(32*N)]), K27XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K00XOR(db[(E0)+(32*N)]), K37XOR(db[(E1)+(32*N)]), K17XOR(db[(E2)+(32*N)]), K28XOR(db[(E3)+(32*N)]), K15XOR(db[(E4)+(32*N)]), K16XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K22XOR(db[59*N]), K50XOR(db[60*N]), K51XOR(db[61*N]), K35XOR(db[62*N]), K02XOR(db[63*N]), K10XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K36XOR(db[55*N]), K01XOR(db[56*N]), K14XOR(db[57*N]), K09XOR(db[58*N]), K49XOR(db[59*N]), K30XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K24XOR(db[(E0)+(32*N)]), K07XOR(db[(E1)+(32*N)]), K44XOR(db[(E2)+(32*N)]), K29XOR(db[(E3)+(32*N)]), K03XOR(db[(E4)+(32*N)]), K08XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(624);
 		switch (threadIdx.y) {
-		case 0: s1(K40XOR(db[E0]), K19XOR(db[E1]), K06XOR(db[E2]), K25XOR(db[E3]), K45XOR(db[E4]), K48XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K26XOR(db[11*NUM_CONTEXTS]), K34XOR(db[12*NUM_CONTEXTS]), K04XOR(db[13*NUM_CONTEXTS]), K53XOR(db[14*NUM_CONTEXTS]), K47XOR(db[15*NUM_CONTEXTS]), K38XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K32XOR(db[ 7*NUM_CONTEXTS]), K05XOR(db[ 8*NUM_CONTEXTS]), K54XOR(db[ 9*NUM_CONTEXTS]), K55XOR(db[10*NUM_CONTEXTS]), K11XOR(db[11*NUM_CONTEXTS]), K27XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K31XOR(db[E0]), K52XOR(db[E1]), K33XOR(db[E2]), K41XOR(db[E3]), K46XOR(db[E4]), K13XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K43XOR(db[E0]), K23XOR(db[E1]), K03XOR(db[E2]), K14XOR(db[E3]), K01XOR(db[E4]), K02XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K08XOR(db[27*NUM_CONTEXTS]), K36XOR(db[28*NUM_CONTEXTS]), K37XOR(db[29*NUM_CONTEXTS]), K21XOR(db[30*NUM_CONTEXTS]), K17XOR(db[31*NUM_CONTEXTS]), K49XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K22XOR(db[23*NUM_CONTEXTS]), K44XOR(db[24*NUM_CONTEXTS]), K00XOR(db[25*NUM_CONTEXTS]), K24XOR(db[26*NUM_CONTEXTS]), K35XOR(db[27*NUM_CONTEXTS]), K16XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K10XOR(db[E0]), K50XOR(db[E1]), K30XOR(db[E2]), K15XOR(db[E3]), K42XOR(db[E4]), K51XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K40XOR(db[E0]), K19XOR(db[E1]), K06XOR(db[E2]), K25XOR(db[E3]), K45XOR(db[E4]), K48XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K26XOR(db[11*N]), K34XOR(db[12*N]), K04XOR(db[13*N]), K53XOR(db[14*N]), K47XOR(db[15*N]), K38XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K32XOR(db[ 7*N]), K05XOR(db[ 8*N]), K54XOR(db[ 9*N]), K55XOR(db[10*N]), K11XOR(db[11*N]), K27XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K31XOR(db[E0]), K52XOR(db[E1]), K33XOR(db[E2]), K41XOR(db[E3]), K46XOR(db[E4]), K13XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K43XOR(db[E0]), K23XOR(db[E1]), K03XOR(db[E2]), K14XOR(db[E3]), K01XOR(db[E4]), K02XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K08XOR(db[27*N]), K36XOR(db[28*N]), K37XOR(db[29*N]), K21XOR(db[30*N]), K17XOR(db[31*N]), K49XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K22XOR(db[23*N]), K44XOR(db[24*N]), K00XOR(db[25*N]), K24XOR(db[26*N]), K35XOR(db[27*N]), K16XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K10XOR(db[E0]), K50XOR(db[E1]), K30XOR(db[E2]), K15XOR(db[E3]), K42XOR(db[E4]), K51XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_B(624);
 		switch (threadIdx.y) {
-		case 0: s1(K26XOR(db[(E0)+(32*NUM_CONTEXTS)]), K05XOR(db[(E1)+(32*NUM_CONTEXTS)]), K47XOR(db[(E2)+(32*NUM_CONTEXTS)]), K11XOR(db[(E3)+(32*NUM_CONTEXTS)]), K31XOR(db[(E4)+(32*NUM_CONTEXTS)]), K34XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 8*NUM_CONTEXTS], &db[16*NUM_CONTEXTS], &db[22*NUM_CONTEXTS], &db[30*NUM_CONTEXTS]);
-		        s4(K12XOR(db[43*NUM_CONTEXTS]), K20XOR(db[44*NUM_CONTEXTS]), K45XOR(db[45*NUM_CONTEXTS]), K39XOR(db[46*NUM_CONTEXTS]), K33XOR(db[47*NUM_CONTEXTS]), K55XOR(db[48*NUM_CONTEXTS]), &db[25*NUM_CONTEXTS], &db[19*NUM_CONTEXTS], &db[ 9*NUM_CONTEXTS], &db[ 0*NUM_CONTEXTS]); break;
-		case 1: s3(K18XOR(db[39*NUM_CONTEXTS]), K46XOR(db[40*NUM_CONTEXTS]), K40XOR(db[41*NUM_CONTEXTS]), K41XOR(db[42*NUM_CONTEXTS]), K52XOR(db[43*NUM_CONTEXTS]), K13XOR(db[44*NUM_CONTEXTS]), &db[23*NUM_CONTEXTS], &db[15*NUM_CONTEXTS], &db[29*NUM_CONTEXTS], &db[ 5*NUM_CONTEXTS]);
-		        s2(K48XOR(db[(E0)+(32*NUM_CONTEXTS)]), K38XOR(db[(E1)+(32*NUM_CONTEXTS)]), K19XOR(db[(E2)+(32*NUM_CONTEXTS)]), K27XOR(db[(E3)+(32*NUM_CONTEXTS)]), K32XOR(db[(E4)+(32*NUM_CONTEXTS)]), K54XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[12*NUM_CONTEXTS], &db[27*NUM_CONTEXTS], &db[ 1*NUM_CONTEXTS], &db[17*NUM_CONTEXTS]); break;
-		case 2: s5(K29XOR(db[(E0)+(32*NUM_CONTEXTS)]), K09XOR(db[(E1)+(32*NUM_CONTEXTS)]), K42XOR(db[(E2)+(32*NUM_CONTEXTS)]), K00XOR(db[(E3)+(32*NUM_CONTEXTS)]), K44XOR(db[(E4)+(32*NUM_CONTEXTS)]), K17XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 7*NUM_CONTEXTS], &db[13*NUM_CONTEXTS], &db[24*NUM_CONTEXTS], &db[ 2*NUM_CONTEXTS]);
-		        s8(K51XOR(db[59*NUM_CONTEXTS]), K22XOR(db[60*NUM_CONTEXTS]), K23XOR(db[61*NUM_CONTEXTS]), K07XOR(db[62*NUM_CONTEXTS]), K03XOR(db[63*NUM_CONTEXTS]), K35XOR(db[32*NUM_CONTEXTS]), &db[ 4*NUM_CONTEXTS], &db[26*NUM_CONTEXTS], &db[14*NUM_CONTEXTS], &db[20*NUM_CONTEXTS]); break;
-		case 3: s7(K08XOR(db[55*NUM_CONTEXTS]), K30XOR(db[56*NUM_CONTEXTS]), K43XOR(db[57*NUM_CONTEXTS]), K10XOR(db[58*NUM_CONTEXTS]), K21XOR(db[59*NUM_CONTEXTS]), K02XOR(db[60*NUM_CONTEXTS]), &db[31*NUM_CONTEXTS], &db[11*NUM_CONTEXTS], &db[21*NUM_CONTEXTS], &db[ 6*NUM_CONTEXTS]);
-		        s6(K49XOR(db[(E0)+(32*NUM_CONTEXTS)]), K36XOR(db[(E1)+(32*NUM_CONTEXTS)]), K16XOR(db[(E2)+(32*NUM_CONTEXTS)]), K01XOR(db[(E3)+(32*NUM_CONTEXTS)]), K28XOR(db[(E4)+(32*NUM_CONTEXTS)]), K37XOR(db[(E5)+(32*NUM_CONTEXTS)]), &db[ 3*NUM_CONTEXTS], &db[28*NUM_CONTEXTS], &db[10*NUM_CONTEXTS], &db[18*NUM_CONTEXTS]); break;
+		case 0: s1(K26XOR(db[(E0)+(32*N)]), K05XOR(db[(E1)+(32*N)]), K47XOR(db[(E2)+(32*N)]), K11XOR(db[(E3)+(32*N)]), K31XOR(db[(E4)+(32*N)]), K34XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		        s4(K12XOR(db[43*N]), K20XOR(db[44*N]), K45XOR(db[45*N]), K39XOR(db[46*N]), K33XOR(db[47*N]), K55XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); break;
+		case 1: s3(K18XOR(db[39*N]), K46XOR(db[40*N]), K40XOR(db[41*N]), K41XOR(db[42*N]), K52XOR(db[43*N]), K13XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		        s2(K48XOR(db[(E0)+(32*N)]), K38XOR(db[(E1)+(32*N)]), K19XOR(db[(E2)+(32*N)]), K27XOR(db[(E3)+(32*N)]), K32XOR(db[(E4)+(32*N)]), K54XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); break;
+		case 2: s5(K29XOR(db[(E0)+(32*N)]), K09XOR(db[(E1)+(32*N)]), K42XOR(db[(E2)+(32*N)]), K00XOR(db[(E3)+(32*N)]), K44XOR(db[(E4)+(32*N)]), K17XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		        s8(K51XOR(db[59*N]), K22XOR(db[60*N]), K23XOR(db[61*N]), K07XOR(db[62*N]), K03XOR(db[63*N]), K35XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); break;
+		case 3: s7(K08XOR(db[55*N]), K30XOR(db[56*N]), K43XOR(db[57*N]), K10XOR(db[58*N]), K21XOR(db[59*N]), K02XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+		        s6(K49XOR(db[(E0)+(32*N)]), K36XOR(db[(E1)+(32*N)]), K16XOR(db[(E2)+(32*N)]), K01XOR(db[(E3)+(32*N)]), K28XOR(db[(E4)+(32*N)]), K37XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); break;
 		}
 		__syncthreads();
 
 		// ROUND_A(720);
 		switch (threadIdx.y) {
-		case 0: s1(K19XOR(db[E0]), K53XOR(db[E1]), K40XOR(db[E2]), K04XOR(db[E3]), K55XOR(db[E4]), K27XOR(db[E5]), &db[40*NUM_CONTEXTS], &db[48*NUM_CONTEXTS], &db[54*NUM_CONTEXTS], &db[62*NUM_CONTEXTS]);
-		        s4(K05XOR(db[11*NUM_CONTEXTS]), K13XOR(db[12*NUM_CONTEXTS]), K38XOR(db[13*NUM_CONTEXTS]), K32XOR(db[14*NUM_CONTEXTS]), K26XOR(db[15*NUM_CONTEXTS]), K48XOR(db[16*NUM_CONTEXTS]), &db[57*NUM_CONTEXTS], &db[51*NUM_CONTEXTS], &db[41*NUM_CONTEXTS], &db[32*NUM_CONTEXTS]); break;
-		case 1: s3(K11XOR(db[ 7*NUM_CONTEXTS]), K39XOR(db[ 8*NUM_CONTEXTS]), K33XOR(db[ 9*NUM_CONTEXTS]), K34XOR(db[10*NUM_CONTEXTS]), K45XOR(db[11*NUM_CONTEXTS]), K06XOR(db[12*NUM_CONTEXTS]), &db[55*NUM_CONTEXTS], &db[47*NUM_CONTEXTS], &db[61*NUM_CONTEXTS], &db[37*NUM_CONTEXTS]);
-		        s2(K41XOR(db[E0]), K31XOR(db[E1]), K12XOR(db[E2]), K20XOR(db[E3]), K25XOR(db[E4]), K47XOR(db[E5]), &db[44*NUM_CONTEXTS], &db[59*NUM_CONTEXTS], &db[33*NUM_CONTEXTS], &db[49*NUM_CONTEXTS]); break;
-		case 2: s5(K22XOR(db[E0]), K02XOR(db[E1]), K35XOR(db[E2]), K50XOR(db[E3]), K37XOR(db[E4]), K10XOR(db[E5]), &db[39*NUM_CONTEXTS], &db[45*NUM_CONTEXTS], &db[56*NUM_CONTEXTS], &db[34*NUM_CONTEXTS]);
-		        s8(K44XOR(db[27*NUM_CONTEXTS]), K15XOR(db[28*NUM_CONTEXTS]), K16XOR(db[29*NUM_CONTEXTS]), K00XOR(db[30*NUM_CONTEXTS]), K49XOR(db[31*NUM_CONTEXTS]), K28XOR(db[ 0*NUM_CONTEXTS]), &db[36*NUM_CONTEXTS], &db[58*NUM_CONTEXTS], &db[46*NUM_CONTEXTS], &db[52*NUM_CONTEXTS]); break;
-		case 3: s7(K01XOR(db[23*NUM_CONTEXTS]), K23XOR(db[24*NUM_CONTEXTS]), K36XOR(db[25*NUM_CONTEXTS]), K03XOR(db[26*NUM_CONTEXTS]), K14XOR(db[27*NUM_CONTEXTS]), K24XOR(db[28*NUM_CONTEXTS]), &db[63*NUM_CONTEXTS], &db[43*NUM_CONTEXTS], &db[53*NUM_CONTEXTS], &db[38*NUM_CONTEXTS]);
-		        s6(K42XOR(db[E0]), K29XOR(db[E1]), K09XOR(db[E2]), K51XOR(db[E3]), K21XOR(db[E4]), K30XOR(db[E5]), &db[35*NUM_CONTEXTS], &db[60*NUM_CONTEXTS], &db[42*NUM_CONTEXTS], &db[50*NUM_CONTEXTS]); break;
+		case 0: s1(K19XOR(db[E0]), K53XOR(db[E1]), K40XOR(db[E2]), K04XOR(db[E3]), K55XOR(db[E4]), K27XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		        s4(K05XOR(db[11*N]), K13XOR(db[12*N]), K38XOR(db[13*N]), K32XOR(db[14*N]), K26XOR(db[15*N]), K48XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); break;
+		case 1: s3(K11XOR(db[ 7*N]), K39XOR(db[ 8*N]), K33XOR(db[ 9*N]), K34XOR(db[10*N]), K45XOR(db[11*N]), K06XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		        s2(K41XOR(db[E0]), K31XOR(db[E1]), K12XOR(db[E2]), K20XOR(db[E3]), K25XOR(db[E4]), K47XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); break;
+		case 2: s5(K22XOR(db[E0]), K02XOR(db[E1]), K35XOR(db[E2]), K50XOR(db[E3]), K37XOR(db[E4]), K10XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		        s8(K44XOR(db[27*N]), K15XOR(db[28*N]), K16XOR(db[29*N]), K00XOR(db[30*N]), K49XOR(db[31*N]), K28XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); break;
+		case 3: s7(K01XOR(db[23*N]), K23XOR(db[24*N]), K36XOR(db[25*N]), K03XOR(db[26*N]), K14XOR(db[27*N]), K24XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		        s6(K42XOR(db[E0]), K29XOR(db[E1]), K09XOR(db[E2]), K51XOR(db[E3]), K21XOR(db[E4]), K30XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); break;
 		}
 		__syncthreads();
 	}
+
+#else
+
+	// For some reason, this routine works better on GTX580.
+#pragma unroll 1 // Do not unroll.
+	for (int i = 0; i < 13; ++i) {
+		switch (threadIdx.y) {
+		case 0: 
+			s1(K12XOR(db[E0]), K46XOR(db[E1]), K33XOR(db[E2]), K52XOR(db[E3]), K48XOR(db[E4]), K20XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		    s4(K53XOR(db[11*N]), K06XOR(db[12*N]), K31XOR(db[13*N]), K25XOR(db[14*N]), K19XOR(db[15*N]), K41XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K05XOR(db[(E0)+(32*N)]), K39XOR(db[(E1)+(32*N)]), K26XOR(db[(E2)+(32*N)]), K45XOR(db[(E3)+(32*N)]), K41XOR(db[(E4)+(32*N)]), K13XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		    s4(K46XOR(db[43*N]), K54XOR(db[44*N]), K55XOR(db[45*N]), K18XOR(db[46*N]), K12XOR(db[47*N]), K34XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]);
+			__syncthreads();
+			s1(K46XOR(db[E0]), K25XOR(db[E1]), K12XOR(db[E2]), K31XOR(db[E3]), K27XOR(db[E4]), K54XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+	        s4(K32XOR(db[11*N]), K40XOR(db[12*N]), K41XOR(db[13*N]), K04XOR(db[14*N]), K53XOR(db[15*N]), K20XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]);
+			__syncthreads();
+			s1(K32XOR(db[(E0)+(32*N)]), K11XOR(db[(E1)+(32*N)]), K53XOR(db[(E2)+(32*N)]), K48XOR(db[(E3)+(32*N)]), K13XOR(db[(E4)+(32*N)]), K40XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+		    s4(K18XOR(db[43*N]), K26XOR(db[44*N]), K27XOR(db[45*N]), K45XOR(db[46*N]), K39XOR(db[47*N]), K06XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]);
+			__syncthreads();
+			s1(K18XOR(db[E0]), K52XOR(db[E1]), K39XOR(db[E2]), K34XOR(db[E3]), K54XOR(db[E4]), K26XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+		    s4(K04XOR(db[11*N]), K12XOR(db[12*N]), K13XOR(db[13*N]), K31XOR(db[14*N]), K25XOR(db[15*N]), K47XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]);
+			__syncthreads();
+			s1(K04XOR(db[(E0)+(32*N)]), K38XOR(db[(E1)+(32*N)]), K25XOR(db[(E2)+(32*N)]), K20XOR(db[(E3)+(32*N)]), K40XOR(db[(E4)+(32*N)]), K12XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K45XOR(db[43*N]), K53XOR(db[44*N]), K54XOR(db[45*N]), K48XOR(db[46*N]), K11XOR(db[47*N]), K33XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K45XOR(db[E0]), K55XOR(db[E1]), K11XOR(db[E2]), K06XOR(db[E3]), K26XOR(db[E4]), K53XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K31XOR(db[11*N]), K39XOR(db[12*N]), K40XOR(db[13*N]), K34XOR(db[14*N]), K52XOR(db[15*N]), K19XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K31XOR(db[(E0)+(32*N)]), K41XOR(db[(E1)+(32*N)]), K52XOR(db[(E2)+(32*N)]), K47XOR(db[(E3)+(32*N)]), K12XOR(db[(E4)+(32*N)]), K39XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K48XOR(db[43*N]), K25XOR(db[44*N]), K26XOR(db[45*N]), K20XOR(db[46*N]), K38XOR(db[47*N]), K05XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K55XOR(db[E0]), K34XOR(db[E1]), K45XOR(db[E2]), K40XOR(db[E3]), K05XOR(db[E4]), K32XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K41XOR(db[11*N]), K18XOR(db[12*N]), K19XOR(db[13*N]), K13XOR(db[14*N]), K31XOR(db[15*N]), K53XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K41XOR(db[(E0)+(32*N)]), K20XOR(db[(E1)+(32*N)]), K31XOR(db[(E2)+(32*N)]), K26XOR(db[(E3)+(32*N)]), K46XOR(db[(E4)+(32*N)]), K18XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K27XOR(db[43*N]), K04XOR(db[44*N]), K05XOR(db[45*N]), K54XOR(db[46*N]), K48XOR(db[47*N]), K39XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K27XOR(db[E0]), K06XOR(db[E1]), K48XOR(db[E2]), K12XOR(db[E3]), K32XOR(db[E4]), K04XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K13XOR(db[11*N]), K45XOR(db[12*N]), K46XOR(db[13*N]), K40XOR(db[14*N]), K34XOR(db[15*N]), K25XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K13XOR(db[(E0)+(32*N)]), K47XOR(db[(E1)+(32*N)]), K34XOR(db[(E2)+(32*N)]), K53XOR(db[(E3)+(32*N)]), K18XOR(db[(E4)+(32*N)]), K45XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K54XOR(db[43*N]), K31XOR(db[44*N]), K32XOR(db[45*N]), K26XOR(db[46*N]), K20XOR(db[47*N]), K11XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K54XOR(db[E0]), K33XOR(db[E1]), K20XOR(db[E2]), K39XOR(db[E3]), K04XOR(db[E4]), K31XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K40XOR(db[11*N]), K48XOR(db[12*N]), K18XOR(db[13*N]), K12XOR(db[14*N]), K06XOR(db[15*N]), K52XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K40XOR(db[(E0)+(32*N)]), K19XOR(db[(E1)+(32*N)]), K06XOR(db[(E2)+(32*N)]), K25XOR(db[(E3)+(32*N)]), K45XOR(db[(E4)+(32*N)]), K48XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K26XOR(db[43*N]), K34XOR(db[44*N]), K04XOR(db[45*N]), K53XOR(db[46*N]), K47XOR(db[47*N]), K38XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K26XOR(db[E0]), K05XOR(db[E1]), K47XOR(db[E2]), K11XOR(db[E3]), K31XOR(db[E4]), K34XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K12XOR(db[11*N]), K20XOR(db[12*N]), K45XOR(db[13*N]), K39XOR(db[14*N]), K33XOR(db[15*N]), K55XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K19XOR(db[(E0)+(32*N)]), K53XOR(db[(E1)+(32*N)]), K40XOR(db[(E2)+(32*N)]), K04XOR(db[(E3)+(32*N)]), K55XOR(db[(E4)+(32*N)]), K27XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K05XOR(db[43*N]), K13XOR(db[44*N]), K38XOR(db[45*N]), K32XOR(db[46*N]), K26XOR(db[47*N]), K48XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			break;
+		case 1: 
+			s3(K04XOR(db[ 7*N]), K32XOR(db[ 8*N]), K26XOR(db[ 9*N]), K27XOR(db[10*N]), K38XOR(db[11*N]), K54XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		    s2(K34XOR(db[E0]), K55XOR(db[E1]), K05XOR(db[E2]), K13XOR(db[E3]), K18XOR(db[E4]), K40XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K52XOR(db[39*N]), K25XOR(db[40*N]), K19XOR(db[41*N]), K20XOR(db[42*N]), K31XOR(db[43*N]), K47XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		    s2(K27XOR(db[(E0)+(32*N)]), K48XOR(db[(E1)+(32*N)]), K53XOR(db[(E2)+(32*N)]), K06XOR(db[(E3)+(32*N)]), K11XOR(db[(E4)+(32*N)]), K33XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K38XOR(db[ 7*N]), K11XOR(db[ 8*N]), K05XOR(db[ 9*N]), K06XOR(db[10*N]), K48XOR(db[11*N]), K33XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+	        s2(K13XOR(db[E0]), K34XOR(db[E1]), K39XOR(db[E2]), K47XOR(db[E3]), K52XOR(db[E4]), K19XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]);
+			__syncthreads();
+			s3(K55XOR(db[39*N]), K52XOR(db[40*N]), K46XOR(db[41*N]), K47XOR(db[42*N]), K34XOR(db[43*N]), K19XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+		    s2(K54XOR(db[(E0)+(32*N)]), K20XOR(db[(E1)+(32*N)]), K25XOR(db[(E2)+(32*N)]), K33XOR(db[(E3)+(32*N)]), K38XOR(db[(E4)+(32*N)]), K05XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]);
+			__syncthreads();
+			s3(K41XOR(db[ 7*N]), K38XOR(db[ 8*N]), K32XOR(db[ 9*N]), K33XOR(db[10*N]), K20XOR(db[11*N]), K05XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+		    s2(K40XOR(db[E0]), K06XOR(db[E1]), K11XOR(db[E2]), K19XOR(db[E3]), K55XOR(db[E4]), K46XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]);
+			__syncthreads();
+			s3(K27XOR(db[39*N]), K55XOR(db[40*N]), K18XOR(db[41*N]), K19XOR(db[42*N]), K06XOR(db[43*N]), K46XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K26XOR(db[(E0)+(32*N)]), K47XOR(db[(E1)+(32*N)]), K52XOR(db[(E2)+(32*N)]), K05XOR(db[(E3)+(32*N)]), K41XOR(db[(E4)+(32*N)]), K32XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K13XOR(db[ 7*N]), K41XOR(db[ 8*N]), K04XOR(db[ 9*N]), K05XOR(db[10*N]), K47XOR(db[11*N]), K32XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K12XOR(db[E0]), K33XOR(db[E1]), K38XOR(db[E2]), K46XOR(db[E3]), K27XOR(db[E4]), K18XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K54XOR(db[39*N]), K27XOR(db[40*N]), K45XOR(db[41*N]), K46XOR(db[42*N]), K33XOR(db[43*N]), K18XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K53XOR(db[(E0)+(32*N)]), K19XOR(db[(E1)+(32*N)]), K55XOR(db[(E2)+(32*N)]), K32XOR(db[(E3)+(32*N)]), K13XOR(db[(E4)+(32*N)]), K04XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K47XOR(db[ 7*N]), K20XOR(db[ 8*N]), K38XOR(db[ 9*N]), K39XOR(db[10*N]), K26XOR(db[11*N]), K11XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K46XOR(db[E0]), K12XOR(db[E1]), K48XOR(db[E2]), K25XOR(db[E3]), K06XOR(db[E4]), K52XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K33XOR(db[39*N]), K06XOR(db[40*N]), K55XOR(db[41*N]), K25XOR(db[42*N]), K12XOR(db[43*N]), K52XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K32XOR(db[(E0)+(32*N)]), K53XOR(db[(E1)+(32*N)]), K34XOR(db[(E2)+(32*N)]), K11XOR(db[(E3)+(32*N)]), K47XOR(db[(E4)+(32*N)]), K38XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K19XOR(db[ 7*N]), K47XOR(db[ 8*N]), K41XOR(db[ 9*N]), K11XOR(db[10*N]), K53XOR(db[11*N]), K38XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K18XOR(db[E0]), K39XOR(db[E1]), K20XOR(db[E2]), K52XOR(db[E3]), K33XOR(db[E4]), K55XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K05XOR(db[39*N]), K33XOR(db[40*N]), K27XOR(db[41*N]), K52XOR(db[42*N]), K39XOR(db[43*N]), K55XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K04XOR(db[(E0)+(32*N)]), K25XOR(db[(E1)+(32*N)]), K06XOR(db[(E2)+(32*N)]), K38XOR(db[(E3)+(32*N)]), K19XOR(db[(E4)+(32*N)]), K41XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K46XOR(db[ 7*N]), K19XOR(db[ 8*N]), K13XOR(db[ 9*N]), K38XOR(db[10*N]), K25XOR(db[11*N]), K41XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K45XOR(db[E0]), K11XOR(db[E1]), K47XOR(db[E2]), K55XOR(db[E3]), K05XOR(db[E4]), K27XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K32XOR(db[39*N]), K05XOR(db[40*N]), K54XOR(db[41*N]), K55XOR(db[42*N]), K11XOR(db[43*N]), K27XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K31XOR(db[(E0)+(32*N)]), K52XOR(db[(E1)+(32*N)]), K33XOR(db[(E2)+(32*N)]), K41XOR(db[(E3)+(32*N)]), K46XOR(db[(E4)+(32*N)]), K13XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K18XOR(db[ 7*N]), K46XOR(db[ 8*N]), K40XOR(db[ 9*N]), K41XOR(db[10*N]), K52XOR(db[11*N]), K13XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K48XOR(db[E0]), K38XOR(db[E1]), K19XOR(db[E2]), K27XOR(db[E3]), K32XOR(db[E4]), K54XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K11XOR(db[39*N]), K39XOR(db[40*N]), K33XOR(db[41*N]), K34XOR(db[42*N]), K45XOR(db[43*N]), K06XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K41XOR(db[(E0)+(32*N)]), K31XOR(db[(E1)+(32*N)]), K12XOR(db[(E2)+(32*N)]), K20XOR(db[(E3)+(32*N)]), K25XOR(db[(E4)+(32*N)]), K47XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			break;
+		case 2: 
+			s5(K15XOR(db[E0]), K24XOR(db[E1]), K28XOR(db[E2]), K43XOR(db[E3]), K30XOR(db[E4]), K03XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K37XOR(db[27*N]), K08XOR(db[28*N]), K09XOR(db[29*N]), K50XOR(db[30*N]), K42XOR(db[31*N]), K21XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]);
+			__syncthreads();
+			s5(K08XOR(db[(E0)+(32*N)]), K17XOR(db[(E1)+(32*N)]), K21XOR(db[(E2)+(32*N)]), K36XOR(db[(E3)+(32*N)]), K23XOR(db[(E4)+(32*N)]), K49XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K30XOR(db[59*N]), K01XOR(db[60*N]), K02XOR(db[61*N]), K43XOR(db[62*N]), K35XOR(db[63*N]), K14XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]);
+			__syncthreads();
+			s5(K51XOR(db[E0]), K03XOR(db[E1]), K07XOR(db[E2]), K22XOR(db[E3]), K09XOR(db[E4]), K35XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+	        s8(K16XOR(db[27*N]), K44XOR(db[28*N]), K17XOR(db[29*N]), K29XOR(db[30*N]), K21XOR(db[31*N]), K00XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]);
+			__syncthreads();
+			s5(K37XOR(db[(E0)+(32*N)]), K42XOR(db[(E1)+(32*N)]), K50XOR(db[(E2)+(32*N)]), K08XOR(db[(E3)+(32*N)]), K24XOR(db[(E4)+(32*N)]), K21XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+		    s8(K02XOR(db[59*N]), K30XOR(db[60*N]), K03XOR(db[61*N]), K15XOR(db[62*N]), K07XOR(db[63*N]), K43XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]);
+			__syncthreads();
+			s5(K23XOR(db[E0]), K28XOR(db[E1]), K36XOR(db[E2]), K51XOR(db[E3]), K10XOR(db[E4]), K07XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+		    s8(K17XOR(db[27*N]), K16XOR(db[28*N]), K42XOR(db[29*N]), K01XOR(db[30*N]), K50XOR(db[31*N]), K29XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]);
+			__syncthreads();
+			s5(K09XOR(db[(E0)+(32*N)]), K14XOR(db[(E1)+(32*N)]), K22XOR(db[(E2)+(32*N)]), K37XOR(db[(E3)+(32*N)]), K49XOR(db[(E4)+(32*N)]), K50XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K03XOR(db[59*N]), K02XOR(db[60*N]), K28XOR(db[61*N]), K44XOR(db[62*N]), K36XOR(db[63*N]), K15XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K24XOR(db[E0]), K00XOR(db[E1]), K08XOR(db[E2]), K23XOR(db[E3]), K35XOR(db[E4]), K36XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K42XOR(db[27*N]), K17XOR(db[28*N]), K14XOR(db[29*N]), K30XOR(db[30*N]), K22XOR(db[31*N]), K01XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K10XOR(db[(E0)+(32*N)]), K43XOR(db[(E1)+(32*N)]), K51XOR(db[(E2)+(32*N)]), K09XOR(db[(E3)+(32*N)]), K21XOR(db[(E4)+(32*N)]), K22XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K28XOR(db[59*N]), K03XOR(db[60*N]), K00XOR(db[61*N]), K16XOR(db[62*N]), K08XOR(db[63*N]), K44XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K03XOR(db[E0]), K36XOR(db[E1]), K44XOR(db[E2]), K02XOR(db[E3]), K14XOR(db[E4]), K15XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K21XOR(db[27*N]), K49XOR(db[28*N]), K50XOR(db[29*N]), K09XOR(db[30*N]), K01XOR(db[31*N]), K37XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K42XOR(db[(E0)+(32*N)]), K22XOR(db[(E1)+(32*N)]), K30XOR(db[(E2)+(32*N)]), K17XOR(db[(E3)+(32*N)]), K00XOR(db[(E4)+(32*N)]), K01XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K07XOR(db[59*N]), K35XOR(db[60*N]), K36XOR(db[61*N]), K24XOR(db[62*N]), K44XOR(db[63*N]), K23XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K28XOR(db[E0]), K08XOR(db[E1]), K16XOR(db[E2]), K03XOR(db[E3]), K43XOR(db[E4]), K44XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K50XOR(db[27*N]), K21XOR(db[28*N]), K22XOR(db[29*N]), K10XOR(db[30*N]), K30XOR(db[31*N]), K09XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K14XOR(db[(E0)+(32*N)]), K51XOR(db[(E1)+(32*N)]), K02XOR(db[(E2)+(32*N)]), K42XOR(db[(E3)+(32*N)]), K29XOR(db[(E4)+(32*N)]), K30XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K36XOR(db[59*N]), K07XOR(db[60*N]), K08XOR(db[61*N]), K49XOR(db[62*N]), K16XOR(db[63*N]), K24XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K00XOR(db[E0]), K37XOR(db[E1]), K17XOR(db[E2]), K28XOR(db[E3]), K15XOR(db[E4]), K16XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K22XOR(db[27*N]), K50XOR(db[28*N]), K51XOR(db[29*N]), K35XOR(db[30*N]), K02XOR(db[31*N]), K10XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K43XOR(db[(E0)+(32*N)]), K23XOR(db[(E1)+(32*N)]), K03XOR(db[(E2)+(32*N)]), K14XOR(db[(E3)+(32*N)]), K01XOR(db[(E4)+(32*N)]), K02XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K08XOR(db[59*N]), K36XOR(db[60*N]), K37XOR(db[61*N]), K21XOR(db[62*N]), K17XOR(db[63*N]), K49XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K29XOR(db[E0]), K09XOR(db[E1]), K42XOR(db[E2]), K00XOR(db[E3]), K44XOR(db[E4]), K17XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K51XOR(db[27*N]), K22XOR(db[28*N]), K23XOR(db[29*N]), K07XOR(db[30*N]), K03XOR(db[31*N]), K35XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K22XOR(db[(E0)+(32*N)]), K02XOR(db[(E1)+(32*N)]), K35XOR(db[(E2)+(32*N)]), K50XOR(db[(E3)+(32*N)]), K37XOR(db[(E4)+(32*N)]), K10XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K44XOR(db[59*N]), K15XOR(db[60*N]), K16XOR(db[61*N]), K00XOR(db[62*N]), K49XOR(db[63*N]), K28XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			break;
+		case 3: 
+			s7(K51XOR(db[23*N]), K16XOR(db[24*N]), K29XOR(db[25*N]), K49XOR(db[26*N]), K07XOR(db[27*N]), K17XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K35XOR(db[E0]), K22XOR(db[E1]), K02XOR(db[E2]), K44XOR(db[E3]), K14XOR(db[E4]), K23XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K44XOR(db[55*N]), K09XOR(db[56*N]), K22XOR(db[57*N]), K42XOR(db[58*N]), K00XOR(db[59*N]), K10XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K28XOR(db[(E0)+(32*N)]), K15XOR(db[(E1)+(32*N)]), K24XOR(db[(E2)+(32*N)]), K37XOR(db[(E3)+(32*N)]), K07XOR(db[(E4)+(32*N)]), K16XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]);
+			__syncthreads();
+			s7(K30XOR(db[23*N]), K24XOR(db[24*N]), K08XOR(db[25*N]), K28XOR(db[26*N]), K43XOR(db[27*N]), K49XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+	        s6(K14XOR(db[E0]), K01XOR(db[E1]), K10XOR(db[E2]), K23XOR(db[E3]), K50XOR(db[E4]), K02XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]);
+			__syncthreads();
+			s7(K16XOR(db[55*N]), K10XOR(db[56*N]), K51XOR(db[57*N]), K14XOR(db[58*N]), K29XOR(db[59*N]), K35XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K00XOR(db[(E0)+(32*N)]), K44XOR(db[(E1)+(32*N)]), K49XOR(db[(E2)+(32*N)]), K09XOR(db[(E3)+(32*N)]), K36XOR(db[(E4)+(32*N)]), K17XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]);
+			__syncthreads();
+			s7(K02XOR(db[23*N]), K49XOR(db[24*N]), K37XOR(db[25*N]), K00XOR(db[26*N]), K15XOR(db[27*N]), K21XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+		    s6(K43XOR(db[E0]), K30XOR(db[E1]), K35XOR(db[E2]), K24XOR(db[E3]), K22XOR(db[E4]), K03XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]);
+			__syncthreads();
+			s7(K17XOR(db[55*N]), K35XOR(db[56*N]), K23XOR(db[57*N]), K43XOR(db[58*N]), K01XOR(db[59*N]), K07XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K29XOR(db[(E0)+(32*N)]), K16XOR(db[(E1)+(32*N)]), K21XOR(db[(E2)+(32*N)]), K10XOR(db[(E3)+(32*N)]), K08XOR(db[(E4)+(32*N)]), K42XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K03XOR(db[23*N]), K21XOR(db[24*N]), K09XOR(db[25*N]), K29XOR(db[26*N]), K44XOR(db[27*N]), K50XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K15XOR(db[E0]), K02XOR(db[E1]), K07XOR(db[E2]), K49XOR(db[E3]), K51XOR(db[E4]), K28XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K42XOR(db[55*N]), K07XOR(db[56*N]), K24XOR(db[57*N]), K15XOR(db[58*N]), K30XOR(db[59*N]), K36XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K01XOR(db[(E0)+(32*N)]), K17XOR(db[(E1)+(32*N)]), K50XOR(db[(E2)+(32*N)]), K35XOR(db[(E3)+(32*N)]), K37XOR(db[(E4)+(32*N)]), K14XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K35XOR(db[23*N]), K00XOR(db[24*N]), K17XOR(db[25*N]), K08XOR(db[26*N]), K23XOR(db[27*N]), K29XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K51XOR(db[E0]), K10XOR(db[E1]), K43XOR(db[E2]), K28XOR(db[E3]), K30XOR(db[E4]), K07XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K21XOR(db[55*N]), K43XOR(db[56*N]), K03XOR(db[57*N]), K51XOR(db[58*N]), K09XOR(db[59*N]), K15XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K37XOR(db[(E0)+(32*N)]), K49XOR(db[(E1)+(32*N)]), K29XOR(db[(E2)+(32*N)]), K14XOR(db[(E3)+(32*N)]), K16XOR(db[(E4)+(32*N)]), K50XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K07XOR(db[23*N]), K29XOR(db[24*N]), K42XOR(db[25*N]), K37XOR(db[26*N]), K24XOR(db[27*N]), K01XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K23XOR(db[E0]), K35XOR(db[E1]), K15XOR(db[E2]), K00XOR(db[E3]), K02XOR(db[E4]), K36XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K50XOR(db[55*N]), K15XOR(db[56*N]), K28XOR(db[57*N]), K23XOR(db[58*N]), K10XOR(db[59*N]), K44XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K09XOR(db[(E0)+(32*N)]), K21XOR(db[(E1)+(32*N)]), K01XOR(db[(E2)+(32*N)]), K43XOR(db[(E3)+(32*N)]), K17XOR(db[(E4)+(32*N)]), K22XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K36XOR(db[23*N]), K01XOR(db[24*N]), K14XOR(db[25*N]), K09XOR(db[26*N]), K49XOR(db[27*N]), K30XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K24XOR(db[E0]), K07XOR(db[E1]), K44XOR(db[E2]), K29XOR(db[E3]), K03XOR(db[E4]), K08XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K22XOR(db[55*N]), K44XOR(db[56*N]), K00XOR(db[57*N]), K24XOR(db[58*N]), K35XOR(db[59*N]), K16XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K10XOR(db[(E0)+(32*N)]), K50XOR(db[(E1)+(32*N)]), K30XOR(db[(E2)+(32*N)]), K15XOR(db[(E3)+(32*N)]), K42XOR(db[(E4)+(32*N)]), K51XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K08XOR(db[23*N]), K30XOR(db[24*N]), K43XOR(db[25*N]), K10XOR(db[26*N]), K21XOR(db[27*N]), K02XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K49XOR(db[E0]), K36XOR(db[E1]), K16XOR(db[E2]), K01XOR(db[E3]), K28XOR(db[E4]), K37XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K01XOR(db[55*N]), K23XOR(db[56*N]), K36XOR(db[57*N]), K03XOR(db[58*N]), K14XOR(db[59*N]), K24XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K42XOR(db[(E0)+(32*N)]), K29XOR(db[(E1)+(32*N)]), K09XOR(db[(E2)+(32*N)]), K51XOR(db[(E3)+(32*N)]), K21XOR(db[(E4)+(32*N)]), K30XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			break;
+		}
+		__syncthreads();
+
+		if (i >= 12)
+			break;
+
+		// ROUND_B(-48);
+		switch (threadIdx.y) {
+		case 0:
+			s1(K12XOR(db[(E0)+(32*N)]), K46XOR(db[(E1)+(32*N)]), K33XOR(db[(E2)+(32*N)]), K52XOR(db[(E3)+(32*N)]), K48XOR(db[(E4)+(32*N)]), K20XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K53XOR(db[43*N]), K06XOR(db[44*N]), K31XOR(db[45*N]), K25XOR(db[46*N]), K19XOR(db[47*N]), K41XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K05XOR(db[E0]), K39XOR(db[E1]), K26XOR(db[E2]), K45XOR(db[E3]), K41XOR(db[E4]), K13XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K46XOR(db[11*N]), K54XOR(db[12*N]), K55XOR(db[13*N]), K18XOR(db[14*N]), K12XOR(db[15*N]), K34XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K46XOR(db[(E0)+(32*N)]), K25XOR(db[(E1)+(32*N)]), K12XOR(db[(E2)+(32*N)]), K31XOR(db[(E3)+(32*N)]), K27XOR(db[(E4)+(32*N)]), K54XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K32XOR(db[43*N]), K40XOR(db[44*N]), K41XOR(db[45*N]), K04XOR(db[46*N]), K53XOR(db[47*N]), K20XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K32XOR(db[E0]), K11XOR(db[E1]), K53XOR(db[E2]), K48XOR(db[E3]), K13XOR(db[E4]), K40XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K18XOR(db[11*N]), K26XOR(db[12*N]), K27XOR(db[13*N]), K45XOR(db[14*N]), K39XOR(db[15*N]), K06XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K18XOR(db[(E0)+(32*N)]), K52XOR(db[(E1)+(32*N)]), K39XOR(db[(E2)+(32*N)]), K34XOR(db[(E3)+(32*N)]), K54XOR(db[(E4)+(32*N)]), K26XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K04XOR(db[43*N]), K12XOR(db[44*N]), K13XOR(db[45*N]), K31XOR(db[46*N]), K25XOR(db[47*N]), K47XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K04XOR(db[E0]), K38XOR(db[E1]), K25XOR(db[E2]), K20XOR(db[E3]), K40XOR(db[E4]), K12XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K45XOR(db[11*N]), K53XOR(db[12*N]), K54XOR(db[13*N]), K48XOR(db[14*N]), K11XOR(db[15*N]), K33XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K45XOR(db[(E0)+(32*N)]), K55XOR(db[(E1)+(32*N)]), K11XOR(db[(E2)+(32*N)]), K06XOR(db[(E3)+(32*N)]), K26XOR(db[(E4)+(32*N)]), K53XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K31XOR(db[43*N]), K39XOR(db[44*N]), K40XOR(db[45*N]), K34XOR(db[46*N]), K52XOR(db[47*N]), K19XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K31XOR(db[E0]), K41XOR(db[E1]), K52XOR(db[E2]), K47XOR(db[E3]), K12XOR(db[E4]), K39XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K48XOR(db[11*N]), K25XOR(db[12*N]), K26XOR(db[13*N]), K20XOR(db[14*N]), K38XOR(db[15*N]), K05XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K55XOR(db[(E0)+(32*N)]), K34XOR(db[(E1)+(32*N)]), K45XOR(db[(E2)+(32*N)]), K40XOR(db[(E3)+(32*N)]), K05XOR(db[(E4)+(32*N)]), K32XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K41XOR(db[43*N]), K18XOR(db[44*N]), K19XOR(db[45*N]), K13XOR(db[46*N]), K31XOR(db[47*N]), K53XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K41XOR(db[E0]), K20XOR(db[E1]), K31XOR(db[E2]), K26XOR(db[E3]), K46XOR(db[E4]), K18XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K27XOR(db[11*N]), K04XOR(db[12*N]), K05XOR(db[13*N]), K54XOR(db[14*N]), K48XOR(db[15*N]), K39XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K27XOR(db[(E0)+(32*N)]), K06XOR(db[(E1)+(32*N)]), K48XOR(db[(E2)+(32*N)]), K12XOR(db[(E3)+(32*N)]), K32XOR(db[(E4)+(32*N)]), K04XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K13XOR(db[43*N]), K45XOR(db[44*N]), K46XOR(db[45*N]), K40XOR(db[46*N]), K34XOR(db[47*N]), K25XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K13XOR(db[E0]), K47XOR(db[E1]), K34XOR(db[E2]), K53XOR(db[E3]), K18XOR(db[E4]), K45XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K54XOR(db[11*N]), K31XOR(db[12*N]), K32XOR(db[13*N]), K26XOR(db[14*N]), K20XOR(db[15*N]), K11XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K54XOR(db[(E0)+(32*N)]), K33XOR(db[(E1)+(32*N)]), K20XOR(db[(E2)+(32*N)]), K39XOR(db[(E3)+(32*N)]), K04XOR(db[(E4)+(32*N)]), K31XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K40XOR(db[43*N]), K48XOR(db[44*N]), K18XOR(db[45*N]), K12XOR(db[46*N]), K06XOR(db[47*N]), K52XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K40XOR(db[E0]), K19XOR(db[E1]), K06XOR(db[E2]), K25XOR(db[E3]), K45XOR(db[E4]), K48XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K26XOR(db[11*N]), K34XOR(db[12*N]), K04XOR(db[13*N]), K53XOR(db[14*N]), K47XOR(db[15*N]), K38XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			__syncthreads();
+			s1(K26XOR(db[(E0)+(32*N)]), K05XOR(db[(E1)+(32*N)]), K47XOR(db[(E2)+(32*N)]), K11XOR(db[(E3)+(32*N)]), K31XOR(db[(E4)+(32*N)]), K34XOR(db[(E5)+(32*N)]), &db[ 8*N], &db[16*N], &db[22*N], &db[30*N]);
+			s4(K12XOR(db[43*N]), K20XOR(db[44*N]), K45XOR(db[45*N]), K39XOR(db[46*N]), K33XOR(db[47*N]), K55XOR(db[48*N]), &db[25*N], &db[19*N], &db[ 9*N], &db[ 0*N]); 
+			__syncthreads();
+			s1(K19XOR(db[E0]), K53XOR(db[E1]), K40XOR(db[E2]), K04XOR(db[E3]), K55XOR(db[E4]), K27XOR(db[E5]), &db[40*N], &db[48*N], &db[54*N], &db[62*N]);
+			s4(K05XOR(db[11*N]), K13XOR(db[12*N]), K38XOR(db[13*N]), K32XOR(db[14*N]), K26XOR(db[15*N]), K48XOR(db[16*N]), &db[57*N], &db[51*N], &db[41*N], &db[32*N]); 
+			break;
+		case 1:
+			s3(K04XOR(db[39*N]), K32XOR(db[40*N]), K26XOR(db[41*N]), K27XOR(db[42*N]), K38XOR(db[43*N]), K54XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K34XOR(db[(E0)+(32*N)]), K55XOR(db[(E1)+(32*N)]), K05XOR(db[(E2)+(32*N)]), K13XOR(db[(E3)+(32*N)]), K18XOR(db[(E4)+(32*N)]), K40XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K52XOR(db[ 7*N]), K25XOR(db[ 8*N]), K19XOR(db[ 9*N]), K20XOR(db[10*N]), K31XOR(db[11*N]), K47XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K27XOR(db[E0]), K48XOR(db[E1]), K53XOR(db[E2]), K06XOR(db[E3]), K11XOR(db[E4]), K33XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K38XOR(db[39*N]), K11XOR(db[40*N]), K05XOR(db[41*N]), K06XOR(db[42*N]), K48XOR(db[43*N]), K33XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K13XOR(db[(E0)+(32*N)]), K34XOR(db[(E1)+(32*N)]), K39XOR(db[(E2)+(32*N)]), K47XOR(db[(E3)+(32*N)]), K52XOR(db[(E4)+(32*N)]), K19XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K55XOR(db[ 7*N]), K52XOR(db[ 8*N]), K46XOR(db[ 9*N]), K47XOR(db[10*N]), K34XOR(db[11*N]), K19XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K54XOR(db[E0]), K20XOR(db[E1]), K25XOR(db[E2]), K33XOR(db[E3]), K38XOR(db[E4]), K05XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K41XOR(db[39*N]), K38XOR(db[40*N]), K32XOR(db[41*N]), K33XOR(db[42*N]), K20XOR(db[43*N]), K05XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K40XOR(db[(E0)+(32*N)]), K06XOR(db[(E1)+(32*N)]), K11XOR(db[(E2)+(32*N)]), K19XOR(db[(E3)+(32*N)]), K55XOR(db[(E4)+(32*N)]), K46XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K27XOR(db[ 7*N]), K55XOR(db[ 8*N]), K18XOR(db[ 9*N]), K19XOR(db[10*N]), K06XOR(db[11*N]), K46XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K26XOR(db[E0]), K47XOR(db[E1]), K52XOR(db[E2]), K05XOR(db[E3]), K41XOR(db[E4]), K32XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K13XOR(db[39*N]), K41XOR(db[40*N]), K04XOR(db[41*N]), K05XOR(db[42*N]), K47XOR(db[43*N]), K32XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K12XOR(db[(E0)+(32*N)]), K33XOR(db[(E1)+(32*N)]), K38XOR(db[(E2)+(32*N)]), K46XOR(db[(E3)+(32*N)]), K27XOR(db[(E4)+(32*N)]), K18XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K54XOR(db[ 7*N]), K27XOR(db[ 8*N]), K45XOR(db[ 9*N]), K46XOR(db[10*N]), K33XOR(db[11*N]), K18XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K53XOR(db[E0]), K19XOR(db[E1]), K55XOR(db[E2]), K32XOR(db[E3]), K13XOR(db[E4]), K04XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K47XOR(db[39*N]), K20XOR(db[40*N]), K38XOR(db[41*N]), K39XOR(db[42*N]), K26XOR(db[43*N]), K11XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K46XOR(db[(E0)+(32*N)]), K12XOR(db[(E1)+(32*N)]), K48XOR(db[(E2)+(32*N)]), K25XOR(db[(E3)+(32*N)]), K06XOR(db[(E4)+(32*N)]), K52XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K33XOR(db[ 7*N]), K06XOR(db[ 8*N]), K55XOR(db[ 9*N]), K25XOR(db[10*N]), K12XOR(db[11*N]), K52XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K32XOR(db[E0]), K53XOR(db[E1]), K34XOR(db[E2]), K11XOR(db[E3]), K47XOR(db[E4]), K38XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K19XOR(db[39*N]), K47XOR(db[40*N]), K41XOR(db[41*N]), K11XOR(db[42*N]), K53XOR(db[43*N]), K38XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K18XOR(db[(E0)+(32*N)]), K39XOR(db[(E1)+(32*N)]), K20XOR(db[(E2)+(32*N)]), K52XOR(db[(E3)+(32*N)]), K33XOR(db[(E4)+(32*N)]), K55XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K05XOR(db[ 7*N]), K33XOR(db[ 8*N]), K27XOR(db[ 9*N]), K52XOR(db[10*N]), K39XOR(db[11*N]), K55XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K04XOR(db[E0]), K25XOR(db[E1]), K06XOR(db[E2]), K38XOR(db[E3]), K19XOR(db[E4]), K41XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K46XOR(db[39*N]), K19XOR(db[40*N]), K13XOR(db[41*N]), K38XOR(db[42*N]), K25XOR(db[43*N]), K41XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K45XOR(db[(E0)+(32*N)]), K11XOR(db[(E1)+(32*N)]), K47XOR(db[(E2)+(32*N)]), K55XOR(db[(E3)+(32*N)]), K05XOR(db[(E4)+(32*N)]), K27XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K32XOR(db[ 7*N]), K05XOR(db[ 8*N]), K54XOR(db[ 9*N]), K55XOR(db[10*N]), K11XOR(db[11*N]), K27XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K31XOR(db[E0]), K52XOR(db[E1]), K33XOR(db[E2]), K41XOR(db[E3]), K46XOR(db[E4]), K13XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			__syncthreads();
+			s3(K18XOR(db[39*N]), K46XOR(db[40*N]), K40XOR(db[41*N]), K41XOR(db[42*N]), K52XOR(db[43*N]), K13XOR(db[44*N]), &db[23*N], &db[15*N], &db[29*N], &db[ 5*N]);
+			s2(K48XOR(db[(E0)+(32*N)]), K38XOR(db[(E1)+(32*N)]), K19XOR(db[(E2)+(32*N)]), K27XOR(db[(E3)+(32*N)]), K32XOR(db[(E4)+(32*N)]), K54XOR(db[(E5)+(32*N)]), &db[12*N], &db[27*N], &db[ 1*N], &db[17*N]); 
+			__syncthreads();
+			s3(K11XOR(db[ 7*N]), K39XOR(db[ 8*N]), K33XOR(db[ 9*N]), K34XOR(db[10*N]), K45XOR(db[11*N]), K06XOR(db[12*N]), &db[55*N], &db[47*N], &db[61*N], &db[37*N]);
+			s2(K41XOR(db[E0]), K31XOR(db[E1]), K12XOR(db[E2]), K20XOR(db[E3]), K25XOR(db[E4]), K47XOR(db[E5]), &db[44*N], &db[59*N], &db[33*N], &db[49*N]); 
+			break;
+		case 2:
+			s5(K15XOR(db[(E0)+(32*N)]), K24XOR(db[(E1)+(32*N)]), K28XOR(db[(E2)+(32*N)]), K43XOR(db[(E3)+(32*N)]), K30XOR(db[(E4)+(32*N)]), K03XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K37XOR(db[59*N]), K08XOR(db[60*N]), K09XOR(db[61*N]), K50XOR(db[62*N]), K42XOR(db[63*N]), K21XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K08XOR(db[E0]), K17XOR(db[E1]), K21XOR(db[E2]), K36XOR(db[E3]), K23XOR(db[E4]), K49XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K30XOR(db[27*N]), K01XOR(db[28*N]), K02XOR(db[29*N]), K43XOR(db[30*N]), K35XOR(db[31*N]), K14XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K51XOR(db[(E0)+(32*N)]), K03XOR(db[(E1)+(32*N)]), K07XOR(db[(E2)+(32*N)]), K22XOR(db[(E3)+(32*N)]), K09XOR(db[(E4)+(32*N)]), K35XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K16XOR(db[59*N]), K44XOR(db[60*N]), K17XOR(db[61*N]), K29XOR(db[62*N]), K21XOR(db[63*N]), K00XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K37XOR(db[E0]), K42XOR(db[E1]), K50XOR(db[E2]), K08XOR(db[E3]), K24XOR(db[E4]), K21XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K02XOR(db[27*N]), K30XOR(db[28*N]), K03XOR(db[29*N]), K15XOR(db[30*N]), K07XOR(db[31*N]), K43XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K23XOR(db[(E0)+(32*N)]), K28XOR(db[(E1)+(32*N)]), K36XOR(db[(E2)+(32*N)]), K51XOR(db[(E3)+(32*N)]), K10XOR(db[(E4)+(32*N)]), K07XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K17XOR(db[59*N]), K16XOR(db[60*N]), K42XOR(db[61*N]), K01XOR(db[62*N]), K50XOR(db[63*N]), K29XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K09XOR(db[E0]), K14XOR(db[E1]), K22XOR(db[E2]), K37XOR(db[E3]), K49XOR(db[E4]), K50XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K03XOR(db[27*N]), K02XOR(db[28*N]), K28XOR(db[29*N]), K44XOR(db[30*N]), K36XOR(db[31*N]), K15XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K24XOR(db[(E0)+(32*N)]), K00XOR(db[(E1)+(32*N)]), K08XOR(db[(E2)+(32*N)]), K23XOR(db[(E3)+(32*N)]), K35XOR(db[(E4)+(32*N)]), K36XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K42XOR(db[59*N]), K17XOR(db[60*N]), K14XOR(db[61*N]), K30XOR(db[62*N]), K22XOR(db[63*N]), K01XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K10XOR(db[E0]), K43XOR(db[E1]), K51XOR(db[E2]), K09XOR(db[E3]), K21XOR(db[E4]), K22XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K28XOR(db[27*N]), K03XOR(db[28*N]), K00XOR(db[29*N]), K16XOR(db[30*N]), K08XOR(db[31*N]), K44XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K03XOR(db[(E0)+(32*N)]), K36XOR(db[(E1)+(32*N)]), K44XOR(db[(E2)+(32*N)]), K02XOR(db[(E3)+(32*N)]), K14XOR(db[(E4)+(32*N)]), K15XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K21XOR(db[59*N]), K49XOR(db[60*N]), K50XOR(db[61*N]), K09XOR(db[62*N]), K01XOR(db[63*N]), K37XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K42XOR(db[E0]), K22XOR(db[E1]), K30XOR(db[E2]), K17XOR(db[E3]), K00XOR(db[E4]), K01XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K07XOR(db[27*N]), K35XOR(db[28*N]), K36XOR(db[29*N]), K24XOR(db[30*N]), K44XOR(db[31*N]), K23XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K28XOR(db[(E0)+(32*N)]), K08XOR(db[(E1)+(32*N)]), K16XOR(db[(E2)+(32*N)]), K03XOR(db[(E3)+(32*N)]), K43XOR(db[(E4)+(32*N)]), K44XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K50XOR(db[59*N]), K21XOR(db[60*N]), K22XOR(db[61*N]), K10XOR(db[62*N]), K30XOR(db[63*N]), K09XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K14XOR(db[E0]), K51XOR(db[E1]), K02XOR(db[E2]), K42XOR(db[E3]), K29XOR(db[E4]), K30XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K36XOR(db[27*N]), K07XOR(db[28*N]), K08XOR(db[29*N]), K49XOR(db[30*N]), K16XOR(db[31*N]), K24XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K00XOR(db[(E0)+(32*N)]), K37XOR(db[(E1)+(32*N)]), K17XOR(db[(E2)+(32*N)]), K28XOR(db[(E3)+(32*N)]), K15XOR(db[(E4)+(32*N)]), K16XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K22XOR(db[59*N]), K50XOR(db[60*N]), K51XOR(db[61*N]), K35XOR(db[62*N]), K02XOR(db[63*N]), K10XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K43XOR(db[E0]), K23XOR(db[E1]), K03XOR(db[E2]), K14XOR(db[E3]), K01XOR(db[E4]), K02XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K08XOR(db[27*N]), K36XOR(db[28*N]), K37XOR(db[29*N]), K21XOR(db[30*N]), K17XOR(db[31*N]), K49XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			__syncthreads();
+			s5(K29XOR(db[(E0)+(32*N)]), K09XOR(db[(E1)+(32*N)]), K42XOR(db[(E2)+(32*N)]), K00XOR(db[(E3)+(32*N)]), K44XOR(db[(E4)+(32*N)]), K17XOR(db[(E5)+(32*N)]), &db[ 7*N], &db[13*N], &db[24*N], &db[ 2*N]);
+			s8(K51XOR(db[59*N]), K22XOR(db[60*N]), K23XOR(db[61*N]), K07XOR(db[62*N]), K03XOR(db[63*N]), K35XOR(db[32*N]), &db[ 4*N], &db[26*N], &db[14*N], &db[20*N]); 
+			__syncthreads();
+			s5(K22XOR(db[E0]), K02XOR(db[E1]), K35XOR(db[E2]), K50XOR(db[E3]), K37XOR(db[E4]), K10XOR(db[E5]), &db[39*N], &db[45*N], &db[56*N], &db[34*N]);
+			s8(K44XOR(db[27*N]), K15XOR(db[28*N]), K16XOR(db[29*N]), K00XOR(db[30*N]), K49XOR(db[31*N]), K28XOR(db[ 0*N]), &db[36*N], &db[58*N], &db[46*N], &db[52*N]); 
+			break;
+		case 3: 
+			s7(K51XOR(db[55*N]), K16XOR(db[56*N]), K29XOR(db[57*N]), K49XOR(db[58*N]), K07XOR(db[59*N]), K17XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K35XOR(db[(E0)+(32*N)]), K22XOR(db[(E1)+(32*N)]), K02XOR(db[(E2)+(32*N)]), K44XOR(db[(E3)+(32*N)]), K14XOR(db[(E4)+(32*N)]), K23XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K44XOR(db[23*N]), K09XOR(db[24*N]), K22XOR(db[25*N]), K42XOR(db[26*N]), K00XOR(db[27*N]), K10XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K28XOR(db[E0]), K15XOR(db[E1]), K24XOR(db[E2]), K37XOR(db[E3]), K07XOR(db[E4]), K16XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K30XOR(db[55*N]), K24XOR(db[56*N]), K08XOR(db[57*N]), K28XOR(db[58*N]), K43XOR(db[59*N]), K49XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K14XOR(db[(E0)+(32*N)]), K01XOR(db[(E1)+(32*N)]), K10XOR(db[(E2)+(32*N)]), K23XOR(db[(E3)+(32*N)]), K50XOR(db[(E4)+(32*N)]), K02XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K16XOR(db[23*N]), K10XOR(db[24*N]), K51XOR(db[25*N]), K14XOR(db[26*N]), K29XOR(db[27*N]), K35XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K00XOR(db[E0]), K44XOR(db[E1]), K49XOR(db[E2]), K09XOR(db[E3]), K36XOR(db[E4]), K17XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K02XOR(db[55*N]), K49XOR(db[56*N]), K37XOR(db[57*N]), K00XOR(db[58*N]), K15XOR(db[59*N]), K21XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K43XOR(db[(E0)+(32*N)]), K30XOR(db[(E1)+(32*N)]), K35XOR(db[(E2)+(32*N)]), K24XOR(db[(E3)+(32*N)]), K22XOR(db[(E4)+(32*N)]), K03XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K17XOR(db[23*N]), K35XOR(db[24*N]), K23XOR(db[25*N]), K43XOR(db[26*N]), K01XOR(db[27*N]), K07XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K29XOR(db[E0]), K16XOR(db[E1]), K21XOR(db[E2]), K10XOR(db[E3]), K08XOR(db[E4]), K42XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K03XOR(db[55*N]), K21XOR(db[56*N]), K09XOR(db[57*N]), K29XOR(db[58*N]), K44XOR(db[59*N]), K50XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K15XOR(db[(E0)+(32*N)]), K02XOR(db[(E1)+(32*N)]), K07XOR(db[(E2)+(32*N)]), K49XOR(db[(E3)+(32*N)]), K51XOR(db[(E4)+(32*N)]), K28XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K42XOR(db[23*N]), K07XOR(db[24*N]), K24XOR(db[25*N]), K15XOR(db[26*N]), K30XOR(db[27*N]), K36XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K01XOR(db[E0]), K17XOR(db[E1]), K50XOR(db[E2]), K35XOR(db[E3]), K37XOR(db[E4]), K14XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K35XOR(db[55*N]), K00XOR(db[56*N]), K17XOR(db[57*N]), K08XOR(db[58*N]), K23XOR(db[59*N]), K29XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K51XOR(db[(E0)+(32*N)]), K10XOR(db[(E1)+(32*N)]), K43XOR(db[(E2)+(32*N)]), K28XOR(db[(E3)+(32*N)]), K30XOR(db[(E4)+(32*N)]), K07XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K21XOR(db[23*N]), K43XOR(db[24*N]), K03XOR(db[25*N]), K51XOR(db[26*N]), K09XOR(db[27*N]), K15XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K37XOR(db[E0]), K49XOR(db[E1]), K29XOR(db[E2]), K14XOR(db[E3]), K16XOR(db[E4]), K50XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K07XOR(db[55*N]), K29XOR(db[56*N]), K42XOR(db[57*N]), K37XOR(db[58*N]), K24XOR(db[59*N]), K01XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K23XOR(db[(E0)+(32*N)]), K35XOR(db[(E1)+(32*N)]), K15XOR(db[(E2)+(32*N)]), K00XOR(db[(E3)+(32*N)]), K02XOR(db[(E4)+(32*N)]), K36XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K50XOR(db[23*N]), K15XOR(db[24*N]), K28XOR(db[25*N]), K23XOR(db[26*N]), K10XOR(db[27*N]), K44XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K09XOR(db[E0]), K21XOR(db[E1]), K01XOR(db[E2]), K43XOR(db[E3]), K17XOR(db[E4]), K22XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K36XOR(db[55*N]), K01XOR(db[56*N]), K14XOR(db[57*N]), K09XOR(db[58*N]), K49XOR(db[59*N]), K30XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K24XOR(db[(E0)+(32*N)]), K07XOR(db[(E1)+(32*N)]), K44XOR(db[(E2)+(32*N)]), K29XOR(db[(E3)+(32*N)]), K03XOR(db[(E4)+(32*N)]), K08XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K22XOR(db[23*N]), K44XOR(db[24*N]), K00XOR(db[25*N]), K24XOR(db[26*N]), K35XOR(db[27*N]), K16XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K10XOR(db[E0]), K50XOR(db[E1]), K30XOR(db[E2]), K15XOR(db[E3]), K42XOR(db[E4]), K51XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			__syncthreads();
+			s7(K08XOR(db[55*N]), K30XOR(db[56*N]), K43XOR(db[57*N]), K10XOR(db[58*N]), K21XOR(db[59*N]), K02XOR(db[60*N]), &db[31*N], &db[11*N], &db[21*N], &db[ 6*N]);
+			s6(K49XOR(db[(E0)+(32*N)]), K36XOR(db[(E1)+(32*N)]), K16XOR(db[(E2)+(32*N)]), K01XOR(db[(E3)+(32*N)]), K28XOR(db[(E4)+(32*N)]), K37XOR(db[(E5)+(32*N)]), &db[ 3*N], &db[28*N], &db[10*N], &db[18*N]); 
+			__syncthreads();
+			s7(K01XOR(db[23*N]), K23XOR(db[24*N]), K36XOR(db[25*N]), K03XOR(db[26*N]), K14XOR(db[27*N]), K24XOR(db[28*N]), &db[63*N], &db[43*N], &db[53*N], &db[38*N]);
+			s6(K42XOR(db[E0]), K29XOR(db[E1]), K09XOR(db[E2]), K51XOR(db[E3]), K21XOR(db[E4]), K30XOR(db[E5]), &db[35*N], &db[60*N], &db[42*N], &db[50*N]); 
+			break;
+		}
+		__syncthreads();
+	}
+
+#endif
 }
 
 #define GET_TRIPCODE_CHAR_INDEX(r, t, i0, i1, i2, i3, i4, i5, pos)  \
-		(  ((((r)[threadIdx.x + (i0*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << (5 + ((pos) * 6)))  \
-	 	 | ((((r)[threadIdx.x + (i1*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << (4 + ((pos) * 6)))  \
-		 | ((((r)[threadIdx.x + (i2*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << (3 + ((pos) * 6)))  \
-		 | ((((r)[threadIdx.x + (i3*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << (2 + ((pos) * 6)))  \
-		 | ((((r)[threadIdx.x + (i4*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << (1 + ((pos) * 6)))  \
-		 | ((((r)[threadIdx.x + (i5*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << (0 + ((pos) * 6)))) \
+		(  ((((r)[threadIdx.x + (i0*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << (5 + ((pos) * 6)))  \
+	 	 | ((((r)[threadIdx.x + (i1*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << (4 + ((pos) * 6)))  \
+		 | ((((r)[threadIdx.x + (i2*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << (3 + ((pos) * 6)))  \
+		 | ((((r)[threadIdx.x + (i3*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << (2 + ((pos) * 6)))  \
+		 | ((((r)[threadIdx.x + (i4*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << (1 + ((pos) * 6)))  \
+		 | ((((r)[threadIdx.x + (i5*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << (0 + ((pos) * 6)))) \
 
 #define GET_TRIPCODE_CHAR_INDEX_LAST(r, t, i0, i1, i2, i3)     \
-		(  ((((r)[threadIdx.x + (i0*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << 5)  \
-	 	 | ((((r)[threadIdx.x + (i1*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << 4)  \
-		 | ((((r)[threadIdx.x + (i2*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << 3)  \
-		 | ((((r)[threadIdx.x + (i3*NUM_CONTEXTS)] & (0x01 << (t))) ? (0x1) : (0x0)) << 2)) \
+		(  ((((r)[threadIdx.x + (i0*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << 5)  \
+	 	 | ((((r)[threadIdx.x + (i1*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << 4)  \
+		 | ((((r)[threadIdx.x + (i2*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << 3)  \
+		 | ((((r)[threadIdx.x + (i3*N)] & (0x01 << (t))) ? (0x1) : (0x0)) << 2)) \
 
 DES_FUNCTION_QUALIFIERS void
 DES_GetTripcodeChunks(int tripcodeIndex, unsigned int *tripcodeChunkArray, int searchMode)

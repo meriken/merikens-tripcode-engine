@@ -271,6 +271,7 @@ double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, unsig
 				}
 			}
 			// printf("{%s, %s}\n", tripcode, key);
+			ERROR0(!IsTripcodeChunkValid(tripcode), ERROR_TRIPCODE_VERIFICATION_FAILED, "A generated tripcode was corrupt.");
 			ProcessPossibleMatch(tripcode, key);
 		}
 	}

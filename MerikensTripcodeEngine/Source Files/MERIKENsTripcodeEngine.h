@@ -185,6 +185,7 @@ BOOL IsFirstByteSJIS(unsigned char ch);
 extern void LoadTargetPatterns(BOOL displayProgress);
 extern void ProcessMatch        (unsigned char *tripcode, unsigned char *key);
 extern void ProcessPossibleMatch(unsigned char *tripcode, unsigned char *key);
+extern BOOL IsTripcodeChunkValid(unsigned char *tripcode);
 
 extern ExpandedPattern *expandedPatternArray;
 extern unsigned int     numExpandedPatterns;
