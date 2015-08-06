@@ -438,7 +438,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		OPENCL_ERROR(clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL));
 		OPENCL_ERROR(clEnqueueReadBuffer(commandQueue, openCL_outputArray, CL_TRUE, 0, sizeOutputArray * sizeof(GPUOutput), outputArray, 0, NULL, NULL));
 		OPENCL_ERROR(clFinish(commandQueue));
-		// We can save registers this way. Not particularly safe, though.
+		// We can save registers this way.
 		for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
 			GPUOutput *output = &outputArray[indexOutput];
 			if (output->numMatchingTripcodes > 0) {
