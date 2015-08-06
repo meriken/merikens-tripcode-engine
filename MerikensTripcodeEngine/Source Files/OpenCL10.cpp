@@ -8,6 +8,8 @@
 // The code that deals with DES decryption is partially adopted from:
 // John the Ripper password cracker
 // Copyright (c) 1996-2002, 2005, 2010 by Solar Designer
+// DeepLearningJohnDoe's fork of Meriken's Tripcode Engine
+// Copyright (c) 2015 by <deeplearningjohndoe at gmail.com>
 //
 // The code that deals with DES hash generation is partially adopted from:
 // sha_digest-2.2
