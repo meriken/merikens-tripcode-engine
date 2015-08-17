@@ -109,8 +109,12 @@ struct Options {
 
 struct CUDADeviceSearchThreadInfo {
 	int   CUDADeviceIndex;
-	BOOL  isOptimizationInProgress;
+	// int          index;
+	int          subindex;
+	cudaDeviceProp  properties;
 	char  status[LEN_LINE_BUFFER_FOR_SCREEN];
+	CRITICAL_SECTION criticalSection;
+	//
 	DWORD timeLastUpdated;
 };
 

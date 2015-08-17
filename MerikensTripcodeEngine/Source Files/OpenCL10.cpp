@@ -216,9 +216,9 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	cl_mem openCL_outputArray;
 	cl_mem openCL_keyInfo;
 	cl_mem openCL_tripcodeChunkArray;
-	cl_mem openCL_smallKeyBitmap;
-	cl_mem openCL_compactMediumKeyBitmap;
-	cl_mem openCL_keyBitmap;
+	cl_mem openCL_smallChunkBitmap;
+	cl_mem openCL_compactMediumChunkBitmap;
+	cl_mem openCL_chunkBitmap;
 	cl_mem openCL_partialKeyFrom3To6Array;
 	cl_int         openCLError;
 	cl_device_id   deviceID = ((OpenCLDeviceSearchThreadInfo *)info)->openCLDeviceID;
@@ -269,11 +269,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	unsigned int  sizeOutputArray = globalWorkSize;
 	GPUOutput    *outputArray     = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
 	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	unsigned int *compactMediumKeyBitmap = (unsigned int *)calloc(MEDIUM_KEY_BITMAP_SIZE / 8, sizeof(unsigned int));
-	ERROR0(compactMediumKeyBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	for (int i = 0; i < MEDIUM_KEY_BITMAP_SIZE; ++i)
-		if (mediumKeyBitmap[i])
-			compactMediumKeyBitmap[i >> 5] |= 0x1 << (i & 0x1f);
+	unsigned int *compactMediumChunkBitmap = (unsigned int *)calloc(MEDIUM_CHUNK_BITMAP_SIZE / 8, sizeof(unsigned int));
+	ERROR0(compactMediumChunkBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	for (int i = 0; i < MEDIUM_CHUNK_BITMAP_SIZE; ++i)
+		if (mediumChunkBitmap[i])
+			compactMediumChunkBitmap[i >> 5] |= 0x1 << (i & 0x1f);
 	// printf("sizeOutputArray = %u\n", sizeOutputArray);
 	PartialKeyFrom3To6 *partialKeyFrom3To6Array = (PartialKeyFrom3To6 *)malloc(sizeof(PartialKeyFrom3To6) * globalWorkSize);
 	ERROR0(partialKeyFrom3To6Array == NULL, ERROR_NO_MEMORY, "Not enough memory.");
@@ -331,9 +331,9 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	openCL_outputArray          = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(GPUOutput) * sizeOutputArray,     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	openCL_keyInfo              = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(keyInfo),                         NULL, &openCLError); OPENCL_ERROR(openCLError);
 	openCL_tripcodeChunkArray   = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(unsigned int) * numTripcodeChunk, NULL, &openCLError); OPENCL_ERROR(openCLError);
-	openCL_smallKeyBitmap       = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_KEY_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
-	openCL_compactMediumKeyBitmap = clCreateBuffer(context, CL_MEM_READ_ONLY,  MEDIUM_KEY_BITMAP_SIZE / 8,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
-	openCL_keyBitmap            = clCreateBuffer(context, CL_MEM_READ_ONLY,  KEY_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_smallChunkBitmap       = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_CHUNK_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_compactMediumChunkBitmap = clCreateBuffer(context, CL_MEM_READ_ONLY,  MEDIUM_CHUNK_BITMAP_SIZE / 8,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_chunkBitmap            = clCreateBuffer(context, CL_MEM_READ_ONLY,  CHUNK_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
 	openCL_partialKeyFrom3To6Array      = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(PartialKeyFrom3To6) * globalWorkSize,     NULL, &openCLError); OPENCL_ERROR(openCLError);
 			
 	while (!GetTerminationState()) {
@@ -380,14 +380,14 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 			OPENCL_ERROR(clSetKernelArg(kernel, 1, sizeof(cl_mem),       (void *)&openCL_keyInfo));
 			OPENCL_ERROR(clSetKernelArg(kernel, 2, sizeof(cl_mem),       (void *)&openCL_tripcodeChunkArray));
 			OPENCL_ERROR(clSetKernelArg(kernel, 3, sizeof(unsigned int), (void *)&numTripcodeChunk));
-			OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_smallKeyBitmap));
-			OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_compactMediumKeyBitmap));
-			OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_keyBitmap));
+			OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_smallChunkBitmap));
+			OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_compactMediumChunkBitmap));
+			OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_chunkBitmap));
 			OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),       (void *)&openCL_partialKeyFrom3To6Array));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,   CL_TRUE, 0, sizeof(unsigned int) * numTripcodeChunk, tripcodeChunkArray,   0, NULL, NULL));
-			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_smallKeyBitmap,       CL_TRUE, 0, SMALL_KEY_BITMAP_SIZE,                   smallKeyBitmap,       0, NULL, NULL));
-			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_compactMediumKeyBitmap,       CL_TRUE, 0, MEDIUM_KEY_BITMAP_SIZE / 8,     compactMediumKeyBitmap,       0, NULL, NULL));
-			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyBitmap,            CL_TRUE, 0, KEY_BITMAP_SIZE,                         keyBitmap,            0, NULL, NULL));
+			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_smallChunkBitmap,       CL_TRUE, 0, SMALL_CHUNK_BITMAP_SIZE,                   smallChunkBitmap,       0, NULL, NULL));
+			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_compactMediumChunkBitmap,       CL_TRUE, 0, MEDIUM_CHUNK_BITMAP_SIZE / 8,     compactMediumChunkBitmap,       0, NULL, NULL));
+			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_chunkBitmap,            CL_TRUE, 0, CHUNK_BITMAP_SIZE,                         chunkBitmap,            0, NULL, NULL));
 
 			execCounter = 16384 + ((int)RandomByte() * 32 - 128 * 32);;
 			firstBuild = FALSE;
@@ -485,13 +485,13 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
     OPENCL_ERROR(clReleaseMemObject(openCL_outputArray));
     OPENCL_ERROR(clReleaseMemObject(openCL_keyInfo));
     OPENCL_ERROR(clReleaseMemObject(openCL_tripcodeChunkArray));
-    OPENCL_ERROR(clReleaseMemObject(openCL_smallKeyBitmap));
-	OPENCL_ERROR(clReleaseMemObject(openCL_keyBitmap));
+    OPENCL_ERROR(clReleaseMemObject(openCL_smallChunkBitmap));
+	OPENCL_ERROR(clReleaseMemObject(openCL_chunkBitmap));
 	OPENCL_ERROR(clReleaseMemObject(openCL_partialKeyFrom3To6Array));
     OPENCL_ERROR(clReleaseCommandQueue(commandQueue));
     OPENCL_ERROR(clReleaseContext(context));
 	free(outputArray);
-	free(compactMediumKeyBitmap);
+	free(compactMediumChunkBitmap);
 	free(partialKeyFrom3To6Array);
 }
 

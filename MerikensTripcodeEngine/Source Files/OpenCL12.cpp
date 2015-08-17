@@ -510,15 +510,15 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	cl_mem openCL_keyCharTable_FirstByte            = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyCharTable_SecondByte           = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyCharTable_SecondByteAndOneByte = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
-	cl_mem openCL_smallKeyBitmap                    = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_KEY_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
-	cl_mem openCL_keyBitmap                         = clCreateBuffer(context, CL_MEM_READ_ONLY,  KEY_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
+	cl_mem openCL_smallChunkBitmap                    = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_CHUNK_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
+	cl_mem openCL_chunkBitmap                         = clCreateBuffer(context, CL_MEM_READ_ONLY,  CHUNK_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,                CL_TRUE, 0, sizeof(unsigned int) * numTripcodeChunk, tripcodeChunkArray,                0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_OneByte,              CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_OneByte,              0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_FirstByte,            CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_FirstByte,            0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_SecondByte,           CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_SecondByte,           0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_SecondByteAndOneByte, CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_SecondByteAndOneByte, 0, NULL, NULL));
-	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_smallKeyBitmap,                    CL_TRUE, 0, SMALL_KEY_BITMAP_SIZE,                   smallKeyBitmap,                    0, NULL, NULL));
-	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyBitmap,                         CL_TRUE, 0, KEY_BITMAP_SIZE,                         keyBitmap,                         0, NULL, NULL));
+	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_smallChunkBitmap,                    CL_TRUE, 0, SMALL_CHUNK_BITMAP_SIZE,                   smallChunkBitmap,                    0, NULL, NULL));
+	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_chunkBitmap,                         CL_TRUE, 0, CHUNK_BITMAP_SIZE,                         chunkBitmap,                         0, NULL, NULL));
 
 	// The main loop of the thread. 
 	double       timeElapsed = 0;
@@ -551,8 +551,8 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_keyCharTable_FirstByte));
 		OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_keyCharTable_SecondByte));
 		OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),       (void *)&openCL_keyCharTable_SecondByteAndOneByte));
-		OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(cl_mem),       (void *)&openCL_smallKeyBitmap));
-		OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(cl_mem),       (void *)&openCL_keyBitmap));
+		OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(cl_mem),       (void *)&openCL_smallChunkBitmap));
+		OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(cl_mem),       (void *)&openCL_chunkBitmap));
 		// printf("globalWorkSize = [%u]\n", globalWorkSize);
 		// printf("localWorkSize  = [%u]\n", localWorkSize);
 		// size_t sizeWorkGroup;
@@ -597,7 +597,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
     OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTable_FirstByte));
     OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTable_SecondByte));
     OPENCL_ERROR(clReleaseMemObject(openCL_keyCharTable_SecondByteAndOneByte));
-    OPENCL_ERROR(clReleaseMemObject(openCL_smallKeyBitmap));
+    OPENCL_ERROR(clReleaseMemObject(openCL_smallChunkBitmap));
     OPENCL_ERROR(clReleaseCommandQueue(commandQueue));
     OPENCL_ERROR(clReleaseContext(context));
 }

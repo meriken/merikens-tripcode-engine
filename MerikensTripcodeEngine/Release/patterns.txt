@@ -1,2 +1,3 @@
 #regex
-^TEST/
+^[:digit:]{4}////
+#^TEST//

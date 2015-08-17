@@ -54,9 +54,11 @@ unsigned int         sizeTripcodeChunkArray   = 0;
 struct RegexPattern *regexPatternArray        = NULL;
 int                  sizeRegexPatternArray    = 0;
 int                  numRegexPattern          = 0;
-unsigned char       *keyBitmap                = NULL;
-unsigned char       *mediumKeyBitmap          = NULL;
-unsigned char       *smallKeyBitmap           = NULL;
+unsigned char        chunkBitmap[CHUNK_BITMAP_SIZE];
+unsigned char        mediumChunkBitmap[MEDIUM_CHUNK_BITMAP_SIZE];
+unsigned char        smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];
+unsigned char        compactMediumChunkBitmap[COMPACT_MEDIUM_CHUNK_BITMAP_SIZE];
+unsigned char        compactSmallChunkBitmap[COMPACT_SMALL_CHUNK_BITMAP_SIZE];
 int                  minLenExpandedPattern;
 int                  maxLenExpandedPattern;
 BOOL                 searchForSpecialPatternsOnCPU = FALSE;
@@ -1224,23 +1226,30 @@ void LoadTargetPatterns(BOOL displayProgress)
 		ResetCursorPos(0);
 	}
 	unsigned int tripcodeChunk;
-	memset(keyBitmap,       0x01, KEY_BITMAP_SIZE);
-	memset(mediumKeyBitmap, 0x01, MEDIUM_KEY_BITMAP_SIZE);
-	memset(smallKeyBitmap,  0x01, SMALL_KEY_BITMAP_SIZE);
+	memset(chunkBitmap,       0x01, CHUNK_BITMAP_SIZE);
+	memset(mediumChunkBitmap, 0x01, MEDIUM_CHUNK_BITMAP_SIZE);
+	memset(smallChunkBitmap,  0x01, SMALL_CHUNK_BITMAP_SIZE);
 	for (int i = 0; i < numExpandedPatterns; ++i) {
 		BOOL lastFiveCharacters =    (searchMode == SEARCH_MODE_BACKWARD_MATCHING || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)
 					              && (expandedPatternArray[i].pos + strlen((char *)(expandedPatternArray[i].c)) == lenTripcode);
 		ERROR0(!CreateTripcodeChunk(expandedPatternArray[i].c, &tripcodeChunk, lastFiveCharacters),
 		       ERROR_INVALID_TARGET_PATTERN,
 		       "There is an invalid character in a target pattern.");
-		keyBitmap      [tripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING       ) * 6)] = 0x00;
-		mediumKeyBitmap[tripcodeChunk >> ((5 - MEDIUM_KEY_BITMAP_LEN_STRING) * 6)] = 0x00;
-		smallKeyBitmap [tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING ) * 6)] = 0x00;
+		chunkBitmap      [tripcodeChunk >> ((5 - CHUNK_BITMAP_LEN_STRING       ) * 6)] = 0x00;
+		mediumChunkBitmap[tripcodeChunk >> ((5 - MEDIUM_CHUNK_BITMAP_LEN_STRING) * 6)] = 0x00;
+		smallChunkBitmap [tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING ) * 6)] = 0x00;
 		AddNewTripcodeChunk(tripcodeChunk & 0x3fffffff);
 	}
 	qsort(tripcodeChunkArray, numTripcodeChunk, sizeof(unsigned int),                   CompareUINT32);
 	numTripcodeChunk = uniq(tripcodeChunkArray, numTripcodeChunk, sizeof(unsigned int), CompareUINT32);
 	ERROR0(numExpandedPatterns == 0, ERROR_NO_TARGET_PATTERNS, "No target patterns were found (2).");
+
+	memset(compactMediumChunkBitmap,  0x00, COMPACT_MEDIUM_CHUNK_BITMAP_SIZE);
+	for (int i = 0; i < MEDIUM_CHUNK_BITMAP_SIZE; ++i)
+		compactMediumChunkBitmap[i >> 3] |= (mediumChunkBitmap[i] ? (1 << (i & 7)) : 0);
+	memset(compactSmallChunkBitmap,  0x00, COMPACT_SMALL_CHUNK_BITMAP_SIZE);
+	for (int i = 0; i < SMALL_CHUNK_BITMAP_SIZE; ++i)
+		compactSmallChunkBitmap[i >> 3] |= (smallChunkBitmap[i] ? (1 << (i & 7)) : 0);
 
 #ifdef DEBUG_DISPLAY_EXPANDED_PATTERNS
 	for (int i = 0; i < numExpandedPatterns; ++i)
@@ -1371,8 +1380,8 @@ BOOL IsTripcodeChunkValid(unsigned char *tripcode)
 			continue;
 		if (i < lenTripcode - 5 && searchMode == SEARCH_MODE_BACKWARD_MATCHING)
 			continue;
-		if (   smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]
-			&&      keyBitmap[tripcodeChunk >> ((5 -       KEY_BITMAP_LEN_STRING) * 6)])
+		if (   smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
+			&&      chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)])
 			continue;
 		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;                                            
 		while (lower <= upper) {

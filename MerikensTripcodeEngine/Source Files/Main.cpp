@@ -175,8 +175,6 @@ void ReleaseResources()
 {
 	RELEASE_AND_SET_TO_NULL(expandedPatternArray, free);
 	RELEASE_AND_SET_TO_NULL(tripcodeChunkArray,   free);
-	RELEASE_AND_SET_TO_NULL(keyBitmap,            free);
-	RELEASE_AND_SET_TO_NULL(smallKeyBitmap,       free);
 	RELEASE_AND_SET_TO_NULL(regexPatternArray,    free);
 	if (tripcodeFile) {
 		RELEASE_AND_SET_TO_NULL(tripcodeFile,     fclose);
@@ -225,6 +223,33 @@ void ResetCursorPos(int deltaY)
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursorPos);
 }
 
+void CreateKey8AndKey9(unsigned char *key)
+{
+	ASSERT(lenTripcode == 10);
+	if (options.useOneByteCharactersForKeys) {
+		key[8] = keyCharTable_OneByte[RandomByte()];
+		key[9] = keyCharTable_OneByte[RandomByte()];
+	} else {
+		BOOL isSecondByte = FALSE;
+		for (int i = 0; i < 8; ++i) {
+			if (!isSecondByte) {
+				isSecondByte = IS_FIRST_BYTE_SJIS_FULL(key[i]);
+			} else {
+				isSecondByte = FALSE;
+			}
+		}
+		if (isSecondByte) {
+			key[8] = keyCharTable_SecondByte[RandomByte()];
+			key[9] = keyCharTable_OneByte   [RandomByte()];
+		} else {
+			key[8] = keyCharTable_FirstByte[RandomByte()];
+			key[9] = (IS_FIRST_BYTE_SJIS_FULL(key[8]))
+							? keyCharTable_SecondByte[RandomByte()]
+							: keyCharTable_OneByte   [RandomByte()];
+		}
+	}
+}
+
 double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, unsigned int sizeOutputArray, BOOL newFormat)
 {
 	unsigned char  tripcode[MAX_LEN_TRIPCODE     + 1];
@@ -248,31 +273,10 @@ double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, unsig
 				memcpy(key + 7,  output->pair.key.c + 7, lenTripcode - 7);
 			} else {
 				ASSERT(lenTripcode == 10);
-				memcpy(key + 2,  output->pair.key.c + 2, lenTripcode - 2);
-				if (options.useOneByteCharactersForKeys) {
-					key[8] = keyCharTable_OneByte[RandomByte()];
-					key[9] = keyCharTable_OneByte[RandomByte()];
-				} else {
-					BOOL isSecondByte = FALSE;
-					for (int i = 0; i < 8; ++i) {
-						if (!isSecondByte) {
-							isSecondByte = IS_FIRST_BYTE_SJIS_FULL(key[i]);
-						} else {
-							isSecondByte = FALSE;
-						}
-					}
-					if (isSecondByte) {
-						key[8] = keyCharTable_SecondByte[RandomByte()];
-						key[9] = keyCharTable_OneByte   [RandomByte()];
-					} else {
-						key[8] = keyCharTable_FirstByte[RandomByte()];
-						key[9] = (IS_FIRST_BYTE_SJIS_FULL(key[8]))
-									 ? keyCharTable_SecondByte[RandomByte()]
-									 : keyCharTable_OneByte   [RandomByte()];
-					}
-				}
+				memcpy(key,  output->pair.key.c, 8);
+				CreateKey8AndKey9(key);
 			}
-			// printf("{%s, %s}\n", tripcode, key);
+			//printf("{%s, %s}\n", tripcode, key);
 			ERROR0(!IsTripcodeChunkValid(tripcode), ERROR_TRIPCODE_VERIFICATION_FAILED, "A generated tripcode was corrupt.");
 			ProcessPossibleMatch(tripcode, key);
 		}
@@ -449,10 +453,9 @@ void DisplayCopyrights()
     printf("\n");
 }
 
-void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, BOOL isOptimizationInProgress, char *status)
+void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, char *status)
 {
 	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
-	info->isOptimizationInProgress = isOptimizationInProgress;
 	strcpy(info->status, status);
 	info->timeLastUpdated = timeGetTime();
 	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
@@ -562,20 +565,6 @@ void KeepSearchThreadsAlive()
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
 
-BOOL IsCUDADeviceOptimizationInProgress()
-{
-	BOOL ret = FALSE;
-	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
-	for (int i = 0; i < numCUDADeviceSearchThreads; ++i) {
-		if (CUDADeviceSearchThreadInfoArray[i].isOptimizationInProgress) {
-			ret = TRUE;
-			break;
-		}
-	}
-	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
-	return ret;
-}
-
 void PrintStatus()
 {
 	EnterCriticalSection(&criticalSection_currentState);
@@ -624,7 +613,7 @@ void PrintStatus()
 			sprintf(NEXT_LINE, "      CUDA0:     %s", CUDADeviceSearchThreadInfoArray[0].status);
 		} else {
 			for (int i = 0; i < numCUDADeviceSearchThreads; ++i)
-				sprintf(NEXT_LINE, "      CUDA%d:     %s", i, CUDADeviceSearchThreadInfoArray[i].status);
+				sprintf(NEXT_LINE, "      CUDA%d-%d:     %s", CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex, CUDADeviceSearchThreadInfoArray[i].subindex, CUDADeviceSearchThreadInfoArray[i].status);
 		}
 		LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
 	}
@@ -771,7 +760,7 @@ void PrintStatus()
 				    (int)(matchingProbDiff * 100),
 				   prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses,
 				   prevNumValidTripcodes,
-				   IsCUDADeviceOptimizationInProgress(),
+				   FALSE,
 				   averageSpeed_GPU,
 				   averageSpeed_CPU,
 				   prevNumDiscardedTripcodes,
@@ -785,7 +774,7 @@ void PrintStatus()
 				   averageSpeed,
 				   prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses,
 				   prevNumValidTripcodes,
-				   IsCUDADeviceOptimizationInProgress(),
+				   FALSE,
 				   averageSpeed_GPU,
 				   averageSpeed_CPU,
 				   prevNumDiscardedTripcodes,
@@ -1021,7 +1010,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 					                                                                           "(unknown)"                        );
 				printf("\n");
 			}
-			++numCUDADeviceSearchThreads;
+			numCUDADeviceSearchThreads += CUDA_NUM_THREADS_PER_DEVICE;
 		}
 	}
 
@@ -1121,16 +1110,6 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			printf("\n");
 		}
 	}
-}
-
-void InitMemoryBlocks()
-{
-	keyBitmap = (unsigned char *)malloc(KEY_BITMAP_SIZE);
-	ERROR0(keyBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	mediumKeyBitmap = (unsigned char *)malloc(MEDIUM_KEY_BITMAP_SIZE);
-	ERROR0(mediumKeyBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	smallKeyBitmap = (unsigned char *)malloc(SMALL_KEY_BITMAP_SIZE);
-	ERROR0(smallKeyBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 }
 
 void ObtainOptions(int argCount, char **arguments)
@@ -1711,18 +1690,27 @@ void StartCUDADeviceSearchThreads()
 	ERROR0((CUDADeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 	ERROR0((CUDADeviceSearchThreadInfoArray = (struct CUDADeviceSearchThreadInfo *)malloc(sizeof(struct CUDADeviceSearchThreadInfo) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 	if (options.GPUIndex == GPU_INDEX_ALL) {
-		for (i = 0; i < numCUDADeviceSearchThreads; ++i) {
-			CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex = i;
-			CUDADeviceSearchThreadInfoArray[i].isOptimizationInProgress = TRUE;
-			CUDADeviceSearchThreadInfoArray[i].status[0] = '\0';
-			CUDADeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
+		int CUDADeviceIndex = 0;
+		for (i = 0; i < numCUDADeviceSearchThreads; ++i, ++CUDADeviceIndex) {
+			for (int j = 0; j < CUDA_NUM_THREADS_PER_DEVICE; ++j, ++i) {
+				CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex = CUDADeviceIndex;
+				CUDADeviceSearchThreadInfoArray[i].subindex = j;
+				CUDADeviceSearchThreadInfoArray[i].status[0] = '\0';
+				CUDADeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
+				CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceSearchThreadInfoArray[i].properties, CUDADeviceIndex));
+				InitializeCriticalSection(&CUDADeviceSearchThreadInfoArray[i].criticalSection);
+			}
 		}
 	} else if (options.GPUIndex < CUDADeviceCount) {
-		ASSERT(numCUDADeviceSearchThreads == 1);
-		CUDADeviceSearchThreadInfoArray[0].CUDADeviceIndex = options.GPUIndex;
-		CUDADeviceSearchThreadInfoArray[0].isOptimizationInProgress = TRUE;
-		CUDADeviceSearchThreadInfoArray[0].status[0] = '\0';
-		CUDADeviceSearchThreadInfoArray[0].timeLastUpdated = timeGetTime();
+		ASSERT(numCUDADeviceSearchThreads == CUDA_NUM_THREADS_PER_DEVICE);
+		for (i = 0; i < CUDA_NUM_THREADS_PER_DEVICE; ++i) {
+			CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex = options.GPUIndex;
+			CUDADeviceSearchThreadInfoArray[i].subindex = i;
+			CUDADeviceSearchThreadInfoArray[i].status[0] = '\0';
+			CUDADeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
+			CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceSearchThreadInfoArray[i].properties, options.GPUIndex));
+			InitializeCriticalSection(&CUDADeviceSearchThreadInfoArray[i].criticalSection);
+		}
 	}
 
 	if (lenTripcode == 12) {
@@ -1738,12 +1726,23 @@ void StartCUDADeviceSearchThreads()
 	} else {
 		ASSERT(lenTripcode == 10);
 		for (i = 0; i < numCUDADeviceSearchThreads; ++i) {
-			CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-			                                                        0,
-			                                                        Thread_SearchForDESTripcodesOnCUDADevice,
-															        &(CUDADeviceSearchThreadInfoArray[i]),
-															        0,
-														            &winThreadID);
+			if (   CUDADeviceSearchThreadInfoArray[i].properties.major >= 5
+				|| (   CUDADeviceSearchThreadInfoArray[i].properties.major == 3
+				    && CUDADeviceSearchThreadInfoArray[i].properties.minor >= 2)) {
+				CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
+																		0,
+																		Thread_SearchForDESTripcodesOnCUDADevice_Registers,
+																		&(CUDADeviceSearchThreadInfoArray[i]),
+																		0,
+																		&winThreadID);
+			} else {
+				CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
+																		0,
+																		Thread_SearchForDESTripcodesOnCUDADevice,
+																		&(CUDADeviceSearchThreadInfoArray[i]),
+																		0,
+																		&winThreadID);
+			}
 			ERROR0((CUDADeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
 		}
 	}
@@ -1968,7 +1967,6 @@ int main(int argc, char **argv)
 	if (displayDeviceInformationAndExit)
 		exit(0);
 
-	InitMemoryBlocks();
 	CreateCharacterTables();
 	LoadTargetPatterns(!options.redirection && !listExpandedPatternsAndExit);
 
@@ -1985,7 +1983,7 @@ int main(int argc, char **argv)
 		TestNewCode();
 #endif
 	
-#if MTF_FREE_EDITION
+#ifdef MTF_FREE_EDITION
 	if (!options.redirection)
 		exit(0);
 #endif

@@ -547,7 +547,7 @@ static unsigned char *DES_GetTripcode(DES_Context *context, int tripcodeIndex, u
 ///////////////////////////////////////////////////////////////////////////////
 
 #define QUICK_SEARCH_FOR_TRIPCODE_CHUNK(p)                                                                      \
-	if (!found && !smallKeyBitmap[generatedTripcodeChunkArray[p] >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) { \
+	if (!found && !smallChunkBitmap[generatedTripcodeChunkArray[p] >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { \
 		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;                                            \
 		while (lower <= upper) {                                                                                \
 			middle = (lower + upper) >> 1;                                                                      \

@@ -33,6 +33,16 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// BUILD OPTIONS                                                             //
+///////////////////////////////////////////////////////////////////////////////
+
+// #define MTF_FREE_EDITION
+// #define ENGLISH_VERSION
+#define CUDA_DES_ENABLE_MULTIPLE_KERNELS_MODE 
+
+
+
+///////////////////////////////////////////////////////////////////////////////
 // INCLUDE FILES                                                             //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -121,9 +131,11 @@ extern char          base64CharTable[64];
 extern void          CreateCharacterTables(void);
 
 // Key bitmap
-extern unsigned char *keyBitmap;
-extern unsigned char *mediumKeyBitmap;
-extern unsigned char *smallKeyBitmap;
+extern unsigned char chunkBitmap[];
+extern unsigned char mediumChunkBitmap[];
+extern unsigned char smallChunkBitmap[];
+extern unsigned char compactMediumChunkBitmap[];
+extern unsigned char compactSmallChunkBitmap[];
 
 // GPUs
 extern int CUDADeviceCount;
@@ -154,6 +166,7 @@ extern void          SetCharactersInTripcodeKey(unsigned char *key, int n);
 extern void          SetCharactersInTripcodeKeyForSHA1Tripcode(unsigned char *key);
 extern unsigned char RandomByte();
 extern BOOL          IsValidKey(unsigned char *key);
+extern void          CreateKey8AndKey9(unsigned char *key);
 
 // 
 extern void SetPauseState(BOOL state);
@@ -162,7 +175,7 @@ extern void SetTerminationState();
 extern BOOL GetTerminationState();
 
 //
-extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, BOOL isOptimizationInProgress, char *status);
+extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, char *status);
 extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status);
 extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, unsigned int numDiscardedTripcodes, HANDLE childProcess);
 
@@ -256,6 +269,7 @@ extern BOOL VerifySHA1Tripcode (unsigned char *tripcode, unsigned char *key);
 extern BOOL VerifyDESTripcode  (unsigned char *tripcode, unsigned char *key);
 extern BOOL IsTripcodeDuplicate(unsigned char *tripcode);
 extern void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key);
+extern void Generate10CharTripcodes(TripcodeKeyPair *p, int numTripcodes);
 
 
 
@@ -267,9 +281,10 @@ extern unsigned WINAPI Thread_SearchForSHA1TripcodesOnCPU         (LPVOID thread
 extern unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice  (LPVOID info);
 extern unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info);
 
-extern unsigned WINAPI Thread_SearchForDESTripcodesOnCPU         (LPVOID threadParams);
-extern unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice  (LPVOID info);
-extern unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info);
+extern unsigned WINAPI Thread_SearchForDESTripcodesOnCPU                 (LPVOID threadParams);
+extern unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice          (LPVOID info);
+extern unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info);
+extern unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice        (LPVOID info);
 
 extern void            Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
 

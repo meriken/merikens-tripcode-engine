@@ -43,9 +43,9 @@ typedef int BOOL;
 #define MAX_LEN_TRIPCODE            12
 #define MAX_LEN_TRIPCODE_KEY        12
 #define MAX_LEN_EXPANDED_PATTERN    MAX_LEN_TRIPCODE
-#define SMALL_KEY_BITMAP_LEN_STRING 2
-#define SMALL_KEY_BITMAP_SIZE       (64 * 64)
-#define KEY_BITMAP_LEN_STRING       4
+#define SMALL_CHUNK_BITMAP_LEN_STRING 2
+#define SMALL_CHUNK_BITMAP_SIZE       (64 * 64)
+#define CHUNK_BITMAP_LEN_STRING       4
 #define OPENCL_SHA1_MAX_PASS_COUNT  2048
 
 #define IS_FIRST_BYTE_SJIS_FULL(c)    \
@@ -213,8 +213,8 @@ __kernel void (functionName)(                                    \
 	__constant const unsigned char * const keyCharTable_FirstByte,   \
 	__constant const unsigned char * const keyCharTable_SecondByte,  \
 	__constant const unsigned char * const keyCharTable_SecondByteAndOneByte,  \
- 	__constant const unsigned char * const smallKeyBitmap_constant, \
- 	__global   const unsigned char * const keyBitmap             \
+ 	__constant const unsigned char * const smallChunkBitmap_constant, \
+ 	__global   const unsigned char * const chunkBitmap             \
 ) {                                                              \
 
 #define OPENCL_SHA1_BEFORE_SEARCHING                                                                       \
@@ -255,10 +255,10 @@ __kernel void (functionName)(                                    \
 	initW1.z = (initW1.z & 0xfffffffc) | 2;                                                                \
 	initW1.w = (initW1.w & 0xfffffffc) | 3;                                                                \
 	                                                                                                       \
-	__local unsigned char smallKeyBitmap[SMALL_KEY_BITMAP_SIZE];                                           \
+	__local unsigned char smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];                                           \
 	if (get_local_id(0) == 0) {                                                                            \
-		for (int i = 0; i < SMALL_KEY_BITMAP_SIZE; ++i)                                                    \
-			smallKeyBitmap[i] = smallKeyBitmap_constant[i];                                                \
+		for (int i = 0; i < SMALL_CHUNK_BITMAP_SIZE; ++i)                                                    \
+			smallChunkBitmap[i] = smallChunkBitmap_constant[i];                                                \
 	}                                                                                                      \
 	barrier(CLK_LOCAL_MEM_FENCE);                                                   \
 	                                                                                                       \
@@ -312,18 +312,18 @@ __kernel void (functionName)(                                    \
 		\
 		uint4        tripcodeChunk = A >> 2;\
 
-#define OPENCL_SHA1_USE_SMALL_KEY_BITMAP                                                   \
-		if (   smallKeyBitmap[tripcodeChunk.x >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]  \
-		    && smallKeyBitmap[tripcodeChunk.y >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]  \
-		    && smallKeyBitmap[tripcodeChunk.z >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]  \
-		    && smallKeyBitmap[tripcodeChunk.w >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) \
+#define OPENCL_SHA1_USE_SMALL_CHUNK_BITMAP                                                   \
+		if (   smallChunkBitmap[tripcodeChunk.x >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]  \
+		    && smallChunkBitmap[tripcodeChunk.y >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]  \
+		    && smallChunkBitmap[tripcodeChunk.z >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]  \
+		    && smallChunkBitmap[tripcodeChunk.w >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) \
 			continue;                                                                      \
 
-#define OPENCL_SHA1_USE_KEY_BITMAP                                                         \
-		if (   keyBitmap[tripcodeChunk.x >> ((5 - KEY_BITMAP_LEN_STRING) * 6)]             \
-		    && keyBitmap[tripcodeChunk.y >> ((5 - KEY_BITMAP_LEN_STRING) * 6)]             \
-		    && keyBitmap[tripcodeChunk.z >> ((5 - KEY_BITMAP_LEN_STRING) * 6)]             \
-		    && keyBitmap[tripcodeChunk.w >> ((5 - KEY_BITMAP_LEN_STRING) * 6)])            \
+#define OPENCL_SHA1_USE_CHUNK_BITMAP                                                         \
+		if (   chunkBitmap[tripcodeChunk.x >> ((5 - CHUNK_BITMAP_LEN_STRING) * 6)]             \
+		    && chunkBitmap[tripcodeChunk.y >> ((5 - CHUNK_BITMAP_LEN_STRING) * 6)]             \
+		    && chunkBitmap[tripcodeChunk.z >> ((5 - CHUNK_BITMAP_LEN_STRING) * 6)]             \
+		    && chunkBitmap[tripcodeChunk.w >> ((5 - CHUNK_BITMAP_LEN_STRING) * 6)])            \
 			continue;                                                                      \
 		
 #define OPENCL_SHA1_LINEAR_SEARCH                                                   \
@@ -511,29 +511,29 @@ OPENCL_SHA1_END_OF_SEAERCH_FUNCTION
 
 OPENCL_SHA1_DEFINE_SEARCH_FUNCTION(OpenCL_SHA1_PerformSearching_ForwardMatching_Simple)
 OPENCL_SHA1_BEFORE_SEARCHING
-	OPENCL_SHA1_USE_SMALL_KEY_BITMAP
+	OPENCL_SHA1_USE_SMALL_CHUNK_BITMAP
 	OPENCL_SHA1_LINEAR_SEARCH
 OPENCL_SHA1_END_OF_SEAERCH_FUNCTION
 
 OPENCL_SHA1_DEFINE_SEARCH_FUNCTION(OpenCL_SHA1_PerformSearching_ForwardMatching)
 OPENCL_SHA1_BEFORE_SEARCHING
-	OPENCL_SHA1_USE_SMALL_KEY_BITMAP
-	OPENCL_SHA1_USE_KEY_BITMAP
+	OPENCL_SHA1_USE_SMALL_CHUNK_BITMAP
+	OPENCL_SHA1_USE_CHUNK_BITMAP
 	OPENCL_SHA1_BINARY_SEARCH
 OPENCL_SHA1_END_OF_SEAERCH_FUNCTION
 
 OPENCL_SHA1_DEFINE_SEARCH_FUNCTION(OpenCL_SHA1_PerformSearching_BackwardMatching_Simple)
 OPENCL_SHA1_BEFORE_SEARCHING
 	tripcodeChunk = ((B <<  8) & 0x3fffffff) | ((C >> 24) & 0x000000ff);
-	OPENCL_SHA1_USE_SMALL_KEY_BITMAP
+	OPENCL_SHA1_USE_SMALL_CHUNK_BITMAP
 	OPENCL_SHA1_LINEAR_SEARCH
 OPENCL_SHA1_END_OF_SEAERCH_FUNCTION
 
 OPENCL_SHA1_DEFINE_SEARCH_FUNCTION(OpenCL_SHA1_PerformSearching_BackwardMatching)
 OPENCL_SHA1_BEFORE_SEARCHING
 	tripcodeChunk = ((B <<  8) & 0x3fffffff) | ((C >> 24) & 0x000000ff);
-	OPENCL_SHA1_USE_SMALL_KEY_BITMAP
-	OPENCL_SHA1_USE_KEY_BITMAP
+	OPENCL_SHA1_USE_SMALL_CHUNK_BITMAP
+	OPENCL_SHA1_USE_CHUNK_BITMAP
 	OPENCL_SHA1_BINARY_SEARCH
 OPENCL_SHA1_END_OF_SEAERCH_FUNCTION
 
@@ -559,8 +559,8 @@ OPENCL_SHA1_BEFORE_SEARCHING
 		{                                                                                         \
 			int lower, upper, middle;                                                             \
 																								  \
-			if (   !smallKeyBitmap[tripcodeChunk.x >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]    \
-				&& !keyBitmap     [tripcodeChunk.x >> ((5 - KEY_BITMAP_LEN_STRING      ) * 6)]) { \
+			if (   !smallChunkBitmap[tripcodeChunk.x >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]    \
+				&& !chunkBitmap     [tripcodeChunk.x >> ((5 - CHUNK_BITMAP_LEN_STRING      ) * 6)]) { \
 				lower  = 0;                                                                       \
 				upper  = numTripcodeChunk - 1;                                                    \
 				middle = lower;                                                                   \
@@ -584,8 +584,8 @@ OPENCL_SHA1_BEFORE_SEARCHING
 			if (found)                                                                            \
 				break;                                                                            \
 																								  \
-			if (   !smallKeyBitmap[tripcodeChunk.y >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]    \
-				&& !keyBitmap     [tripcodeChunk.y >> ((5 - KEY_BITMAP_LEN_STRING      ) * 6)]) { \
+			if (   !smallChunkBitmap[tripcodeChunk.y >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]    \
+				&& !chunkBitmap     [tripcodeChunk.y >> ((5 - CHUNK_BITMAP_LEN_STRING      ) * 6)]) { \
 				lower  = 0;                                                                       \
 				upper  = numTripcodeChunk - 1;                                                    \
 				middle = lower;                                                                   \
@@ -609,8 +609,8 @@ OPENCL_SHA1_BEFORE_SEARCHING
 			if (found)                                                                            \
 				break;                                                                            \
 																								  \
-			if (   !smallKeyBitmap[tripcodeChunk.z >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]    \
-				&& !keyBitmap     [tripcodeChunk.z >> ((5 - KEY_BITMAP_LEN_STRING      ) * 6)]) { \
+			if (   !smallChunkBitmap[tripcodeChunk.z >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]    \
+				&& !chunkBitmap     [tripcodeChunk.z >> ((5 - CHUNK_BITMAP_LEN_STRING      ) * 6)]) { \
 				lower  = 0;                                                                       \
 				upper  = numTripcodeChunk - 1;                                                    \
 				middle = lower;                                                                   \
@@ -634,8 +634,8 @@ OPENCL_SHA1_BEFORE_SEARCHING
 			if (found)                                                                            \
 				break;                                                                            \
 																								  \
-			if (   !smallKeyBitmap[tripcodeChunk.w >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]    \
-				&& !keyBitmap     [tripcodeChunk.w >> ((5 - KEY_BITMAP_LEN_STRING      ) * 6)]) { \
+			if (   !smallChunkBitmap[tripcodeChunk.w >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]    \
+				&& !chunkBitmap     [tripcodeChunk.w >> ((5 - CHUNK_BITMAP_LEN_STRING      ) * 6)]) { \
 				lower  = 0;                                                                       \
 				upper  = numTripcodeChunk - 1;                                                    \
 				middle = lower;                                                                   \
@@ -674,7 +674,7 @@ OPENCL_SHA1_DEFINE_SEARCH_FUNCTION(OpenCL_SHA1_PerformSearching_ForwardAndBackwa
 OPENCL_SHA1_BEFORE_SEARCHING
 
 	#define PERFORM_LINEAR_SEARCH_IF_NECESSARY                                             \
-		if (!smallKeyBitmap[tripcodeChunk.x >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) { \
+		if (!smallChunkBitmap[tripcodeChunk.x >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { \
 			for (unsigned int i = 0; i < numTripcodeChunk; i++){                           \
 				if (tripcodeChunkArray[i] == tripcodeChunk.x) {                            \
 					found = 1;                                                             \
@@ -688,7 +688,7 @@ OPENCL_SHA1_BEFORE_SEARCHING
 		}                                                                                  \
 		if (found)                                                                         \
 			break;                                                                         \
-		if (!smallKeyBitmap[tripcodeChunk.y >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) { \
+		if (!smallChunkBitmap[tripcodeChunk.y >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { \
 			for (unsigned int i = 0; i < numTripcodeChunk; i++){                           \
 				if (tripcodeChunkArray[i] == tripcodeChunk.y) {                            \
 					found = 1;                                                             \
@@ -702,7 +702,7 @@ OPENCL_SHA1_BEFORE_SEARCHING
 		}                                                                                  \
 		if (found)                                                                         \
 			break;                                                                         \
-		if (!smallKeyBitmap[tripcodeChunk.z >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) { \
+		if (!smallChunkBitmap[tripcodeChunk.z >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { \
 			for (unsigned int i = 0; i < numTripcodeChunk; i++){                           \
 				if (tripcodeChunkArray[i] == tripcodeChunk.z) {                            \
 					found = 1;                                                             \
@@ -716,7 +716,7 @@ OPENCL_SHA1_BEFORE_SEARCHING
 		}                                                                                  \
 		if (found)                                                                         \
 			break;                                                                         \
-		if (!smallKeyBitmap[tripcodeChunk.w >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) { \
+		if (!smallChunkBitmap[tripcodeChunk.w >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { \
 			for (unsigned int i = 0; i < numTripcodeChunk; i++){                           \
 				if (tripcodeChunkArray[i] == tripcodeChunk.w) {                            \
 					found = 1;                                                             \

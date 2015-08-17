@@ -49,14 +49,14 @@
 // VARIABLES FOR CUDA CODES                                                  //
 ///////////////////////////////////////////////////////////////////////////////
 
-__device__ __constant__ unsigned char   CUDA_keyCharTable_OneByte[SIZE_KEY_CHAR_TABLE];
-__device__ __constant__ unsigned char   CUDA_keyCharTable_FirstByte  [SIZE_KEY_CHAR_TABLE];
-__device__ __constant__ unsigned char   CUDA_keyCharTable_SecondByte [SIZE_KEY_CHAR_TABLE];
-__device__ __constant__ unsigned char   CUDA_keyCharTable_SecondByteAndOneByte[SIZE_KEY_CHAR_TABLE];
+__device__ __constant__ unsigned char   cudaKeyCharTable_OneByte[SIZE_KEY_CHAR_TABLE];
+__device__ __constant__ unsigned char   cudaKeyCharTable_FirstByte  [SIZE_KEY_CHAR_TABLE];
+__device__ __constant__ unsigned char   cudaKeyCharTable_SecondByte [SIZE_KEY_CHAR_TABLE];
+__device__ __constant__ unsigned char   cudaKeyCharTable_SecondByteAndOneByte[SIZE_KEY_CHAR_TABLE];
 __device__ __constant__ char            CUDA_base64CharTable[64];
 __device__ __constant__ unsigned char   CUDA_key[12];
 __device__ __constant__ unsigned char   CUDA_PW[80];
-__device__ __constant__ unsigned char   CUDA_smallKeyBitmap[SMALL_KEY_BITMAP_SIZE];
+__device__ __constant__ unsigned char   CUDA_smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];
 
 
 
@@ -99,7 +99,7 @@ __device__ __constant__ unsigned char   CUDA_smallKeyBitmap[SMALL_KEY_BITMAP_SIZ
 		var = (table)[(value)];                           \
 		isSecondByte = IS_FIRST_BYTE_SJIS(var);           \
 	} else {                                              \
-		var = CUDA_keyCharTable_SecondByte[(value)];          \
+		var = cudaKeyCharTable_SecondByte[(value)];          \
 		isSecondByte = FALSE;                             \
 	}                                                     \
 
@@ -146,7 +146,7 @@ __device__ __constant__ unsigned char   CUDA_smallKeyBitmap[SMALL_KEY_BITMAP_SIZ
 #define CUDA_SHA1_DEFINE_SEARCH_FUNCTION(functionName) \
 __global__ void (functionName)(\
 	GPUOutput     *outputArray,\
-	unsigned char *keyBitmap,\
+	unsigned char *chunkBitmap,\
 	unsigned int  *tripcodeChunkArray,\
 	unsigned int   numTripcodeChunk\
 ) {
@@ -163,13 +163,13 @@ __global__ void (functionName)(\
 	int                 randomByte3 = CUDA_key[3];                                                         \
 	                                                                                                       \
 	output->numMatchingTripcodes = 0;                                                                      \
-	SET_KEY_CHAR(key0, isSecondByte, CUDA_keyCharTable_FirstByte, CUDA_key[0] + (blockIdx.x >> 6));        \
-	SET_KEY_CHAR(key1, isSecondByte, CUDA_keyCharTable_FirstByte, CUDA_key[1] + (threadIdx.x & 0x3f));     \
-	tableForKey2 = (isSecondByte) ? (CUDA_keyCharTable_SecondByte) : (CUDA_keyCharTable_FirstByte);        \
-	key11 = CUDA_keyCharTable_SecondByteAndOneByte[CUDA_key[11] + (blockIdx.x & 0x3f)];                    \
+	SET_KEY_CHAR(key0, isSecondByte, cudaKeyCharTable_FirstByte, CUDA_key[0] + (blockIdx.x >> 6));        \
+	SET_KEY_CHAR(key1, isSecondByte, cudaKeyCharTable_FirstByte, CUDA_key[1] + (threadIdx.x & 0x3f));     \
+	tableForKey2 = (isSecondByte) ? (cudaKeyCharTable_SecondByte) : (cudaKeyCharTable_FirstByte);        \
+	key11 = cudaKeyCharTable_SecondByteAndOneByte[CUDA_key[11] + (blockIdx.x & 0x3f)];                    \
 	                                                                                                       \
 	__shared__ unsigned int PW[80+1];                                                                        \
-	__shared__ unsigned char smallKeyBitmap[SMALL_KEY_BITMAP_SIZE];                                        \
+	__shared__ unsigned char smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];                                        \
 	if (threadIdx.x == 0) {                                                                                \
 		PW[0]  = 0;                                                                                        \
 		PW[1]  = (CUDA_key[4] << 24) | (CUDA_key[5] << 16) | (CUDA_key[ 6] << 8) | CUDA_key[ 7];           \
@@ -191,8 +191,8 @@ __global__ void (functionName)(\
 		for (int t = 17; t < 80; ++t)                                                                      \
 			PW[t] = ROTL(1, PW[(t) - 3] ^ PW[(t) - 8] ^ PW[(t) - 14] ^ PW[(t) - 16]);                      \
 			                                                                                               \
-		for (int i = 0; i < SMALL_KEY_BITMAP_SIZE; ++i)                                                    \
-			smallKeyBitmap[i] = CUDA_smallKeyBitmap[i];                                                    \
+		for (int i = 0; i < SMALL_CHUNK_BITMAP_SIZE; ++i)                                                    \
+			smallChunkBitmap[i] = CUDA_smallChunkBitmap[i];                                                    \
 	}                                                                                                      \
 	__syncthreads();                                                                                       \
 	randomByte2 += ((threadIdx.x & 0x40) >> 1);                                                            \
@@ -201,7 +201,7 @@ __global__ void (functionName)(\
 		__syncthreads();                                                                                   \
 		                                                                                                   \
 		key2 = tableForKey2[randomByte2 + (passCount >> 6)];                                               \
-		key3 = CUDA_keyCharTable_SecondByteAndOneByte[randomByte3 + (passCount & 63)];                     \
+		key3 = cudaKeyCharTable_SecondByteAndOneByte[randomByte3 + (passCount & 63)];                     \
 		                                                                                                   \
 		A = H0;                                                                                            \
 		B = H1;                                                                                            \
@@ -328,12 +328,12 @@ __global__ void (functionName)(\
 		                                                                                                   \
 		unsigned int tripcodeChunk = A >> 2;                                                               \
 
-#define CUDA_SHA1_USE_SMALL_KEY_BITMAP                                                     \
-		if (smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) \
+#define CUDA_SHA1_USE_SMALL_CHUNK_BITMAP                                                     \
+		if (smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) \
 			continue;                                                                      \
 
-#define CUDA_SHA1_USE_KEY_BITMAP \
-		if (keyBitmap[tripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING) * 6)]) \
+#define CUDA_SHA1_USE_CHUNK_BITMAP \
+		if (chunkBitmap[tripcodeChunk >> ((5 - CHUNK_BITMAP_LEN_STRING) * 6)]) \
 			continue;
 
 #define CUDA_SHA1_LINEAR_SEARCH \
@@ -403,29 +403,29 @@ CUDA_SHA1_END_OF_SEAERCH_FUNCTION
 
 CUDA_SHA1_DEFINE_SEARCH_FUNCTION(CUDA_SHA1_PerformSearching_ForwardMatching_Simple)
 CUDA_SHA1_BEFORE_SEARCHING
-	CUDA_SHA1_USE_SMALL_KEY_BITMAP
+	CUDA_SHA1_USE_SMALL_CHUNK_BITMAP
 	CUDA_SHA1_LINEAR_SEARCH
 CUDA_SHA1_END_OF_SEAERCH_FUNCTION
 
 CUDA_SHA1_DEFINE_SEARCH_FUNCTION(CUDA_SHA1_PerformSearching_ForwardMatching)
 CUDA_SHA1_BEFORE_SEARCHING
-	CUDA_SHA1_USE_SMALL_KEY_BITMAP
-	CUDA_SHA1_USE_KEY_BITMAP
+	CUDA_SHA1_USE_SMALL_CHUNK_BITMAP
+	CUDA_SHA1_USE_CHUNK_BITMAP
 	CUDA_SHA1_BINARY_SEARCH
 CUDA_SHA1_END_OF_SEAERCH_FUNCTION
 
 CUDA_SHA1_DEFINE_SEARCH_FUNCTION(CUDA_SHA1_PerformSearching_BackwardMatching_Simple)
 CUDA_SHA1_BEFORE_SEARCHING
 	tripcodeChunk = ((B <<  8) & 0x3fffffff) | ((C >> 24) & 0x000000ff);
-	CUDA_SHA1_USE_SMALL_KEY_BITMAP
+	CUDA_SHA1_USE_SMALL_CHUNK_BITMAP
 	CUDA_SHA1_LINEAR_SEARCH
 CUDA_SHA1_END_OF_SEAERCH_FUNCTION
 
 CUDA_SHA1_DEFINE_SEARCH_FUNCTION(CUDA_SHA1_PerformSearching_BackwardMatching)
 CUDA_SHA1_BEFORE_SEARCHING
 	tripcodeChunk = ((B <<  8) & 0x3fffffff) | ((C >> 24) & 0x000000ff);
-	CUDA_SHA1_USE_SMALL_KEY_BITMAP
-	CUDA_SHA1_USE_KEY_BITMAP
+	CUDA_SHA1_USE_SMALL_CHUNK_BITMAP
+	CUDA_SHA1_USE_CHUNK_BITMAP
 	CUDA_SHA1_BINARY_SEARCH
 CUDA_SHA1_END_OF_SEAERCH_FUNCTION
 
@@ -433,7 +433,7 @@ CUDA_SHA1_DEFINE_SEARCH_FUNCTION(CUDA_SHA1_PerformSearching_Flexible_Simple)
 CUDA_SHA1_BEFORE_SEARCHING
 
 #define PERFORM_LINEAR_SEARCH_IF_NECESSARY                                           \
-	if (!smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]) { \
+	if (!smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { \
 		CUDA_SHA1_LINEAR_SEARCH                                                      \
 	}                                                                                \
 
@@ -451,8 +451,8 @@ CUDA_SHA1_DEFINE_SEARCH_FUNCTION(CUDA_SHA1_PerformSearching_Flexible)
 CUDA_SHA1_BEFORE_SEARCHING
 
 #define PERFORM_BINARY_SEARCH_IF_NECESSARY                                              \
-	if (   !smallKeyBitmap[tripcodeChunk >> ((5 - SMALL_KEY_BITMAP_LEN_STRING) * 6)]    \
-	    && !keyBitmap     [tripcodeChunk >> ((5 - KEY_BITMAP_LEN_STRING      ) * 6)]) { \
+	if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]    \
+	    && !chunkBitmap     [tripcodeChunk >> ((5 - CHUNK_BITMAP_LEN_STRING      ) * 6)]) { \
 		CUDA_SHA1_BINARY_SEARCH                                                         \
 	}                                                                                   \
 
@@ -493,17 +493,13 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	GPUOutput *outputArray = NULL;
 	GPUOutput *CUDA_outputArray = NULL;
 	unsigned int     *CUDA_tripcodeChunkArray = NULL;
-	unsigned char      *CUDA_keyBitmap = NULL;
+	unsigned char      *CUDA_chunkBitmap = NULL;
 	unsigned int      sizeOutputArray;
 	unsigned char       key[MAX_LEN_TRIPCODE + 1];
 	char        status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
-	int         optimizationPhase    = CUDA_OPTIMIZATION_PHASE_NUM_BLOCKS;
-	int         optimizationSubphase = 0;
-	double      timeElapsedInOptimizationSubphase = 0;
-	static int  numBlocksTableForOptimization[] = {8, 16, 32, 48, 64, 96, 128, 160, 192, 224, 256, 0};
+	double      timeElapsed = 0;
 	double      numGeneratedTripcodes = 0;
-	double      speedInPreviousSubphase = 0;
-	double      speedInCurrentSubphase = 0;
+	double      speed = 0;
 	DWORD       startingTime;
 	DWORD       endingTime;
 	double      deltaTime;
@@ -514,15 +510,11 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceProperties, ((CUDADeviceSearchThreadInfo *)info)->CUDADeviceIndex));
 	if (CUDADeviceProperties.computeMode == cudaComputeModeProhibited) {
 		sprintf(status, "[disabled]");
-		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), FALSE, status);
+		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
 		return 0;
 	}
 
-	if (options.CUDANumBlocksPerSM == CUDA_NUM_BLOCKS_PER_SM_NIL) {
-		numBlocksPerSM = numBlocksTableForOptimization[optimizationSubphase];
-	} else {
-		numBlocksPerSM = options.CUDANumBlocksPerSM;
-	}
+	numBlocksPerSM = options.CUDANumBlocksPerSM;
 	numBlocksPerGrid = numBlocksPerSM * CUDADeviceProperties.multiProcessorCount;
 	sizeOutputArray = CUDA_SHA1_NUM_THREADS_PER_BLOCK * numBlocksPerGrid;
 	outputArray = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
@@ -530,21 +522,23 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	cudaError = cudaMalloc((void **)&CUDA_outputArray, sizeof(GPUOutput) * sizeOutputArray);
 	ERROR0(cudaError == cudaErrorMemoryAllocation, ERROR_NO_MEMORY, "Not enough memory.");
 	CUDA_ERROR(cudaError);
-	cudaError = cudaMalloc((void **)&CUDA_keyBitmap, KEY_BITMAP_SIZE);
+	cudaError = cudaMalloc((void **)&CUDA_chunkBitmap, CHUNK_BITMAP_SIZE);
 	ERROR0(cudaError == cudaErrorMemoryAllocation, ERROR_NO_MEMORY, "Not enough memory.");
 	CUDA_ERROR(cudaError);
 	cudaError = cudaMalloc((void **)&CUDA_tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk); 
 	ERROR0(cudaError == cudaErrorMemoryAllocation, ERROR_NO_MEMORY, "Not enough memory.");
 	CUDA_ERROR(cudaError);
-
+ 
+	EnterCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
 	CUDA_ERROR(cudaMemcpy(CUDA_tripcodeChunkArray, tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk, cudaMemcpyHostToDevice));
-	CUDA_ERROR(cudaMemcpy(CUDA_keyBitmap, keyBitmap, KEY_BITMAP_SIZE, cudaMemcpyHostToDevice));
+	CUDA_ERROR(cudaMemcpy(CUDA_chunkBitmap, chunkBitmap, CHUNK_BITMAP_SIZE, cudaMemcpyHostToDevice));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_base64CharTable,                   base64CharTable,                    sizeof(base64CharTable)));
-	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_keyCharTable_OneByte,              keyCharTable_OneByte,               SIZE_KEY_CHAR_TABLE));
-	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_keyCharTable_FirstByte,            keyCharTable_FirstByte,             SIZE_KEY_CHAR_TABLE));
-	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_keyCharTable_SecondByte,           keyCharTable_SecondByte,            SIZE_KEY_CHAR_TABLE));
-	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_keyCharTable_SecondByteAndOneByte, keyCharTable_SecondByteAndOneByte,  SIZE_KEY_CHAR_TABLE));
-	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_smallKeyBitmap,                    smallKeyBitmap,                     SMALL_KEY_BITMAP_SIZE));
+	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_OneByte,              keyCharTable_OneByte,               SIZE_KEY_CHAR_TABLE));
+	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_FirstByte,            keyCharTable_FirstByte,             SIZE_KEY_CHAR_TABLE));
+	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByte,           keyCharTable_SecondByte,            SIZE_KEY_CHAR_TABLE));
+	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByteAndOneByte, keyCharTable_SecondByteAndOneByte,  SIZE_KEY_CHAR_TABLE));
+	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_smallChunkBitmap,                    smallChunkBitmap,                     SMALL_CHUNK_BITMAP_SIZE));
+	LeaveCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
 
 	startingTime = timeGetTime();
 
@@ -558,27 +552,27 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 		key[11] = RandomByte();
 				
 		// Call an appropriate CUDA function.
+		EnterCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
 		CUDA_ERROR(cudaMemcpyToSymbol(CUDA_key, key, 12));
 		dim3 dimBlock(CUDA_SHA1_NUM_THREADS_PER_BLOCK);
 		dim3 dimGrid(numBlocksPerGrid);
-		
 		if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
 			if (numTripcodeChunk == 1) {
 				CUDA_SHA1_PerformSearching_ForwardMatching_1Chunk<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			} else if (numTripcodeChunk <= CUDA_SIMPLE_SEARCH_THRESHOLD) {
 				CUDA_SHA1_PerformSearching_ForwardMatching_Simple<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			} else {
 				CUDA_SHA1_PerformSearching_ForwardMatching<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			}
@@ -587,13 +581,13 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 			if (numTripcodeChunk <= CUDA_SIMPLE_SEARCH_THRESHOLD) {
 				CUDA_SHA1_PerformSearching_BackwardMatching_Simple<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			} else {
 				CUDA_SHA1_PerformSearching_BackwardMatching<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			}
@@ -602,13 +596,13 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 			if (numTripcodeChunk <= CUDA_SIMPLE_SEARCH_THRESHOLD) {
 				CUDA_SHA1_PerformSearching_ForwardAndBackwardMatching_Simple<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			} else {
 				CUDA_SHA1_PerformSearching_ForwardAndBackwardMatching<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			}
@@ -617,25 +611,26 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 			if (numTripcodeChunk <= CUDA_SIMPLE_SEARCH_THRESHOLD) {
 				CUDA_SHA1_PerformSearching_Flexible_Simple<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			} else {
 				CUDA_SHA1_PerformSearching_Flexible<<<dimGrid, dimBlock>>>(
 					CUDA_outputArray,
-					CUDA_keyBitmap,
+					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk);
 			}
 		}
 		CUDA_ERROR(cudaGetLastError());
+		LeaveCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
 		// CUDA_ERROR(cudaDeviceSynchronize()); // Check errors at kernel launch.
 
 		// Process the output array.
 		CUDA_ERROR(cudaMemcpy(outputArray, CUDA_outputArray, sizeOutputArray * sizeof(GPUOutput), cudaMemcpyDeviceToHost));
 		numGeneratedTripcodes += ProcessGPUOutput(key, outputArray, sizeOutputArray, TRUE);
 
-		// Optimization
+		//
 		endingTime = timeGetTime();
 		deltaTime = (endingTime >= startingTime)
 								? ((double)endingTime - (double)startingTime                     ) * 0.001
@@ -643,57 +638,18 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
 		startingTime = timeGetTime();
-		timeElapsedInOptimizationSubphase += deltaTime;
-		speedInCurrentSubphase = numGeneratedTripcodes / timeElapsedInOptimizationSubphase;
-		if (optimizationPhase == CUDA_OPTIMIZATION_PHASE_NUM_BLOCKS) {
-			if (options.CUDANumBlocksPerSM != CUDA_NUM_BLOCKS_PER_SM_NIL) {
-				optimizationPhase     = CUDA_OPTIMIZATION_PHASE_COMPLETED;
-				optimizationSubphase  = 0;
-				numGeneratedTripcodes = 0;
-				timeElapsedInOptimizationSubphase = 0;
-			} else if (timeElapsedInOptimizationSubphase >= CUDA_OPTIMIZATION_SUBPHASE_DURATION) {
-				if (   optimizationSubphase > 0
-				    && (   speedInPreviousSubphase > speedInCurrentSubphase
-					    || fabs(speedInPreviousSubphase - speedInCurrentSubphase) / speedInPreviousSubphase < CUDA_OPTIMIZATION_THRESHOLD)) {
-					numBlocksPerSM = numBlocksTableForOptimization[(speedInPreviousSubphase > speedInCurrentSubphase) ? (optimizationSubphase - 1) : (optimizationSubphase)];
-					optimizationPhase = CUDA_OPTIMIZATION_PHASE_COMPLETED;
-					optimizationSubphase = 0;
-					numGeneratedTripcodes = 0;
-				} else if (numBlocksTableForOptimization[optimizationSubphase + 1] > 0) {
-					numBlocksPerSM = numBlocksTableForOptimization[++optimizationSubphase];
-					timeElapsedInOptimizationSubphase = 0;
-					numGeneratedTripcodes = 0;
-					speedInPreviousSubphase = speedInCurrentSubphase;
-				} else {
-					optimizationPhase = CUDA_OPTIMIZATION_PHASE_COMPLETED;
-					optimizationSubphase = 0;
-					numGeneratedTripcodes = 0;
-				}
-				timeElapsedInOptimizationSubphase = 0;
-				numGeneratedTripcodes = 0;
-				numBlocksPerGrid = numBlocksPerSM * CUDADeviceProperties.multiProcessorCount;
-				sizeOutputArray = CUDA_SHA1_NUM_THREADS_PER_BLOCK * numBlocksPerGrid;
-				free(outputArray);
-				outputArray = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
-				ERROR0(outputArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-				CUDA_ERROR(cudaFree(CUDA_outputArray));
-				cudaError = cudaMalloc((void **)&CUDA_outputArray, sizeof(GPUOutput) * sizeOutputArray);
-				ERROR0(cudaError == cudaErrorMemoryAllocation, ERROR_NO_MEMORY, "Not enough memory.");
-				CUDA_ERROR(cudaError);
-			}
-		}
-		//
+		timeElapsed += deltaTime;
+		speed = numGeneratedTripcodes / timeElapsed;
 		sprintf(status,
-			    "%s%.1lfM TPS, %d blocks/SM",
-				(optimizationPhase != CUDA_OPTIMIZATION_PHASE_COMPLETED) ? "[optimizing...] " : "",
-				speedInCurrentSubphase / 1000000,
+			    "%.1lfM TPS, %d blocks/SM",
+				speed / 1000000,
 				numBlocksPerSM);
-		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), (optimizationPhase != CUDA_OPTIMIZATION_PHASE_COMPLETED), status);
+		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
 	}
 
 	RELEASE_AND_SET_TO_NULL(CUDA_outputArray,        cudaFree);
 	RELEASE_AND_SET_TO_NULL(CUDA_tripcodeChunkArray, cudaFree);
-	RELEASE_AND_SET_TO_NULL(CUDA_keyBitmap,          cudaFree);
+	RELEASE_AND_SET_TO_NULL(CUDA_chunkBitmap,          cudaFree);
 	RELEASE_AND_SET_TO_NULL(outputArray,             free);
 }
 
