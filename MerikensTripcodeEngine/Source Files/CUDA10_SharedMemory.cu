@@ -1816,4 +1816,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	RELEASE_AND_SET_TO_NULL(CUDA_tripcodeChunkArray, cudaFree);
 	RELEASE_AND_SET_TO_NULL(CUDA_chunkBitmap,          cudaFree);
 	RELEASE_AND_SET_TO_NULL(outputArray,             free);
+
+	return 0;
 }

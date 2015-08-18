@@ -39,13 +39,22 @@
 
 
 
+// #define DEBUG_SALT_0
+
+// 790.0M t/s (10000 chunks, DEBUG_SALT_0, 25m)
+// 795.8M t/s (10000 chunks, JD, 8m)
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // INCLUDE FILE(S)                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "MerikensTripcodeEngine.h"
-
 #include "CUDA10_Registers_Kernel_Common.h"
+#ifdef DEBUG_SALT_0
+#define SALT 0
+#endif
+#include "CUDA10_Registers_Kernel.h"
 
 
 
@@ -54,8 +63,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef CUDA_DES_ENABLE_MULTIPLE_KERNELS_MODE
-
-#include "CUDA10_Registers_Kernel.h"
 
 #define CUDA_DES_DECLARE_KERNEL_LAUNCHER(n) \
 	extern void CUDA_DES_InitializeKernelLauncher##n();\
@@ -184,9 +191,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 		
 	startingTime = timeGetTime();
 
-	cudaStream_t currentStream, prevStream;
+	cudaStream_t currentStream;
 	CUDA_ERROR(cudaStreamCreate(&currentStream));
-	CUDA_ERROR(cudaStreamCreate(&prevStream));
 	BOOL prevDataExists = FALSE;
 	passCountArray         = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(passCountArray         == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 	tripcodeIndexArray     = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(tripcodeIndexArray     == NULL, ERROR_NO_MEMORY, "Not enough memory.");
@@ -206,8 +212,13 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 			salt[0] = CONVERT_CHAR_FOR_SALT(keyAndRandomBytes[1]);
 			salt[1] = CONVERT_CHAR_FOR_SALT(keyAndRandomBytes[2]);
 			intSalt = charToIndexTableForDES[salt[0]] | (charToIndexTableForDES[salt[1]] << 6);
-		} while (   (salt[0] == '.' && salt0NonDotCounter < 64)
+		} while (
+#ifdef DEBUG_SALT_0
+                    intSalt
+#else
+			        (salt[0] == '.' && salt0NonDotCounter < 64)
 				 || (salt[1] == '.' && salt1NonDotCounter < 64)
+#endif
 				 || !IsValidKey(keyAndRandomBytes));
 		if (salt[0] == '.') {
 			salt0NonDotCounter -= 63;
@@ -279,7 +290,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 		{
 			dim3 dimGrid(numBlocksPerGrid);
 			dim3 dimBlock(CUDA_DES_NUM_THREADS_PER_BLOCK);
+#ifdef DEBUG_SALT_0
+			CUDA_DES_PerformSearch_0<<<dimGrid, dimBlock, 0, currentStream>>>(
+#else
 			CUDA_DES_PerformSearch<<<dimGrid, dimBlock, 0, currentStream>>>(
+#endif	
 				cudaPassCountArray,
 				cudaTripcodeIndexArray,
 				cudaTripcodeChunkArray,
@@ -298,11 +313,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 		// Process the output.
 		TripcodeKeyPair tripcodes[32];
 		int numTripcodes = 0;
-		unsigned int numGeneratedTripcodesThisTime = 0;
 		if (prevDataExists) {
-			CUDA_ERROR(cudaStreamSynchronize(prevStream));
 			for (int i = 0; i < numThreadsPerGrid; i++){
-				numGeneratedTripcodesThisTime += CUDA_DES_BS_DEPTH * prevPassCountArray[i];
 				if (prevPassCountArray[i] < CUDA_DES_MAX_PASS_COUNT) {
 					unsigned char key[MAX_LEN_TRIPCODE_KEY + 1];
 					key[0] = prevKey0Array[prevPassCountArray[i]];
@@ -332,12 +344,15 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 					numTripcodes = 0;
 				}
 			}
-			AddToNumGeneratedTripcodesByGPU(numGeneratedTripcodesThisTime);
-			numGeneratedTripcodes += numGeneratedTripcodesThisTime;
 		}
+		CUDA_ERROR(cudaStreamSynchronize(currentStream));
+		unsigned int numGeneratedTripcodesThisTime = 0;
+		for (int i = 0; i < numThreadsPerGrid; i++)
+			numGeneratedTripcodesThisTime += CUDA_DES_BS_DEPTH * passCountArray[i];
+		AddToNumGeneratedTripcodesByGPU(numGeneratedTripcodesThisTime);
+		numGeneratedTripcodes += numGeneratedTripcodesThisTime;
 #undef  SWAP
 #define SWAP(t, a, b) { t temp; temp = (a); (a) = (b); (b) = temp; }
-		SWAP(cudaStream_t, currentStream, prevStream);
 		SWAP(unsigned char *, passCountArray, prevPassCountArray);
 		SWAP(unsigned char *, tripcodeIndexArray, prevTripcodeIndexArray);
 		SWAP(unsigned char *, cudaPassCountArray, cudaPrevPassCountArray);
@@ -378,7 +393,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	RELEASE_AND_SET_TO_NULL(cudaKeyVectorsFrom49To55, cudaFree);
 	RELEASE_AND_SET_TO_NULL(cudaKeyAndRandomBytes,    cudaFree);
 	CUDA_ERROR(cudaStreamDestroy(currentStream));
-	CUDA_ERROR(cudaStreamDestroy(prevStream));
 
 	return 0;
 }
