@@ -13,3 +13,5 @@ Meriken's Tripcode Engine is developed with the following tools:
 * YASM 1.2.0
 
 This program uses Multiple Precision Integers and Rationals (MPIR). Make sure to copy MPIR header and library files into appropriate Visual Studio folders.
+
+See MerikensTripcodeEngine.h for various build options.
