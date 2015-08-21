@@ -52,7 +52,7 @@ __device__ __constant__ unsigned char   cudaKeyCharTable_OneByte[SIZE_KEY_CHAR_T
 __device__ __constant__ unsigned char   cudaKeyCharTable_FirstByte  [SIZE_KEY_CHAR_TABLE];
 __device__ __constant__ unsigned char   cudaKeyCharTable_SecondByte [SIZE_KEY_CHAR_TABLE];
 __device__ __constant__ char            CUDA_base64CharTable[64];
-__device__ __constant__ unsigned char   CUDA_key[12];
+__device__ __constant__ unsigned char CUDA_smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];
 
 
 
@@ -86,7 +86,7 @@ __device__ __constant__ unsigned char   CUDA_key[12];
 #define N CUDA_DES_NUM_BITSLICE_DES_CONTEXTS_PER_BLOCK
 
 #define CUDA_DES_BS_DEPTH                   32
-#define CUDA_DES_MAX_PASS_COUNT             10
+#define CUDA_DES_MAX_PASS_COUNT             16
 
 typedef int           DES_ARCH_WORD;
 typedef int           DES_ARCH_WORD_32;
@@ -125,11 +125,6 @@ const unsigned char expansionTable[48] = {
 	23, 24, 25, 26, 27, 28,
 	27, 28, 29, 30, 31,  0
 };
-
-__device__ __constant__ unsigned char CUDA_smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];
-__device__ __constant__ unsigned char CUDA_expansionFunction[96];
-__device__ __constant__ unsigned char CUDA_key7Array[CUDA_DES_BS_DEPTH];
-__device__ __constant__ DES_Vector    CUDA_keyFrom49To55Array[7];
 
 const char charToIndexTableForDES[0x100] = {
 	0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
@@ -281,7 +276,7 @@ void DES_CreateExpansionFunction(char *saltString, unsigned char *expansionFunct
 	CLEAR_BLOCK_8(56); \
 
 DES_FUNCTION_QUALIFIERS
-void DES_Crypt(volatile unsigned int keyFrom00To27, volatile unsigned int keyFrom28To48)
+void DES_Crypt(volatile unsigned int keyFrom00To27, volatile unsigned int keyFrom28To48, unsigned char *CUDA_expansionFunction, DES_Vector *CUDA_keyFrom49To55Array)
 {
 	if (threadIdx.y == 0)
 		CLEAR_BLOCK();
@@ -423,13 +418,20 @@ void DES_Crypt(volatile unsigned int keyFrom00To27, volatile unsigned int keyFro
 #define K46XOR(val) ((keyFrom28To48 & (0x1U << (46 - 28))) ? ~(val) : (val))
 #define K47XOR(val) ((keyFrom28To48 & (0x1U << (47 - 28))) ? ~(val) : (val))
 #define K48XOR(val) ((keyFrom28To48 & (0x1U << (48 - 28))) ? ~(val) : (val))
-#define K49XOR(val) ((val) ^ CUDA_keyFrom49To55Array[0])
-#define K50XOR(val) ((val) ^ CUDA_keyFrom49To55Array[1])
-#define K51XOR(val) ((val) ^ CUDA_keyFrom49To55Array[2])
-#define K52XOR(val) ((val) ^ CUDA_keyFrom49To55Array[3])
-#define K53XOR(val) ((val) ^ CUDA_keyFrom49To55Array[4])
-#define K54XOR(val) ((val) ^ CUDA_keyFrom49To55Array[5])
-#define K55XOR(val) ((val) ^ CUDA_keyFrom49To55Array[6])
+	DES_Vector K49 = CUDA_keyFrom49To55Array[0];
+	DES_Vector K50 = CUDA_keyFrom49To55Array[1];
+	DES_Vector K51 = CUDA_keyFrom49To55Array[2];
+	DES_Vector K52 = CUDA_keyFrom49To55Array[3];
+	DES_Vector K53 = CUDA_keyFrom49To55Array[4];
+	DES_Vector K54 = CUDA_keyFrom49To55Array[5];
+	DES_Vector K55 = CUDA_keyFrom49To55Array[6];
+#define K49XOR(val) ((val) ^ K49)
+#define K50XOR(val) ((val) ^ K50)
+#define K51XOR(val) ((val) ^ K51)
+#define K52XOR(val) ((val) ^ K52)
+#define K53XOR(val) ((val) ^ K53)
+#define K54XOR(val) ((val) ^ K54)
+#define K55XOR(val) ((val) ^ K55)
 
 #if FALSE
 
@@ -1357,6 +1359,11 @@ __global__ void functionName(\
 	unsigned char      *chunkBitmap,\
 	unsigned int     *tripcodeChunkArray,\
 	unsigned int      numTripcodeChunk,\
+	unsigned char   *CUDA_key,\
+	unsigned char   *CUDA_expansionFunction,\
+	unsigned char   *CUDA_key0Array,\
+	unsigned char   *CUDA_key7Array,\
+	DES_Vector      *CUDA_keyFrom49To55Array,\
 	int         searchMode) {
 
 #define CUDA_DES_BEFORE_SEARCHING \
@@ -1370,20 +1377,20 @@ __global__ void functionName(\
 	if (threadIdx.y == 0) {\
 		output->numMatchingTripcodes = 0;\
 	}\
-	key[0] = CUDA_key[0];\
 	key[1] = CUDA_key[1];\
 	key[2] = CUDA_key[2];\
 	\
-	for (passCount = 0; passCount < 10; ++passCount) {\
+	for (passCount = 0; passCount < CUDA_DES_MAX_PASS_COUNT; ++passCount) {\
+		key[0] = CUDA_key0Array[passCount];\
 		isSecondByte = IS_FIRST_BYTE_SJIS(CUDA_key[2]);\
-		SET_KEY_CHAR(key[3], isSecondByte, cudaKeyCharTable_FirstByte, CUDA_key[3] + (((threadIdx.x >> 6) &  3) | ((passCount & 15) << 2)));\
+		SET_KEY_CHAR(key[3], isSecondByte, cudaKeyCharTable_FirstByte, CUDA_key[3] + (((threadIdx.x >> 6) &  3) | ((blockIdx.x & (3 << 12)) >> (12 - 2))));\
 		SET_KEY_CHAR(key[4], isSecondByte, cudaKeyCharTable_FirstByte, CUDA_key[4] + ( (blockIdx.x  >> 6) & 63));\
 		SET_KEY_CHAR(key[5], isSecondByte, cudaKeyCharTable_FirstByte, CUDA_key[5] + (  blockIdx.x        & 63));\
 		SET_KEY_CHAR(key[6], isSecondByte, cudaKeyCharTable_FirstByte, CUDA_key[6] + (  threadIdx.x       & 63));\
 		unsigned int keyFrom00To27 = (((unsigned int)key[3] & 0x7f) << 21) | (((unsigned int)key[2] & 0x7f) << 14) | (((unsigned int)key[1] & 0x7f) <<  7) | (((unsigned int)key[0] & 0x7f) << 0); \
 		unsigned int keyFrom28To48 = (((unsigned int)key[6] & 0x7f) << 14) | (((unsigned int)key[5] & 0x7f) <<  7) | (((unsigned int)key[4] & 0x7f) << 0); \
 		__syncthreads();\
-		DES_Crypt(keyFrom00To27, keyFrom28To48);\
+		DES_Crypt(keyFrom00To27, keyFrom28To48, CUDA_expansionFunction, CUDA_keyFrom49To55Array);\
 		\
 		__syncthreads();\
 		if (threadIdx.y == 0) {\
@@ -1596,7 +1603,6 @@ CUDA_DES_END_OF_SEAERCH_FUNCTION
 
 unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 {
-	cudaError_t     cudaError;
 	cudaDeviceProp  CUDADeviceProperties;
 	unsigned int    numBlocksPerSM;
 	unsigned int    numBlocksPerGrid;
@@ -1617,6 +1623,13 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	double          deltaTime;
 	int             salt0NonDotCounter = 0;
 	int             salt1NonDotCounter = 0;
+
+	unsigned char   *CUDA_key; // [12];
+	unsigned char   *CUDA_expansionFunction; // [96];
+	unsigned char   *CUDA_key0Array; // [CUDA_DES_MAX_PASS_COUNT];
+	unsigned char   *CUDA_key7Array; // [CUDA_DES_BS_DEPTH];
+	DES_Vector      *CUDA_keyFrom49To55Array; // [7];
+
 
 	key[lenTripcode] = '\0';
 	salt[2]          = '\0';
@@ -1640,15 +1653,14 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	sizeOutputArray = numBitsliceDESPerBlock * numBlocksPerGrid;
 	outputArray = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
 	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	cudaError = cudaMalloc((void **)&CUDA_outputArray, sizeof(GPUOutput) * sizeOutputArray);
-	ERROR0(cudaError == cudaErrorMemoryAllocation, ERROR_NO_MEMORY, "Not enough memory.");
-	CUDA_ERROR(cudaError);
-	cudaError = cudaMalloc((void **)&CUDA_chunkBitmap, CHUNK_BITMAP_SIZE);
-	ERROR0(cudaError == cudaErrorMemoryAllocation, ERROR_NO_MEMORY, "Not enough memory.");
-	CUDA_ERROR(cudaError);
-	cudaError = cudaMalloc((void **)&CUDA_tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk); 
-	ERROR0(cudaError == cudaErrorMemoryAllocation, ERROR_NO_MEMORY, "Not enough memory.");
-	CUDA_ERROR(cudaError);
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_outputArray,        sizeof(GPUOutput) * sizeOutputArray));
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_chunkBitmap,        CHUNK_BITMAP_SIZE));
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk)); 
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_key,                sizeof(unsigned char) * 8)); 
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_expansionFunction,  sizeof(unsigned char) * 96)); 
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_key0Array,           sizeof(unsigned char) * CUDA_DES_MAX_PASS_COUNT)); 
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_key7Array,          sizeof(unsigned char) * CUDA_DES_BS_DEPTH)); 
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_keyFrom49To55Array, sizeof(DES_Vector)    * 7)); 
 
 	EnterCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
 	CUDA_ERROR(cudaMemcpy(CUDA_tripcodeChunkArray, tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk, cudaMemcpyHostToDevice));
@@ -1685,10 +1697,24 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 			break;
 		} while (TRUE);
 		
+		//
+		unsigned char key0Array[CUDA_DES_MAX_PASS_COUNT];
+		unsigned char randomByteForKey0 = RandomByte();
+		int j = 0;
+		for (int i = 3; i < lenTripcode; ++i)
+			key[i] = 'A';
+		for (int i = 0; i < CUDA_DES_MAX_PASS_COUNT; ++i) {
+			do {
+				key[0] = keyCharTable_FirstByte[randomByteForKey0 + j++];
+			} while(!IsValidKey(key));
+			key0Array[i] = key[0];
+		}
+
 		// Generate random bytes for the key to ensure its randomness.
-		unsigned char randomByteForKey6 = RandomByte();
 		for (int i = 3; i < lenTripcode; ++i)
 			key[i] = RandomByte();
+		
+		//
 		unsigned char key7Array[CUDA_DES_BS_DEPTH];
 		DES_Vector  keyFrom49To55Array[7] = {0, 0, 0, 0, 0, 0, 0};
 		for (int tripcodeIndex = 0; tripcodeIndex < CUDA_DES_BS_DEPTH; ++tripcodeIndex) {
@@ -1708,11 +1734,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 		DES_CreateExpansionFunction((char *)salt, expansionFunction);
 
 		// Call an appropriate CUDA kernel.
-		EnterCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
-		CUDA_ERROR(cudaMemcpyToSymbol(CUDA_key,               key,               lenTripcode));
-		CUDA_ERROR(cudaMemcpyToSymbol(CUDA_expansionFunction, expansionFunction, sizeof(expansionFunction)));
-		CUDA_ERROR(cudaMemcpyToSymbol(CUDA_key7Array,         key7Array,         sizeof(key7Array)));
-		CUDA_ERROR(cudaMemcpyToSymbol(CUDA_keyFrom49To55Array, keyFrom49To55Array, sizeof(keyFrom49To55Array)));
+		CUDA_ERROR(cudaMemcpy(CUDA_key,               key,               8, cudaMemcpyHostToDevice));
+		CUDA_ERROR(cudaMemcpy(CUDA_expansionFunction, expansionFunction, sizeof(expansionFunction), cudaMemcpyHostToDevice));
+		CUDA_ERROR(cudaMemcpy(CUDA_key0Array,         key0Array,         sizeof(key0Array), cudaMemcpyHostToDevice));
+		CUDA_ERROR(cudaMemcpy(CUDA_key7Array,         key7Array,         sizeof(key7Array), cudaMemcpyHostToDevice));
+		CUDA_ERROR(cudaMemcpy(CUDA_keyFrom49To55Array, keyFrom49To55Array, sizeof(keyFrom49To55Array), cudaMemcpyHostToDevice));
 		dim3 dimBlock(numBitsliceDESPerBlock, NUM_THREADS_PER_BITSICE_DES);
 		dim3 dimGrid(numBlocksPerGrid);
 		if (searchMode == SEARCH_MODE_FLEXIBLE) {
@@ -1722,6 +1748,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk,
+					CUDA_key,
+					CUDA_expansionFunction,
+					CUDA_key0Array,
+					CUDA_key7Array,
+					CUDA_keyFrom49To55Array,
 					searchMode);
 			} else {
 				CUDA_PerformSearching_DES_Flexible<<<dimGrid, dimBlock, CUDADeviceProperties.sharedMemPerBlock>>>(
@@ -1729,6 +1760,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk,
+					CUDA_key,
+					CUDA_expansionFunction,
+					CUDA_key0Array,
+					CUDA_key7Array,
+					CUDA_keyFrom49To55Array,
 					searchMode);
 			}
 		} else if (searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING) {
@@ -1738,6 +1774,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk,
+					CUDA_key,
+					CUDA_expansionFunction,
+					CUDA_key0Array,
+					CUDA_key7Array,
+					CUDA_keyFrom49To55Array,
 					searchMode);
 			} else {
 				CUDA_PerformSearching_DES_ForwardAndBackwardMatching<<<dimGrid, dimBlock, CUDADeviceProperties.sharedMemPerBlock>>>(
@@ -1745,6 +1786,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk,
+					CUDA_key,
+					CUDA_expansionFunction,
+					CUDA_key0Array,
+					CUDA_key7Array,
+					CUDA_keyFrom49To55Array,
 					searchMode);
 			}
 		} else {
@@ -1755,6 +1801,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 						CUDA_chunkBitmap,
 						CUDA_tripcodeChunkArray,
 						numTripcodeChunk,
+						CUDA_key,
+						CUDA_expansionFunction,
+						CUDA_key0Array,
+						CUDA_key7Array,
+						CUDA_keyFrom49To55Array,
 						searchMode);
 				} else {
 					CUDA_PerformSearching_DES_BackwardMatching_1Chunk<<<dimGrid, dimBlock, CUDADeviceProperties.sharedMemPerBlock>>>(
@@ -1762,6 +1813,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 						CUDA_chunkBitmap,
 						CUDA_tripcodeChunkArray,
 						numTripcodeChunk,
+						CUDA_key,
+						CUDA_expansionFunction,
+						CUDA_key0Array,
+						CUDA_key7Array,
+						CUDA_keyFrom49To55Array,
 						searchMode);
 				}
 			} else if (numTripcodeChunk <= CUDA_SIMPLE_SEARCH_THRESHOLD) {
@@ -1770,6 +1826,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk,
+					CUDA_key,
+					CUDA_expansionFunction,
+					CUDA_key0Array,
+					CUDA_key7Array,
+					CUDA_keyFrom49To55Array,
 					searchMode);
 			} else {
 				CUDA_PerformSearching_DES_ForwardOrBackwardMatching<<<dimGrid, dimBlock, CUDADeviceProperties.sharedMemPerBlock>>>(
@@ -1777,11 +1838,15 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 					CUDA_chunkBitmap,
 					CUDA_tripcodeChunkArray,
 					numTripcodeChunk,
+					CUDA_key,
+					CUDA_expansionFunction,
+					CUDA_key0Array,
+					CUDA_key7Array,
+					CUDA_keyFrom49To55Array,
 					searchMode);
 			}
 		}
 		CUDA_ERROR(cudaGetLastError());
-		LeaveCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
 		// CUDA_ERROR(cudaDeviceSynchronize()); // Check errors at kernel launch.
 
 		// Process the output array.
@@ -1814,7 +1879,12 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 
 	RELEASE_AND_SET_TO_NULL(CUDA_outputArray,        cudaFree);
 	RELEASE_AND_SET_TO_NULL(CUDA_tripcodeChunkArray, cudaFree);
-	RELEASE_AND_SET_TO_NULL(CUDA_chunkBitmap,          cudaFree);
+	RELEASE_AND_SET_TO_NULL(CUDA_chunkBitmap,        cudaFree);
+	RELEASE_AND_SET_TO_NULL(CUDA_key,                cudaFree);
+	RELEASE_AND_SET_TO_NULL(CUDA_expansionFunction,  cudaFree);
+	RELEASE_AND_SET_TO_NULL(CUDA_key0Array,          cudaFree);
+	RELEASE_AND_SET_TO_NULL(CUDA_key7Array,          cudaFree);
+	RELEASE_AND_SET_TO_NULL(CUDA_keyFrom49To55Array, cudaFree);
 	RELEASE_AND_SET_TO_NULL(outputArray,             free);
 
 	return 0;

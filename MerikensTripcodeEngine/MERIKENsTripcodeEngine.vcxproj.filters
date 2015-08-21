@@ -244,14 +244,54 @@
     <CudaCompile Include="Source Files\CUDA10_SharedMemory.cu" />
     <CudaCompile Include="Source Files\CUDA12.cu" />
     <CudaCompile Include="Source Files\Testing.cpp" />
-    <CudaCompile Include="Source Files\CUDA10_Registers_KernelLauncher0.cu" />
-    <CudaCompile Include="Source Files\CUDA10_Registers_KernelLauncher1.cu" />
-    <CudaCompile Include="Source Files\CUDA10_Registers_KernelLauncher2.cu" />
-    <CudaCompile Include="Source Files\CUDA10_Registers_KernelLauncher5.cu" />
-    <CudaCompile Include="Source Files\CUDA10_Registers_KernelLauncher6.cu" />
-    <CudaCompile Include="Source Files\CUDA10_Registers_KernelLauncher7.cu" />
-    <CudaCompile Include="Source Files\CUDA10_Registers_KernelLauncher3.cu" />
-    <CudaCompile Include="Source Files\CUDA10_Registers_KernelLauncher4.cu" />
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher10.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher11.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher12.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher13.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher14.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher15.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher0.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher1.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher2.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher3.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher4.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher5.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher6.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher7.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher8.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Source Files\CUDA10_Registers_MultipleKernels\CUDA10_Registers_KernelLauncher9.cu">
+      <Filter>CUDA10_Registers_MultipleKernels</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA10_Registers_MultipleKernels">

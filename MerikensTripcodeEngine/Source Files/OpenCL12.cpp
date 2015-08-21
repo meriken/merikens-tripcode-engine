@@ -139,15 +139,15 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Cayman",                    22, "Radeon HD 6950",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Cayman",                    -1, "Radeon HD 6970/6990",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"}, // measured
+	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"}, // measured
 
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"}, // measured
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"}, // measured
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"}, // measured
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"}, // measured
 
 	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
@@ -158,7 +158,7 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Trinity",                   -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Devastator",                -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",            16384, 256, "OpenCL\\OpenCL10.cl",  512, 256, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 256, "-O1 -cl-mad-enable"},
 
 	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 128, ""},
 
