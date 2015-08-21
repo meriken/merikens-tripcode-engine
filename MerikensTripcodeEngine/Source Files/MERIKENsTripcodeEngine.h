@@ -36,7 +36,7 @@
 // BUILD OPTIONS                                                             //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define REDIRECTION_ONLY
+// #define REDIRECTION_ONLY
 // #define ENGLISH_VERSION
 // #define CUDA_DES_ENABLE_MULTIPLE_KERNELS_MODE 
 

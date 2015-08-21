@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 2.0.0
+// Meriken's Tripcode Engine 2.0.1
 // Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -149,7 +149,7 @@
 #define MAX_NUM_DEPTHS_IN_REGEX_PATTERN         (10 + 1)
 
 // For screen output
-#define PRODUCT_NAME                 "Meriken's Tripcode Engine 2.0.0"
+#define PRODUCT_NAME                 "Meriken's Tripcode Engine 2.0.1"
 #define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10

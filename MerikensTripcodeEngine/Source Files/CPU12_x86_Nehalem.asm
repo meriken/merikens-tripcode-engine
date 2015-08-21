@@ -1,4 +1,4 @@
-; Meriken's Tripcode Engine 2.0.0
+; Meriken's Tripcode Engine 2.0.1
 ; Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 ;
 ; The initial veesions of this software were based on:

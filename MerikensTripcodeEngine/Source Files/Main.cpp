@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 2.0.0
+// Meriken's Tripcode Engine 2.0.1
 // Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -1983,7 +1983,7 @@ int main(int argc, char **argv)
 		TestNewCode();
 #endif
 	
-#ifdef MTF_FREE_EDITION
+#ifdef REDIRECTION_ONLY
 	if (!options.redirection)
 		exit(0);
 #endif
