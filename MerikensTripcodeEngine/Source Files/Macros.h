@@ -74,7 +74,7 @@
 				fprintf(stderr, "%d\n", ERROR_CUDA);                                          \
 				fflush(stderr);                                                               \
 			} else {                                                                          \
-				fprintf(stderr, "%s: CUDA FUNCTION FALL FAILED: %s (file '%s', line %d)\n\a", \
+				fprintf(stderr, "%s: CUDA FUNCTION CALL FAILED: %s (file '%s', line %d)\n\a", \
 						COMMAND, cudaGetErrorString(_errorCode), __FILE__, __LINE__);         \
 				getchar();                                                                    \
 				ShowCursor();                                                                 \
@@ -91,7 +91,7 @@
 				fprintf(stderr, "%d\n", ERROR_OPENCL);                                             \
 				fflush(stderr);                                                                    \
 			} else {                                                                               \
-				fprintf(stderr, "%s: OPENCL FUNCTION FALL FAILED: %s (file '%s', line %d)\n\a",    \
+				fprintf(stderr, "%s: OPENCL FUNCTION CALL FAILED: %s (file '%s', line %d)\n\a",    \
 						COMMAND, ConvertOpenCLErrorCodeToString(_errorCode), __FILE__, __LINE__);  \
 				getchar();                                                                         \
 				ShowCursor();                                                                      \
