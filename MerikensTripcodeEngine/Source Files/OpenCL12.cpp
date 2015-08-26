@@ -258,6 +258,8 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	}
 	if (options.useOneByteCharactersForKeys)
 		strcat(commandLine, " --use-one-byte-characters-for-keys");
+	if (options.useOpenCLForCUDADevices)
+		strcat(commandLine, " --use-opencl-for-cuda-devices");
 	if (strlen(nameMutexForPausing) > 0) {
 		strcat(commandLine, " -e ");
 		strcat(commandLine, nameMutexForPausing);
