@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 2.0.1
+// Meriken's Tripcode Engine
 // Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -123,7 +123,7 @@ __constant const char indexToCharTable[64] =
 	/* 54 */ 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
 };
 
-typedef unsigned long vtype;
+typedef unsigned int vtype;
 
 #define vnot(dst, a)     (dst) =  (~(a))
 #define vand(dst, a, b)  (dst) =  ((a) & (b))

@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 2.0.1
+// Meriken's Tripcode Engine
 // Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -118,24 +118,26 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	for (int i = 0; i < 7; ++i) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
 		if (keyChar1 & (1 << i)) {
-			sprintf(s, "#define K%02d 0xfffffffUL\n#define K%02dXOR(dest, val) (dest) = ~(val)\n", i + 7, i + 7);
+			sprintf(s, "#define K%02dC 0xffffffffU\n#define K%02dXOR(dest, val) (dest) = ~(val)\n#define K%02dXORV(val) ~(val)\n", i + 7, i + 7, i + 7);
 		} else {
-			sprintf(s, "#define K%02d 0x0000000UL\n#define K%02dXOR(dest, val) (dest) = (val)\n", i + 7, i + 7);
+			sprintf(s, "#define K%02dC 0x0U\n#define K%02dXOR(dest, val) (dest) = (val)\n#define K%02dXORV(val) (val)\n", i + 7, i + 7, i + 7);
 		}
 		strcat(sourceCode, s);
 	}
 	for (int i = 0; i < 7; ++i) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
 		if (keyChar2 & (1 << i)) {
-			sprintf(s, "#define K%02d 0xffffffffU\n#define K%02dXOR(dest, val) (dest) = ~(val)\n", i + 14, i + 14);
+			sprintf(s, "#define K%02dC 0xffffffffU\n#define K%02dXOR(dest, val) (dest) = ~(val)\n#define K%02dXORV(val) ~(val)\n", i + 14, i + 14, i + 14);
 		} else {
-			sprintf(s, "#define K%02d 0x00000000U\n#define K%02dXOR(dest, val) (dest) = (val)\n", i + 14, i + 14);
+			sprintf(s, "#define K%02dC 0x0U\n#define K%02dXOR(dest, val) (dest) = (val)\n#define K%02dXORV(val) (val)\n", i + 14, i + 14, i + 14);
 		}
 		strcat(sourceCode, s);
 	}
 	for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
 		sprintf(s, "#define EF%02d %d\n", i, (int)expansionFunction[i]);
+		strcat(sourceCode, s);
+		sprintf(s, "#define DB_EF%02d DB%02d\n", i, (int)expansionFunction[i]);
 		strcat(sourceCode, s);
 	}
 	unsigned char key7Array[OPENCL_DES_BS_DEPTH];
@@ -153,7 +155,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		unsigned int k = 0;
 		for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i)
 			k |= ((key7Array[i] >> j) & 0x1) << i;
-		sprintf(s, "#define K%02d 0x%08x\n#define K%02dXOR(dest, val) (dest) = ((val) ^ 0x%08x)\n", j + 49, k, j + 49, k);
+		sprintf(s, "#define K%02dC 0x%08x\n#define K%02dXOR(dest, val) (dest) = ((val) ^ 0x%08x)\n#define K%02dXORV(val) ((val) ^ 0x%08x)\n", j + 49, k, j + 49, k, j + 49, k);
 		strcat(sourceCode, s);
 	}
 	sizeSourceCode =  strlen(sourceCode);
@@ -251,7 +253,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 
 	char    deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 	char    deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
-	size_t localMemorySize;
+	cl_ulong localMemorySize;
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(localMemorySize), &localMemorySize, NULL));
 	// printf("localMemorySize: %d\n", localMemorySize);
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
@@ -281,9 +283,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
     // 
 	if (options.maximizeKeySpace)
 		strcat(buildOptions, " -DMAXIMIZE_KEY_SPACE ");
-	char buildOption_localWorkSize[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1];
-	sprintf(buildOption_localWorkSize, " -DOPENCL_DES_LOCAL_WORK_SIZE=%d ", (int)localWorkSize);
-	strcat(buildOptions, buildOption_localWorkSize);
+	char tempBuildOption[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1];
+	sprintf(tempBuildOption, " -DOPENCL_DES_LOCAL_WORK_SIZE=%d ", (int)localWorkSize);
+	strcat(buildOptions, tempBuildOption);
+	sprintf(tempBuildOption, " -DOPENCL_DES_BS_DEPTH=%d ", (int)OPENCL_DES_BS_DEPTH);
+	strcat(buildOptions, tempBuildOption);
 	strcat(buildOptions, " -w ");
 #ifdef DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
 	strcat(buildOptions, " -save-temps=OpenCL10.cl ");

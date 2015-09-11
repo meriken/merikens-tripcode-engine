@@ -321,6 +321,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Release\OpenCL\OpenCL10.cl" />
+    <None Include="Release\OpenCL\OpenCL10_AMD_pre-GCN.cl" />
     <None Include="Release\OpenCL\OpenCL12.cl" />
     <None Include="Release\OpenCL\OpenCL12_AMD_pre-GCN.cl" />
   </ItemGroup>
@@ -483,6 +484,8 @@
       <AdditionalDependencies>winmm.lib;mpir.lib;OpenCL.lib;cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <StackReserveSize>
+      </StackReserveSize>
     </Link>
     <CudaCompile>
       <CodeGeneration>compute_20,sm_20;compute_20,sm_21;compute_30,sm_30;compute_32,sm_32;compute_35,sm_35;compute_37,sm_37;compute_50,sm_50;compute_52,sm_52</CodeGeneration>
@@ -521,6 +524,8 @@
       <AdditionalDependencies>winmm.lib;mpir.lib;OpenCL.lib;cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <StackReserveSize>
+      </StackReserveSize>
     </Link>
     <CudaCompile>
       <CodeGeneration>compute_20,sm_20;compute_20,sm_21;compute_30,sm_30;compute_32,sm_32;compute_35,sm_35;compute_37,sm_37;compute_50,sm_50;compute_52,sm_52</CodeGeneration>

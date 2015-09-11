@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine 2.0.1
+// Meriken's Tripcode Engine
 // Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -484,6 +484,7 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
 
+// This routine is not used anymore.
 void CheckSearchThreads()
 {
 	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
@@ -2070,7 +2071,7 @@ int main(int argc, char **argv)
 			break;
 				
 		//
-		CheckSearchThreads();
+		// CheckSearchThreads();
 		startingTime = timeGetTime();
 		PrintStatus();
 		

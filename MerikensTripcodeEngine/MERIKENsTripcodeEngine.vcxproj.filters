@@ -220,6 +220,7 @@
     <None Include="Release\OpenCL\OpenCL10.cl" />
     <None Include="Release\OpenCL\OpenCL12.cl" />
     <None Include="Release\OpenCL\OpenCL12_AMD_pre-GCN.cl" />
+    <None Include="Release\OpenCL\OpenCL10_AMD_pre-GCN.cl" />
   </ItemGroup>
   <ItemGroup>
     <YASM Include="Source Files\CPU10_x64_AVX.asm" />
