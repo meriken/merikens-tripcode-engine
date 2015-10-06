@@ -1727,9 +1727,7 @@ void StartCUDADeviceSearchThreads()
 	} else {
 		ASSERT(lenTripcode == 10);
 		for (i = 0; i < numCUDADeviceSearchThreads; ++i) {
-			if (   CUDADeviceSearchThreadInfoArray[i].properties.major >= 5
-				|| (   CUDADeviceSearchThreadInfoArray[i].properties.major == 3
-				    && CUDADeviceSearchThreadInfoArray[i].properties.minor >= 2)) {
+			if (CUDADeviceSearchThreadInfoArray[i].properties.major >= 5) {
 				CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
 																		0,
 																		Thread_SearchForDESTripcodesOnCUDADevice_Registers,
