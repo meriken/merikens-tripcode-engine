@@ -1691,9 +1691,10 @@ void StartCUDADeviceSearchThreads()
 	ERROR0((CUDADeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 	ERROR0((CUDADeviceSearchThreadInfoArray = (struct CUDADeviceSearchThreadInfo *)malloc(sizeof(struct CUDADeviceSearchThreadInfo) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
 	if (options.GPUIndex == GPU_INDEX_ALL) {
-		int CUDADeviceIndex = 0;
-		for (i = 0; i < numCUDADeviceSearchThreads; ++i, ++CUDADeviceIndex) {
+		int CUDADeviceIndex;
+		for (CUDADeviceIndex = 0, i = 0; CUDADeviceIndex < CUDADeviceCount; ++CUDADeviceIndex) {
 			for (int j = 0; j < CUDA_NUM_THREADS_PER_DEVICE; ++j, ++i) {
+				ASSERT(i < numCUDADeviceSearchThreads);
 				CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex = CUDADeviceIndex;
 				CUDADeviceSearchThreadInfoArray[i].subindex = j;
 				CUDADeviceSearchThreadInfoArray[i].status[0] = '\0';

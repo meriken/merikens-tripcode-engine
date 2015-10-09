@@ -74,8 +74,8 @@
 				fprintf(stderr, "%d\n", ERROR_CUDA);                                          \
 				fflush(stderr);                                                               \
 			} else {                                                                          \
-				fprintf(stderr, "%s: CUDA FUNCTION CALL FAILED: %s (file '%s', line %d)\n\a", \
-						COMMAND, cudaGetErrorString(_errorCode), __FILE__, __LINE__);         \
+				fprintf(stderr, "%s: CUDA FUNCTION CALL FAILED: %s [%d] (file '%s', line %d)\n\a", \
+						COMMAND, cudaGetErrorString(_errorCode), (int)_errorCode, __FILE__, __LINE__);         \
 				getchar();                                                                    \
 				ShowCursor();                                                                 \
 			}                                                                                 \

@@ -48,10 +48,10 @@
 // VARIABLES FOR CUDA CODES                                                  //
 ///////////////////////////////////////////////////////////////////////////////
 
-__device__ __constant__ unsigned char   cudaKeyCharTable_OneByte[SIZE_KEY_CHAR_TABLE];
-__device__ __constant__ unsigned char   cudaKeyCharTable_FirstByte  [SIZE_KEY_CHAR_TABLE];
-__device__ __constant__ unsigned char   cudaKeyCharTable_SecondByte [SIZE_KEY_CHAR_TABLE];
-__device__ __constant__ char            CUDA_base64CharTable[64];
+__device__ __constant__ unsigned char cudaKeyCharTable_OneByte   [SIZE_KEY_CHAR_TABLE];
+__device__ __constant__ unsigned char cudaKeyCharTable_FirstByte [SIZE_KEY_CHAR_TABLE];
+__device__ __constant__ unsigned char cudaKeyCharTable_SecondByte[SIZE_KEY_CHAR_TABLE];
+__device__ __constant__ char          CUDA_base64CharTable[64];
 __device__ __constant__ unsigned char CUDA_smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];
 
 
