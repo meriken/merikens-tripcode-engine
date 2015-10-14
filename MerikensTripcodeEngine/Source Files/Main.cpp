@@ -75,8 +75,8 @@ Options options = {
 };
 
 // Search Parameters
-int  lenTripcode    = 12;
-int  lenTripcodeKey = 12;
+int  lenTripcode    = 10;
+int  lenTripcodeKey = 10;
 
 // Application path
 char applicationPath     [MAX_LEN_FILE_PATH + 1];
@@ -440,12 +440,14 @@ void CreateCharacterTables(void)
 
 void DisplayCopyrights()
 {
+#ifdef ENGLISH_VERSION
+	printf("%s English\n", PRODUCT_NAME);
+	printf("[compiled at %s on %s (PST)]\n", __TIME__, __DATE__);
+	printf("Copyright (C) 2014-2015 !/Meriken/. <meriken.2ch@gmail.com>\n");
+#else
 	printf("%s\n", PRODUCT_NAME);
 	printf("[compiled at %s on %s (PST)]\n", __TIME__, __DATE__);
-#ifdef ENGLISH_VERSION
-	printf("Copyright (C) 2014 Meriken <meriken.2ch@gmail.com>\n");
-#else
-	printf("Copyright (C) 2011-2014 %c%cMeriken//XXX <meriken.2ch@gmail.com>\n", 0x81, 0x9f);
+	printf("Copyright (C) 2011-2015 %c%cMeriken//XXX <meriken.2ch@gmail.com>\n", 0x81, 0x9f);
 #endif
 	printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to redistribute it\n");
@@ -952,7 +954,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			ERROR_INVALID_OPTION,
 			"An invalid device was specified.");
 	if (options.searchDevice == SEARCH_DEVICE_NIL) {
-		searchDevice = (CUDADeviceCount <= 0 && openCLDeviceCount <= 0) ? (SEARCH_DEVICE_CPU) : (SEARCH_DEVICE_GPU_AND_CPU);
+		searchDevice = (CUDADeviceCount <= 0 && openCLDeviceCount <= 0) ? (SEARCH_DEVICE_CPU) : (SEARCH_DEVICE_GPU);
 	} else {
 		searchDevice = options.searchDevice;
 	}
