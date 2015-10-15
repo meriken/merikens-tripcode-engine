@@ -103,7 +103,7 @@ int           searchDevice = SEARCH_DEVICE_NIL;
 // Character tables
 int numFirstByte  = 0;
 int numSecondByte = 0;
-int numOneByte   = 0;
+int numOneByte    = 0;
 unsigned char keyCharTable_OneByte             [SIZE_KEY_CHAR_TABLE];
 unsigned char keyCharTable_FirstByte           [SIZE_KEY_CHAR_TABLE];
 unsigned char keyCharTable_SecondByte          [SIZE_KEY_CHAR_TABLE];
@@ -1300,17 +1300,20 @@ void ObtainOptions(int argCount, char **arguments)
 			options.isAVX2Enabled = FALSE;
 
 		} else if (strcmp(arguments[indexArg], "--use-one-byte-characters-for-keys") == 0) {
+			options.useOnlyASCIICharactersForKeys = FALSE;
 			options.useOneByteCharactersForKeys = TRUE;
 
 		} else if (strcmp(arguments[indexArg], "--use-ascii-characters-for-keys") == 0) {
-			options.useOneByteCharactersForKeys = TRUE;
 			options.useOnlyASCIICharactersForKeys = TRUE;
+			options.useOneByteCharactersForKeys = TRUE;
 
 		} else if (strcmp(arguments[indexArg], "--use-one-and-two-byte-characters-for-keys") == 0) {
 			options.useOneByteCharactersForKeys = FALSE;
+			options.useOnlyASCIICharactersForKeys = FALSE;
 
 		} else if (strcmp(arguments[indexArg], "--maximize-key-space") == 0) {
 			options.useOneByteCharactersForKeys = FALSE;
+			options.useOnlyASCIICharactersForKeys = FALSE;
 			options.maximizeKeySpace = TRUE;
 
 		} else if (strcmp(arguments[indexArg], "--disable-tripcode-checks") == 0) {

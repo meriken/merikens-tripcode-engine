@@ -257,10 +257,15 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		strcat(commandLine, " -f ");
 		strcat(commandLine, patternFilePathArray[patternFileIndex]);
 	}
-	if (options.useOneByteCharactersForKeys)
+	if (options.useOnlyASCIICharactersForKeys) {
+		strcat(commandLine, " --use-ascii-characters-for-keys");
+	} else if (options.useOneByteCharactersForKeys) {
 		strcat(commandLine, " --use-one-byte-characters-for-keys");
-	if (options.useOpenCLForCUDADevices)
-		strcat(commandLine, " --use-opencl-for-cuda-devices");
+	} else if (options.maximizeKeySpace) {
+		strcat(commandLine, " --maximize-key-space");
+	} else {
+		strcat(commandLine, " --use-one-and-two-byte-characters-for-keys");
+	}
 	if (strlen(nameMutexForPausing) > 0) {
 		strcat(commandLine, " -e ");
 		strcat(commandLine, nameMutexForPausing);
