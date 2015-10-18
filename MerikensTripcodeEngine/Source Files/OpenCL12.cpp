@@ -146,8 +146,8 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290",          "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290/390",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X/295X2/390X", "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"},
 
 	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},

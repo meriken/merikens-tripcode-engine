@@ -156,7 +156,7 @@
 #define MAX_NUM_DEPTHS_IN_REGEX_PATTERN         (10 + 1)
 
 // For screen output
-#define PRODUCT_NAME                 "Meriken's Tripcode Engine 2.0.6"
+#define PRODUCT_NAME                 "Meriken's Tripcode Engine 2.0.7"
 #define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10
