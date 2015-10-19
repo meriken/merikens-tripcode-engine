@@ -6,6 +6,12 @@ It is arguably the fastest and most powerful program of its kind. It makes effec
 and the user can specify flexible regex patterns for tripcodes. It features highly optimized, extensively parallelized 
 implementations of bitslice DES and SHA-1 for SSE2, AVX, AVX2, CUDA, and OpenCL.
 
+This program is part of "Meriken's Tripcode Generator":
+http://meriken.ygch.net/programming/merikens-tripcode-generator/
+
+The English version of this program is available for free download for Windows operating systems at the following link:
+http://meriken.ygch.net/programming/merikens-tripcode-engine-english/
+
 Meriken's Tripcode Engine is developed with the following tools:
 * Visual Studio 2010 Professional
 * CUDA Toolkit 7.5
