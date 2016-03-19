@@ -21,8 +21,12 @@ MerikensTripcodeEngine/x64/Release/*.i
 *.sdf
 *.suo
 *.ipch
-*.exe
+Merikens*.exe
 *.lnk
 *.opensdf
 tripcodes.txt
 *.unsuccessfulbuild
+MerikensTripcodeEngine/Release/OpenCL10.cl_49_Hawaii.co
+*.hsail
+MerikensTripcodeEngine/Release/OpenCL10.cl_50_Hawaii.co
+*.i-0abf6143

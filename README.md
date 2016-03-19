@@ -9,7 +9,7 @@ implementations of bitslice DES and SHA-1 for SSE2, AVX, AVX2, CUDA, and OpenCL.
 This program is part of "Meriken's Tripcode Generator":
 http://meriken.ygch.net/programming/merikens-tripcode-generator/
 
-The English version of this program is available for free download for Windows operating systems at the following link:
+The English version of this program is available for free download here:
 http://meriken.ygch.net/programming/merikens-tripcode-engine-english/
 
 Meriken's Tripcode Engine is developed with the following tools:
