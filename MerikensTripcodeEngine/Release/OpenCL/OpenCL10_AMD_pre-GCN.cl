@@ -770,6 +770,7 @@ void DES_Crypt(DES_DATA_BLOCKS_SPACE vtype *db, const unsigned int keyFrom00To27
 __attribute__((work_group_size_hint(OPENCL_DES_LOCAL_WORK_SIZE, 1, 1)))\
 __attribute__((reqd_work_group_size(OPENCL_DES_LOCAL_WORK_SIZE, 1, 1)))\
 	void OpenCL_DES_PerformSearching(                                                             \
+				   const          int               searchMode,                                            \
 		__global   GPUOutput                * const outputArray,                                           \
 		__constant KeyInfo                  *       keyInfo,                                               \
 		__global   const unsigned int       * const tripcodeChunkArray,                                    \

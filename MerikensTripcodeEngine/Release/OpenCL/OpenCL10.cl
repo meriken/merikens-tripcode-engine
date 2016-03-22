@@ -48,6 +48,12 @@ typedef unsigned char BOOL;
 #define DES_SIZE_EXPANSION_FUNCTION 96
 #define OPENCL_DES_BS_DEPTH         32
 
+#define SEARCH_MODE_NIL                    -1
+#define SEARCH_MODE_FORWARD_MATCHING       0
+#define SEARCH_MODE_BACKWARD_MATCHING      1
+#define SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING 2
+#define SEARCH_MODE_FLEXIBLE               3
+
 #ifdef MAXIMIZE_KEY_SPACE
 
 #define IS_FIRST_BYTE_SJIS(c)         \
@@ -580,7 +586,22 @@ void s8(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 #define K05XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  5)) ? (~(val)) : (val))
 #define K06XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  6)) ? (~(val)) : (val))
 
-/*
+#undef K07XOR
+#undef K08XOR
+#undef K09XOR
+#undef K10XOR
+#undef K11XOR
+#undef K12XOR
+#undef K13XOR
+
+#undef K14XOR
+#undef K15XOR
+#undef K16XOR
+#undef K17XOR
+#undef K18XOR
+#undef K19XOR
+#undef K20XOR
+
 #define K07XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  7)) ? (~(val)) : (val))
 #define K08XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  8)) ? (~(val)) : (val))
 #define K09XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  9)) ? (~(val)) : (val))
@@ -596,7 +617,6 @@ void s8(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 #define K18XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 18)) ? (~(val)) : (val))
 #define K19XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 19)) ? (~(val)) : (val))
 #define K20XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 20)) ? (~(val)) : (val))
-*/
 
 #define K21XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 21)) ? (~(val)) : (val))
 #define K22XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U << 22)) ? (~(val)) : (val))
@@ -1308,6 +1328,7 @@ next:
 
 #define OPENCL_DES_DEFINE_SEARCH_FUNCTION                                                                  \
 	__kernel void OpenCL_DES_PerformSearching(                                                             \
+				   const          int               searchMode,                                            \
 		__global   GPUOutput                * const outputArray,                                           \
 		__constant KeyInfo                  *       keyInfo,                                               \
 		__global   const unsigned int       * const tripcodeChunkArray,                                    \
@@ -1387,204 +1408,85 @@ next:
 	 | ((((r)[i2] & (0x01U << (t))) ? (0x1) : (0x0)) << 3)  \
 	 | ((((r)[i3] & (0x01U << (t))) ? (0x1) : (0x0)) << 2)) \
 
-#if defined(FORWARD_MATCHING_1CHUNK)
-
 OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		if (GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0) != ((tripcodeChunkArray[0] >> (6 * 4)) & 0x3f)) continue;
-		if (GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 0) != ((tripcodeChunkArray[0] >> (6 * 3)) & 0x3f)) continue;
-		if (GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 0) != ((tripcodeChunkArray[0] >> (6 * 2)) & 0x3f)) continue;
-		if (GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 0) != ((tripcodeChunkArray[0] >> (6 * 1)) & 0x3f)) continue;
-		if (GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0) != ((tripcodeChunkArray[0] >> (6 * 0)) & 0x3f)) continue;
-		found = TRUE;
-		goto quit_loops;
-	}
-OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#elif defined(FORWARD_MATCHING_SIMPLE)
-
-OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
-		OPENCL_DES_USE_SMALL_CHUNK_BITMAP
-		OPENCL_DES_PERFORM_LINEAR_SEARCH
-	}
-OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#elif defined(FORWARD_MATCHING)
-
-OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
-		// all:                                  2181M (10m)
-		// w/o OPENCL_DES_USE_SMALL_CHUNK_BITMAP:  2160M (10m)
-		// w/o OPENCL_DES_USE_MEDIUM_CHUNK_BITMAP: 2142M (10m)
-		OPENCL_DES_USE_SMALL_CHUNK_BITMAP
-		OPENCL_DES_USE_MEDIUM_CHUNK_BITMAP
-		OPENCL_DES_USE_CHUNK_BITMAP
-		OPENCL_DES_PERFORM_BINARY_SEARCH
-	}
-OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#elif defined(BACKWARD_MATCHING_SIMPLE)
-
-OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 4)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 3)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 2)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 1)
-		                             | GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24);
-		OPENCL_DES_USE_SMALL_CHUNK_BITMAP
-		OPENCL_DES_PERFORM_LINEAR_SEARCH
-	}
-OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#elif defined(BACKWARD_MATCHING)
-
-OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 4)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 3)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 2)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 1)
-		                             | GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24);
-		OPENCL_DES_USE_SMALL_CHUNK_BITMAP
-		OPENCL_DES_USE_CHUNK_BITMAP
-		OPENCL_DES_PERFORM_BINARY_SEARCH
-	}
-OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#elif defined(FORWARD_AND_BACKWARD_MATCHING_SIMPLE)
-
-OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
-		OPENCL_DES_USE_SMALL_CHUNK_BITMAP
-		OPENCL_DES_PERFORM_LINEAR_SEARCH
-	}
+	if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
+		for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
+			unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
+											| GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
+											| GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
+											| GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
+											| GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
+			OPENCL_DES_USE_SMALL_CHUNK_BITMAP
+			OPENCL_DES_USE_CHUNK_BITMAP
+			OPENCL_DES_PERFORM_BINARY_SEARCH
+		}
+	} else if (searchMode != SEARCH_MODE_FLEXIBLE) {
+		if (searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING) {
+			for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
+				unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
+											 | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
+											 | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
+											 | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
+											 | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
+				OPENCL_DES_USE_SMALL_CHUNK_BITMAP
+				OPENCL_DES_USE_CHUNK_BITMAP
+				OPENCL_DES_PERFORM_BINARY_SEARCH
+			}
+		}
 	
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 4)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 3)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 2)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 1)
-		                             | GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24);
-		OPENCL_DES_USE_SMALL_CHUNK_BITMAP
-		OPENCL_DES_PERFORM_LINEAR_SEARCH
-	}
-OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#elif defined(FORWARD_AND_BACKWARD_MATCHING)
-
-OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
-		OPENCL_DES_USE_SMALL_CHUNK_BITMAP
-		OPENCL_DES_USE_CHUNK_BITMAP
-		OPENCL_DES_PERFORM_BINARY_SEARCH
-	}
-	
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 4)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 3)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 2)
-		                             | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 1)
-		                             | GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24);
-		OPENCL_DES_USE_SMALL_CHUNK_BITMAP
-		OPENCL_DES_USE_CHUNK_BITMAP
-		OPENCL_DES_PERFORM_BINARY_SEARCH
-	}
-OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#elif defined(FLEXIBLE_SIMPLE)
-
-OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
-		if (!smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { OPENCL_DES_PERFORM_LINEAR_SEARCH }
-
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 0);
-		if (!smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { OPENCL_DES_PERFORM_LINEAR_SEARCH }
-
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 0);
-		if (!smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { OPENCL_DES_PERFORM_LINEAR_SEARCH }
-
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 0);
-		if (!smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { OPENCL_DES_PERFORM_LINEAR_SEARCH }
-
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 0);
-		if (!smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { OPENCL_DES_PERFORM_LINEAR_SEARCH }
-
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24);
-		if (!smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { OPENCL_DES_PERFORM_LINEAR_SEARCH }
-	}
-OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#elif defined(FLEXIBLE)
-
-OPENCL_DES_DEFINE_SEARCH_FUNCTION
-	for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
-		unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
-						             | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
-		if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
-		    && !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
-			OPENCL_DES_PERFORM_BINARY_SEARCH
+		if (searchMode == SEARCH_MODE_BACKWARD_MATCHING || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING) {
+			for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
+				unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 4)
+											 | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 3)
+											 | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 2)
+											 | GET_TRIPCODE_CHAR_INDEX     (DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 1)
+											 | GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24);
+				OPENCL_DES_USE_SMALL_CHUNK_BITMAP
+				OPENCL_DES_USE_CHUNK_BITMAP
+				OPENCL_DES_PERFORM_BINARY_SEARCH
+			}
 		}
+	} else {
+		for (tripcodeIndex = 0; tripcodeIndex < OPENCL_DES_BS_DEPTH; ++tripcodeIndex) {
+			unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 4)
+										 | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 54, 22, 62, 30, 37,  5, 3)
+										 | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 45, 13, 53, 21, 61, 29, 2)
+										 | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 36,  4, 44, 12, 52, 20, 1)
+										 | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 60, 28, 35,  3, 43, 11, 0);
+			if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
+				&& !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
+				OPENCL_DES_PERFORM_BINARY_SEARCH
+			}
 
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 0);
-		if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
-		    && !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
-			OPENCL_DES_PERFORM_BINARY_SEARCH
-		}
+			tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 0);
+			if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
+				&& !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
+				OPENCL_DES_PERFORM_BINARY_SEARCH
+			}
 
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 0);
-		if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
-		    && !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
-			OPENCL_DES_PERFORM_BINARY_SEARCH
-		}
+			tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 42, 10, 50, 18, 58, 26, 0);
+			if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
+				&& !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
+				OPENCL_DES_PERFORM_BINARY_SEARCH
+			}
 
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 0);
-		if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
-		    && !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
-			OPENCL_DES_PERFORM_BINARY_SEARCH
-		}
+			tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 33,  1, 41,  9, 49, 17, 0);
+			if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
+				&& !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
+				OPENCL_DES_PERFORM_BINARY_SEARCH
+			}
 
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 0);
-		if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
-		    && !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
-			OPENCL_DES_PERFORM_BINARY_SEARCH
-		}
+			tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX(DES_dataBlocks, tripcodeIndex, 57, 25, 32,  0, 40,  8, 0);
+			if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
+				&& !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
+				OPENCL_DES_PERFORM_BINARY_SEARCH
+			}
 
-		tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24);
-		if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
-		    && !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
-			OPENCL_DES_PERFORM_BINARY_SEARCH
+			tripcodeChunk = ((tripcodeChunk << 6) & 0x3fffffff) | GET_TRIPCODE_CHAR_INDEX_LAST(DES_dataBlocks, tripcodeIndex, 48, 16, 56, 24);
+			if (   !smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]
+				&& !     chunkBitmap[tripcodeChunk >> ((5 -       CHUNK_BITMAP_LEN_STRING) * 6)]) {
+				OPENCL_DES_PERFORM_BINARY_SEARCH
+			}
 		}
 	}
 OPENCL_DES_END_OF_SEAERCH_FUNCTION
-
-#endif
