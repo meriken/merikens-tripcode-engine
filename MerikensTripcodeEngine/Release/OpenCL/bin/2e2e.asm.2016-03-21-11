@@ -458,6 +458,10 @@
         v_mov_b32       v119, 0
         v_mov_b32       v85, 0
 
+        /*
+		s_movk_i32      s28, 0x0
+        s_movk_i32      s29, 0x19
+        */
 		s_movk_i32      s32, 13
 
 .S1_S2_A:
@@ -799,7 +803,7 @@
         s_getpc_b64 s[90:91]
 		s_add_u32 s90,s90,12
 		s_addc_u32 s91,s91,0
-		s_branch .S3_S4_B
+		s_branch .startLoop
 		
         v_bfi_b32       v99, v110, v98, v92
         v_xor_b32       v100, v92, v98
@@ -883,11 +887,6 @@
 
 
 .S3_S4_B:
-        s_getpc_b64 s[28:29]
-		s_add_u32 s28,s28,12
-		s_addc_u32 s29,s29,0
-		s_branch .startLoop
-
         v_bfi_b32       v99, v84, v93, v87
         v_xor_b32       v99, v82, v99
         v_bfi_b32       v100, v98, v99, v84
@@ -1234,8 +1233,10 @@
         v_xor_b32       v113, 0xfc03fc03, v30
         v_not_b32       v111, v24
         v_xor_b32       v70, -4, v25
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v18
         v_readlane_b32  s34, v2, 20
         v_readlane_b32  s35, v2, 21
@@ -1283,7 +1284,6 @@
 		s_add_u32 s100,s100,12
 		s_addc_u32 s101,s101,0
 		s_branch .S7_S8_B
-
 		/*********************************************/
 		/* A 2 */
         v_not_b32       v87, v75
@@ -1394,8 +1394,10 @@
         v_xor_b32       v93, v68, v28
         v_not_b32       v113, v30
         v_xor_b32       v98, 0xfc03fc03, v29
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 28
         v_readlane_b32  s35, v2, 29
@@ -1559,8 +1561,10 @@
         v_xor_b32       v111, -4, v24
         v_xor_b32       v70, 0xfffc0003, v25
         v_not_b32       v98, v29
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_xor_b32       v81, s47, v22
         v_xor_b32       v113, v80, v13
         v_xor_b32       v84, s56, v14
@@ -1709,8 +1713,10 @@
         v_xor_b32       v93, v79, v28
         v_xor_b32       v98, s39, v29
         v_xor_b32       v113, -4, v30
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 44
         v_readlane_b32  s35, v2, 45
@@ -1870,8 +1876,10 @@
         v_xor_b32       v110, -4, v23
         v_xor_b32       v82, 0xfc03fc03, v25
         v_not_b32       v93, v28
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v18
         v_readlane_b32  s34, v2, 48
         v_readlane_b32  s35, v2, 49
@@ -2028,8 +2036,10 @@
         v_xor_b32       v98, v58, v29
         v_xor_b32       v81, -4, v26
         v_xor_b32       v87, 0xfc03fc03, v27
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 32
         v_readlane_b32  s35, v2, 33
@@ -2186,8 +2196,10 @@
         v_xor_b32       v110, 0xfffc0003, v23
         v_not_b32       v87, v27
         v_xor_b32       v93, -4, v28
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v18
         v_readlane_b32  s34, v2, 38
         v_readlane_b32  s35, v2, 39
@@ -2336,7 +2348,10 @@
         v_xor_b32       v87, v55, v27
         v_xor_b32       v93, v58, v28
         v_xor_b32       v98, v61, v29
-        s_swappc_b64 s[100:101], s[28:29]
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
 
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 52
@@ -2420,8 +2435,10 @@
         v_xor_b32       v98, v64, v29
         v_xor_b32       v81, 0xfffc0003, v26
         v_xor_b32       v82, -4, v25
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 12
         v_readlane_b32  s35, v2, 13
@@ -2588,8 +2605,10 @@
         v_xor_b32       v93, s41, v28
         v_xor_b32       v98, s40, v29
         v_xor_b32       v112, 0xfffc0003, v22
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 24
         v_readlane_b32  s35, v2, 25
@@ -2746,8 +2765,10 @@
         v_xor_b32       v87, v58, v27
         v_xor_b32       v93, v64, v28
         v_xor_b32       v98, v86, v29
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 18
         v_readlane_b32  s35, v2, 19
@@ -2907,8 +2928,10 @@
         v_xor_b32       v93, s10, v28
         v_xor_b32       v98, v62, v29
         v_xor_b32       v112, 0xfc03fc03, v22
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 40
         v_readlane_b32  s35, v2, 41
@@ -3066,8 +3089,10 @@
         v_xor_b32       v93, v86, v28
         v_xor_b32       v98, s8, v29
         v_xor_b32       v83, 0xfffc0003, v21
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 38
         v_readlane_b32  s35, v2, 39
@@ -3221,8 +3246,10 @@
         v_xor_b32       v93, v62, v28
         v_xor_b32       v98, v57, v29
         v_xor_b32       v84, 0xfffc0003, v26
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 14
         v_readlane_b32  s35, v2, 15
@@ -3385,8 +3412,10 @@
         v_xor_b32       v93, s43, v28
         v_xor_b32       v98, s11, v29
         v_xor_b32       v83, 0xfc03fc03, v21
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_readlane_b32  s34, v2, 36
         v_readlane_b32  s35, v2, 37
@@ -3535,8 +3564,10 @@
         v_xor_b32       v98, v68, v29
         v_not_b32       v83, v21
         v_xor_b32       v84, 0xfc03fc03, v26
-        s_swappc_b64 s[100:101], s[28:29]
-
+        s_getpc_b64 s[100:101]
+		s_add_u32 s100,s100,12
+		s_addc_u32 s101,s101,0
+		s_branch .S3_S4_B
         v_not_b32       v87, v17
         v_cndmask_b32   v70, v17, v87, s[24:25]
         v_readlane_b32  s34, v2, 44
