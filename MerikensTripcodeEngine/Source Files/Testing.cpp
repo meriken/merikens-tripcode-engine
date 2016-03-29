@@ -149,7 +149,6 @@ void TestNewCode()
 #if FALSE
         printf("IsAVX2Supported(): %d\n", IsAVX2Supported());
 #endif
-
         // printf("IsCPUBasedOnNehalemMicroarchitecture(): %d\n", IsCPUBasedOnNehalemMicroarchitecture());
 
 exit:

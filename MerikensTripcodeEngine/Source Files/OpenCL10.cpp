@@ -77,6 +77,8 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
 	salt[1] = CONVERT_CHAR_FOR_SALT(keyChar2);
 	DES_CreateExpansionFunction((char *)salt, expansionFunction);
+	//for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
+	//	printf("#define EF%02d %d\n", i, (int)expansionFunction[i]);
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
@@ -210,6 +212,59 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	sprintf(assemblerCommand, "%s\\CLRadeonExtender\\clrxdisasm -m -d -c -f %s > %s\\OpenCL\\bin\\%02x%02x.asm", applicationDirectory, binaryFilePath, applicationDirectory, salt[0], salt[1]);
 	system(assemblerCommand);
 //	*/
+}
+
+
+static void CreateProgramFromAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *sourceFileName, char *buildOptions, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction)
+{
+	cl_int         openCLError;
+
+	// Create an expansion function based on the salt.
+	unsigned char  salt[2];
+	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
+	salt[1] = CONVERT_CHAR_FOR_SALT(keyChar2);
+	DES_CreateExpansionFunction((char *)salt, expansionFunction);
+	//for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
+	//	printf("#define EF%02d %d\n", i, (int)expansionFunction[i]);
+
+	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
+	FILE   *binaryFile;
+	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
+
+	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
+	FILE   *sourceFile;
+	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL10GCNTemp.asm", applicationDirectory);
+
+	if (sourceFile = fopen(sourceFilePath, "w")) {
+		for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
+			fprintf(sourceFile, "DB_EF%02d = %%v%d\n", i, (int)expansionFunction[i]);
+		fclose(sourceFile);
+	}
+
+	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
+	sprintf(assemblerCommand, "type %s\\OpenCL\\bin\\OpenCL10GCN.asm >> %s", applicationDirectory, sourceFilePath);
+	system(assemblerCommand);
+	sprintf(assemblerCommand, "%s\\CLRadeonExtender\\clrxasm -b amd -g tahiti -A gcn1.0 -o %s %s", applicationDirectory, binaryFilePath, sourceFilePath);
+	system(assemblerCommand);
+
+	if (binaryFile = fopen(binaryFilePath, "rb")) {
+		fseek(binaryFile, 0L, SEEK_END);
+		size_t binarySize = ftell(binaryFile);
+		unsigned char *binary = (unsigned char *)malloc(binarySize);
+		const unsigned char *binaryArray[1] = {binary};
+		ERROR0(binary == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		fseek(binaryFile, 0L, SEEK_SET);
+		fread(binary, sizeof(unsigned char), binarySize, binaryFile);
+		fclose(binaryFile);
+
+		*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
+		OPENCL_ERROR(openCLError);
+		openCLError = clBuildProgram(*program, 1, deviceID, buildOptions, NULL, NULL);
+		OPENCL_ERROR(openCLError);
+		
+		free(binary);
+		return;
+	}
 }
 
 unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
@@ -376,7 +431,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				}
 				break;
 				*/
-				if (salt[0] == '.' && salt[1] == '.')
+				if (salt[0] != '.' || salt[1] != '.')
 					break;
 			} while (TRUE);
 
@@ -394,7 +449,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 			}
 			return 0;
 			*/
-			CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction);
+			CreateProgramFromAssemblySource(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction);
 			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL kernel...");
 			kernel = clCreateKernel(program, "OpenCL_DES_PerformSearching", &openCLError);
 			// printf("clCreateKernel(): done\n");

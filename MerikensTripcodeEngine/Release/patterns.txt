@@ -3,3 +3,4 @@
 ^TEST/
 #/TES\.$
 #\.TES\.
+#^[:digit:]+$
