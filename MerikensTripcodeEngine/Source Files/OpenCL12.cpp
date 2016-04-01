@@ -409,6 +409,63 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	// TO DO: Wait for child processes to exit.
 }
 
+static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion)
+{
+	cl_int         openCLError;
+	
+	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
+	FILE   *binaryFile;
+	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	
+	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
+	FILE   *sourceFile;
+	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN.asm", applicationDirectory);
+	
+	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
+	sprintf(assemblerCommand, 
+		    "cmd /C \"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -o \"%s\" \"%s\"\"",
+			applicationDirectory,
+			"amd",
+			deviceName,
+			(   strcmp(deviceName, "CapeVerde") == 0
+			 || strcmp(deviceName, "Pitcairn" ) == 0
+			 || strcmp(deviceName, "Tahiti"   ) == 0
+			 || strcmp(deviceName, "Oland"    ) == 0) ? "gcn1.0" :
+	        (   strcmp(deviceName, "Bonaire"  ) == 0
+			 || strcmp(deviceName, "Spectre"  ) == 0
+			 || strcmp(deviceName, "Spooky"   ) == 0
+			 || strcmp(deviceName, "Kalindi"  ) == 0
+			 || strcmp(deviceName, "Hainan"   ) == 0
+			 || strcmp(deviceName, "Hawaii"   ) == 0
+			 || strcmp(deviceName, "Iceland"  ) == 0
+			 || strcmp(deviceName, "Mullins"  ) == 0) ? "gcn1.1" :
+	                                                    "gcn1.2",
+			binaryFilePath,
+			sourceFilePath);
+	system(assemblerCommand);
+
+	if (binaryFile = fopen(binaryFilePath, "rb")) {
+		fseek(binaryFile, 0L, SEEK_END);
+		size_t binarySize = ftell(binaryFile);
+		unsigned char *binary = (unsigned char *)malloc(binarySize);
+		const unsigned char *binaryArray[1] = {binary};
+		ERROR0(binary == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		fseek(binaryFile, 0L, SEEK_SET);
+		fread(binary, sizeof(unsigned char), binarySize, binaryFile);
+		fclose(binaryFile);
+
+		*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
+		OPENCL_ERROR(openCLError);
+		openCLError = clBuildProgram(*program, 1, deviceID, NULL, NULL, NULL);
+		OPENCL_ERROR(openCLError);
+		
+		free(binary);
+	}
+	
+	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
+	system(assemblerCommand);
+}
+
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 {
 
@@ -440,9 +497,31 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 
 	char    deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 	char    deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
+	char deviceVersion[LEN_LINE_BUFFER_FOR_SCREEN];
+	char driverVersion[LEN_LINE_BUFFER_FOR_SCREEN];
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VENDOR,            sizeof(deviceVendor),    &deviceVendor,    NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_NAME,              sizeof(deviceName),      &deviceName,      NULL));
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VERSION,           sizeof(deviceVersion),    &deviceVersion,    NULL));
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DRIVER_VERSION,           sizeof(driverVersion),    &driverVersion,    NULL));
+	BOOL useGCNAssembler =    (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
+		                   && (   strcmp(deviceName, "CapeVerde") == 0
+						       || strcmp(deviceName, "Pitcairn") == 0
+						       || strcmp(deviceName, "Tahiti") == 0
+						       || strcmp(deviceName, "Oland") == 0
+						       || strcmp(deviceName, "Bonaire") == 0
+						       || strcmp(deviceName, "Spectre") == 0
+						       || strcmp(deviceName, "Spooky") == 0
+						       || strcmp(deviceName, "Kalindi") == 0
+						       || strcmp(deviceName, "Hainan") == 0
+						       || strcmp(deviceName, "Hawaii") == 0
+						       || strcmp(deviceName, "Iceland") == 0
+						       || strcmp(deviceName, "Tonga") == 0
+						       || strcmp(deviceName, "Mullins") == 0
+						       || strcmp(deviceName, "Fiji") == 0
+						       || strcmp(deviceName, "Carrizo") == 0)
+						   && (strncmp(deviceVersion, "OpenCL 1.2", 10) == 0);
+	//useGCNAssembler = FALSE;
 	BOOL isIntelHDGraphics = FALSE;
 	if (   strcmp(deviceVendor, OPENCL_VENDOR_INTEL) == 0
 		&& strncmp(deviceName, "Intel(R) HD Graphics", strlen("Intel(R) HD Graphics")) == 0) {
@@ -466,45 +545,80 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
     sizeSourceCode = fread(sourceCode, 1, OPENCL_MAX_SIZE_SOURCE_CODE, sourceFile);
     fclose(sourceFile);
 
-    // Create an OpenCL kernel from the source code.
-	if (options.maximizeKeySpace)
-		strcat(buildOptions, " -D MAXIMIZE_KEY_SPACE ");
-	// strcat(buildOptions, " -save-temps=OpenCL10.cl ");
 	cl_context       context      = clCreateContext(NULL, 1, &deviceID, OnOpenCLError, NULL, &openCLError); OPENCL_ERROR(openCLError);
-    cl_command_queue commandQueue = clCreateCommandQueue(context, deviceID, 0, &openCLError);               OPENCL_ERROR(openCLError);
-    cl_program       program      = clCreateProgramWithSource(context, 1, (const char **)&sourceCode, (const size_t *)&sizeSourceCode, &openCLError);
-	openCLError = clBuildProgram(program, 1, &deviceID, buildOptions, NULL, NULL);
-	if (openCLError != CL_SUCCESS && !options.redirection) {
-		size_t lenBuildLog= 0;
-		char  *buildLog = NULL;
-		clGetProgramBuildInfo(program, deviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &lenBuildLog);
-		if ((buildLog = (char *)malloc(lenBuildLog + 1)) != NULL) {
-			clGetProgramBuildInfo(program, deviceID, CL_PROGRAM_BUILD_LOG, lenBuildLog, buildLog, &lenBuildLog);
-			buildLog[lenBuildLog] = '\0';
-			fprintf(stderr, "%s\n", buildLog);
-			free(buildLog);
+	cl_command_queue commandQueue = clCreateCommandQueue(context, deviceID, 0, &openCLError);               OPENCL_ERROR(openCLError);
+	cl_program       program;
+	if (useGCNAssembler) {
+		CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion);
+	} else {
+		// Create an OpenCL kernel from the source code.
+		if (options.maximizeKeySpace)
+			strcat(buildOptions, " -D MAXIMIZE_KEY_SPACE ");
+		// strcat(buildOptions, " -save-temps=OpenCL10.cl ");
+		program = clCreateProgramWithSource(context, 1, (const char **)&sourceCode, (const size_t *)&sizeSourceCode, &openCLError);
+		openCLError = clBuildProgram(program, 1, &deviceID, buildOptions, NULL, NULL);
+		if (openCLError != CL_SUCCESS && !options.redirection) {
+			size_t lenBuildLog= 0;
+			char  *buildLog = NULL;
+			clGetProgramBuildInfo(program, deviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &lenBuildLog);
+			if ((buildLog = (char *)malloc(lenBuildLog + 1)) != NULL) {
+				clGetProgramBuildInfo(program, deviceID, CL_PROGRAM_BUILD_LOG, lenBuildLog, buildLog, &lenBuildLog);
+				buildLog[lenBuildLog] = '\0';
+				fprintf(stderr, "%s\n", buildLog);
+				free(buildLog);
+			}
 		}
+		OPENCL_ERROR(openCLError);
 	}
-	OPENCL_ERROR(openCLError);
 	char *nameKernelFunction;
 	if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
-		nameKernelFunction = (numTripcodeChunk == 1)                              ? "OpenCL_SHA1_PerformSearching_ForwardMatching_1Chunk" :
-		                     (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "OpenCL_SHA1_PerformSearching_ForwardMatching_Simple" :
-							                                                        "OpenCL_SHA1_PerformSearching_ForwardMatching";
+		nameKernelFunction = "OpenCL_SHA1_PerformSearching_ForwardMatching";
 	} else if (searchMode == SEARCH_MODE_BACKWARD_MATCHING) {
-		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "OpenCL_SHA1_PerformSearching_BackwardMatching_Simple" : 
-		                                                                            "OpenCL_SHA1_PerformSearching_BackwardMatching";
+		nameKernelFunction = "OpenCL_SHA1_PerformSearching_BackwardMatching";
 	} else if (searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING) {
-		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "OpenCL_SHA1_PerformSearching_ForwardAndBackwardMatching_Simple" : 
-		                                                                            "OpenCL_SHA1_PerformSearching_ForwardAndBackwardMatching";
+		nameKernelFunction = "OpenCL_SHA1_PerformSearching_ForwardAndBackwardMatching";
 	} else {
-		// Flexible search
-		nameKernelFunction = (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "OpenCL_SHA1_PerformSearching_Flexible_Simple" :
-		                                                                            "OpenCL_SHA1_PerformSearching_Flexible";
+		nameKernelFunction = "OpenCL_SHA1_PerformSearching_Flexible";
 	}
 	// printf("nameKernelFunction = %s\n", nameKernelFunction);
-    cl_kernel kernel = clCreateKernel(program, nameKernelFunction, &openCLError);
+	cl_kernel kernel = clCreateKernel(program, nameKernelFunction, &openCLError);
    	OPENCL_ERROR(openCLError);
+
+	//
+	/*
+	size_t numDevices;
+	openCLError = clGetProgramInfo(program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
+	OPENCL_ERROR(openCLError);
+	size_t *binarySizeArray = (size_t *)malloc(sizeof(size_t) * numDevices);
+	ERROR0(binarySizeArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	openCLError = clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t) * numDevices, binarySizeArray, NULL);
+	OPENCL_ERROR(openCLError);
+	unsigned char **binaryArray = (unsigned char **)malloc(sizeof(unsigned char *) * numDevices);
+	ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	for(int i = 0; i < numDevices; ++i) {
+		binaryArray[i] = (unsigned char *)malloc(binarySizeArray[i]);
+		ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	}
+	openCLError = clGetProgramInfo(program, CL_PROGRAM_BINARIES, sizeof(unsigned char *) * numDevices, binaryArray, NULL);
+	OPENCL_ERROR(openCLError);
+	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
+	FILE   *binaryFile;
+	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	if (binaryFile = fopen(binaryFilePath, "wb")) {
+		fwrite(binaryArray[0], sizeof(unsigned char), binarySizeArray[0], binaryFile);
+		fclose(binaryFile);
+	}
+	free(binarySizeArray);
+	for(int i = 0; i < numDevices; ++i)
+		free(binaryArray[i]);
+	free(binaryArray);
+	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.asm", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
+	sprintf(assemblerCommand, "cmd /C \"\"%s\\CLRadeonExtender\\clrxdisasm\" -m -d -c -f \"%s\" > \"%s\"\"", applicationDirectory, binaryFilePath, sourceFilePath);
+	system(assemblerCommand);
+	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
+	system(assemblerCommand);
+	*/
 
 	// Create memory blocks for CPU.
 	unsigned int  sizeOutputArray = globalWorkSize;

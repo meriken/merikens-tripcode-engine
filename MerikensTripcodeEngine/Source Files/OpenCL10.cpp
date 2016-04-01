@@ -80,10 +80,10 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	//for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
 	//	printf("#define EF%02d %d\n", i, (int)expansionFunction[i]);
 
+	/*
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
-	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\%02x%02x.bin", applicationDirectory, salt[0], salt[1]);
-	///*
+	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
 	if (binaryFile = fopen(binaryFilePath, "rb")) {
 		fseek(binaryFile, 0L, SEEK_END);
 		size_t binarySize = ftell(binaryFile);
@@ -102,7 +102,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		free(binary);
 		return;
 	}
-	//*/
+	*/
 
 	// Load an OpenCL source code
 	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
@@ -181,7 +181,9 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	}
 	OPENCL_ERROR(openCLError);
 
-//	/*
+
+	//
+	/*
 	size_t numDevices;
 	openCLError = clGetProgramInfo(*program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
 	OPENCL_ERROR(openCLError);
@@ -197,8 +199,9 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	}
 	openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARIES, sizeof(unsigned char *) * numDevices, binaryArray, NULL);
 	OPENCL_ERROR(openCLError);
-
-	//
+	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
+	FILE   *binaryFile;
+	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	if (binaryFile = fopen(binaryFilePath, "wb")) {
 		fwrite(binaryArray[0], sizeof(unsigned char), binarySizeArray[0], binaryFile);
 		fclose(binaryFile);
@@ -207,15 +210,17 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	for(int i = 0; i < numDevices; ++i)
 		free(binaryArray[i]);
 	free(binaryArray);
-
+	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
-	sprintf(assemblerCommand, "%s\\CLRadeonExtender\\clrxdisasm -m -d -c -f %s > %s\\OpenCL\\bin\\%02x%02x.asm", applicationDirectory, binaryFilePath, applicationDirectory, salt[0], salt[1]);
+	sprintf(assemblerCommand, "cmd /C \"\"%s\\CLRadeonExtender\\clrxdisasm\" -m -d -c -f \"%s\" > \"%s\"\"", applicationDirectory, binaryFilePath, sourceFilePath);
 	system(assemblerCommand);
-//	*/
+	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
+	system(assemblerCommand);
+	*/
 }
 
 
-static void CreateProgramFromAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *sourceFileName, char *buildOptions, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction)
+static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction)
 {
 	cl_int         openCLError;
 
@@ -224,30 +229,53 @@ static void CreateProgramFromAssemblySource(cl_context *context, cl_program *pro
 	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
 	salt[1] = CONVERT_CHAR_FOR_SALT(keyChar2);
 	DES_CreateExpansionFunction((char *)salt, expansionFunction);
-	//for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
-	//	printf("#define EF%02d %d\n", i, (int)expansionFunction[i]);
-
+	
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
+	char    binaryFileFullPath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
-	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
+	sprintf(binaryFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(binaryFileFullPath, "%s\\%s", applicationDirectory, binaryFilePath);
 
 	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
+	char    sourceFileFullPath[MAX_LEN_FILE_PATH + 1];
 	FILE   *sourceFile;
-	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL10GCNTemp.asm", applicationDirectory);
+	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(sourceFileFullPath, "%s\\%s", applicationDirectory, sourceFilePath);
 
-	if (sourceFile = fopen(sourceFilePath, "w")) {
+	if (sourceFile = fopen(sourceFileFullPath, "w")) {
 		for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
 			fprintf(sourceFile, "DB_EF%02d = %%v%d\n", i, (int)expansionFunction[i]);
 		fclose(sourceFile);
 	}
 
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
-	sprintf(assemblerCommand, "type %s\\OpenCL\\bin\\OpenCL10GCN.asm >> %s", applicationDirectory, sourceFilePath);
+	sprintf(assemblerCommand, "type \"%s\\OpenCL\\bin\\OpenCL10GCN.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
 	system(assemblerCommand);
-	sprintf(assemblerCommand, "%s\\CLRadeonExtender\\clrxasm -b amd -g tahiti -A gcn1.0 -o %s %s", applicationDirectory, binaryFilePath, sourceFilePath);
+	sprintf(assemblerCommand, 
+		    "cmd /C \"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -o \"%s\" \"%s\"\"",
+			applicationDirectory,
+			"amd",
+			deviceName,
+			(   strcmp(deviceName, "CapeVerde") == 0
+			 || strcmp(deviceName, "Pitcairn" ) == 0
+			 || strcmp(deviceName, "Tahiti"   ) == 0
+			 || strcmp(deviceName, "Oland"    ) == 0) ? "gcn1.0" :
+	        (   strcmp(deviceName, "Bonaire"  ) == 0
+			 || strcmp(deviceName, "Spectre"  ) == 0
+			 || strcmp(deviceName, "Spooky"   ) == 0
+			 || strcmp(deviceName, "Kalindi"  ) == 0
+			 || strcmp(deviceName, "Hainan"   ) == 0
+			 || strcmp(deviceName, "Hawaii"   ) == 0
+			 || strcmp(deviceName, "Iceland"  ) == 0
+			 || strcmp(deviceName, "Mullins"  ) == 0) ? "gcn1.1" :
+	                                                    "gcn1.2",
+			binaryFileFullPath,
+			sourceFileFullPath);
+	system(assemblerCommand);
+	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", sourceFileFullPath);
 	system(assemblerCommand);
 
-	if (binaryFile = fopen(binaryFilePath, "rb")) {
+	if (binaryFile = fopen(binaryFileFullPath, "rb")) {
 		fseek(binaryFile, 0L, SEEK_END);
 		size_t binarySize = ftell(binaryFile);
 		unsigned char *binary = (unsigned char *)malloc(binarySize);
@@ -259,12 +287,14 @@ static void CreateProgramFromAssemblySource(cl_context *context, cl_program *pro
 
 		*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
 		OPENCL_ERROR(openCLError);
-		openCLError = clBuildProgram(*program, 1, deviceID, buildOptions, NULL, NULL);
+		openCLError = clBuildProgram(*program, 1, deviceID, NULL, NULL, NULL);
 		OPENCL_ERROR(openCLError);
 		
 		free(binary);
-		return;
 	}
+	
+	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFileFullPath);
+	system(assemblerCommand);
 }
 
 unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
@@ -309,14 +339,35 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	// printf("globalWorkSize: %d\n", globalWorkSize);
 	// printf(" localWorkSize: %d\n",  localWorkSize);
 
-	char    deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
-	char    deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
+	char deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
+	char deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
+	char deviceVersion[LEN_LINE_BUFFER_FOR_SCREEN];
+	char driverVersion[LEN_LINE_BUFFER_FOR_SCREEN];
 	cl_ulong localMemorySize;
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(localMemorySize), &localMemorySize, NULL));
 	// printf("localMemorySize: %d\n", localMemorySize);
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VENDOR,            sizeof(deviceVendor),    &deviceVendor,    NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_NAME,              sizeof(deviceName),      &deviceName,      NULL));
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VERSION,           sizeof(deviceVersion),    &deviceVersion,    NULL));
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DRIVER_VERSION,           sizeof(driverVersion),    &driverVersion,    NULL));
+	BOOL useGCNAssembler =    (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
+		                   && (   strcmp(deviceName, "CapeVerde") == 0
+						       || strcmp(deviceName, "Pitcairn") == 0
+						       || strcmp(deviceName, "Tahiti") == 0
+						       || strcmp(deviceName, "Oland") == 0
+						       || strcmp(deviceName, "Bonaire") == 0
+						       || strcmp(deviceName, "Spectre") == 0
+						       || strcmp(deviceName, "Spooky") == 0
+						       || strcmp(deviceName, "Kalindi") == 0
+						       || strcmp(deviceName, "Hainan") == 0
+						       || strcmp(deviceName, "Hawaii") == 0
+						       || strcmp(deviceName, "Iceland") == 0
+						       || strcmp(deviceName, "Tonga") == 0
+						       || strcmp(deviceName, "Mullins") == 0
+						       || strcmp(deviceName, "Fiji") == 0
+						       || strcmp(deviceName, "Carrizo") == 0)
+						   && (strncmp(deviceVersion, "OpenCL 1.2", 10) == 0);
 	BOOL isIntelHDGraphics = FALSE;
 	if (   strcmp(deviceVendor, OPENCL_VENDOR_INTEL) == 0
 		&& strncmp(deviceName, "Intel(R) HD Graphics", strlen("Intel(R) HD Graphics")) == 0) {
@@ -382,9 +433,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	double       deltaTime;
 	int          execCounter = 0;
 	BOOL         firstBuild = TRUE;
-	int          salt0NonDotCounter = 0;
-	int          salt1NonDotCounter = 0;
-
+	
 	// Create an OpenCL context.
 	context      = clCreateContext(NULL, 1, &deviceID, OnOpenCLError, NULL, &openCLError); OPENCL_ERROR(openCLError);
 	commandQueue = clCreateCommandQueue(context, deviceID, 0, &openCLError);               OPENCL_ERROR(openCLError);
@@ -409,47 +458,15 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 			}
 	
 			// Choose the first 3 characters of the keyInfo.partialKeyAndRandomBytes.
-			do {
-				SetCharactersInTripcodeKey(keyInfo.partialKeyAndRandomBytes, 3);
-				unsigned char  salt[2];
-				salt[0] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[1]);
-				salt[1] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[2]);
-				/*
-				if (salt[0] == '.' && salt0NonDotCounter < 64) {
-					continue;
-				} else if (salt[0] == '.') {
-					salt0NonDotCounter -= 63;
-				} else {
-					++salt0NonDotCounter;
-				}
-				if (salt[1] == '.' && salt1NonDotCounter < 64) {
-					continue;
-				} else if (salt[1] == '.') {
-					salt1NonDotCounter -= 63;
-				} else {
-					++salt1NonDotCounter;
-				}
-				break;
-				*/
-				if (salt[0] != '.' || salt[1] != '.')
-					break;
-			} while (TRUE);
-
-			/*
-			unsigned char c1 = 0x16;
-			while (TRUE) {
-				unsigned char c2 = 0;
-				while (TRUE) {
-					CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, c1, c2, keyInfo.expansioinFunction);
-					if (c2 == 0xff) break;
-					++c2;
-				}
-				if (c1 == 0xff) break;
-				++c1;
+			SetCharactersInTripcodeKey(keyInfo.partialKeyAndRandomBytes, 3);
+			unsigned char  salt[2];
+			salt[0] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[1]);
+			salt[1] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[2]);
+			if (useGCNAssembler) {
+				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction);
+			} else {
+				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction);
 			}
-			return 0;
-			*/
-			CreateProgramFromAssemblySource(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction);
 			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL kernel...");
 			kernel = clCreateKernel(program, "OpenCL_DES_PerformSearching", &openCLError);
 			// printf("clCreateKernel(): done\n");
