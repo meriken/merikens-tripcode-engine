@@ -126,17 +126,17 @@ typedef struct {
 #endif
 
 // Initial hash values (see p. 14 of FIPS 180-3)
-#define H0 0x67452301
-#define H1 0xefcdab89
-#define H2 0x98badcfe
-#define H3 0x10325476
-#define H4 0xc3d2e1f0
+#define H0 0x67452301U
+#define H1 0xefcdab89U
+#define H2 0x98badcfeU
+#define H3 0x10325476U
+#define H4 0xc3d2e1f0U
 
 // Constants required for hash calculation (see p. 11 of FIPS 180-3)
-#define K0 0x5a827999
-#define K1 0x6ed9eba1
-#define K2 0x8f1bbcdc
-#define K3 0xca62c1d6
+#define K0 0x5a827999U
+#define K1 0x6ed9eba1U
+#define K2 0x8f1bbcdcU
+#define K3 0xca62c1d6U
 
 #define SET_KEY_CHAR(var, flag, table, value)             \
 	if (!(flag)) {                                        \
@@ -285,24 +285,12 @@ __kernel void (functionName)(                                    \
 	PW[13] = 0;                                                                                        \
 	PW[14] = 0;                                                                                        \
 	PW[15] = 12 * 8;                                                                                   \
-	PW[16] = ROTL(1, PW[16 - 3] ^ PW[16 - 8] ^ PW[16 - 14]);                                           \
+	PW[16] = ROTL(1, PW[13] ^ PW[8]  ^ PW[2]);                                           \
 	for (int t = 17; t < 80; ++t)                                                                      \
 		PW[t] = ROTL(1, PW[(t) - 3] ^ PW[(t) - 8] ^ PW[(t) - 14] ^ PW[(t) - 16]);                      \
-	PW[1] += K0;\
+	\
+    PW[1] += K0;\
 	PW[2] += K0;\
-	PW[3] += K0;\
-	PW[4] += K0;\
-	PW[5] += K0;\
-	PW[6] += K0;\
-	PW[7] += K0;\
-	PW[8] += K0;\
-	PW[9] += K0;\
-	PW[10] += K0;\
-	PW[11] += K0;\
-	PW[12] += K0;\
-	PW[13] += K0;\
-	PW[14] += K0;\
-	PW[15] += K0;\
 	PW[17] += K0;\
 	PW[18] += K0;\
 	PW[20] += K1;\
@@ -319,6 +307,31 @@ __kernel void (functionName)(                                    \
 	PW[65] += K3;\
 	PW[69] += K3;\
 	PW[77] += K3;\
+	barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);                                                   \
+	unsigned int PW16 = PW[16]; \
+	unsigned int PW17 = PW[17]; \
+	unsigned int PW18 = PW[18]; \
+	unsigned int PW19 = PW[19]; \
+	unsigned int PW20 = PW[20]; \
+	unsigned int PW21 = PW[21]; \
+	unsigned int PW22 = PW[22]; \
+	unsigned int PW23 = PW[23]; \
+	unsigned int PW24 = PW[24]; \
+	unsigned int PW25 = PW[25]; \
+	unsigned int PW26 = PW[26]; \
+	unsigned int PW27 = PW[27]; \
+	unsigned int PW28 = PW[28]; \
+	unsigned int PW29 = PW[29]; \
+	unsigned int PW30 = PW[30]; \
+	unsigned int PW31 = PW[31]; \
+	unsigned int PW32 = PW[32]; \
+	unsigned int PW33 = PW[33]; \
+	unsigned int PW34 = PW[34]; \
+	unsigned int PW35 = PW[35]; \
+	unsigned int PW36 = PW[36]; \
+	unsigned int PW37 = PW[37]; \
+	unsigned int PW38 = PW[38]; \
+	unsigned int PW39 = PW[39]; \
 	barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);                                                   \
 	\
 	randomByte2 += ((get_local_id(0) & 0xc0) >> 2);                                                        \
@@ -362,47 +375,47 @@ __kernel void (functionName)(                                    \
 		unsigned int W0_8___W012        = W0_8        ^ W012;                                              \
 		                                                                                                   \
 		ROUND_00_TO_19_K0(0,  W0);                                                                         \
-		ROUND_00_TO_19(1,  PW[1]);                                                                         \
-		ROUND_00_TO_19(2,  PW[2]);                                                                         \
-		ROUND_00_TO_19(3,  PW[3]);                                                                         \
-		ROUND_00_TO_19(4,  PW[4]);                                                                         \
-		ROUND_00_TO_19(5,  PW[5]);                                                                         \
-		ROUND_00_TO_19(6,  PW[6]);                                                                         \
-		ROUND_00_TO_19(7,  PW[7]);                                                                         \
-		ROUND_00_TO_19(8,  PW[8]);                                                                         \
-		ROUND_00_TO_19(9,  PW[9]);                                                                         \
-		ROUND_00_TO_19(10, PW[10]);                                                                        \
-		ROUND_00_TO_19(11, PW[11]);                                                                        \
-		ROUND_00_TO_19(12, PW[12]);                                                                        \
-		ROUND_00_TO_19(13, PW[13]);                                                                        \
-		ROUND_00_TO_19(14, PW[14]);                                                                        \
-		ROUND_00_TO_19(15, PW[15]);                                                                        \
+		ROUND_00_TO_19   (1,  PW[1]);                                                                         \
+		ROUND_00_TO_19   (2,  PW[2]);                                                                         \
+		ROUND_00_TO_19_K0(3,  0x80000000);                                                                         \
+		ROUND_00_TO_19_K0(4,  0);                                                                         \
+		ROUND_00_TO_19_K0(5,  0);                                                                         \
+		ROUND_00_TO_19_K0(6,  0);                                                                         \
+		ROUND_00_TO_19_K0(7,  0);                                                                         \
+		ROUND_00_TO_19_K0(8,  0);                                                                         \
+		ROUND_00_TO_19_K0(9,  0);                                                                         \
+		ROUND_00_TO_19_K0(10, 0);                                                                        \
+		ROUND_00_TO_19_K0(11, 0);                                                                        \
+		ROUND_00_TO_19_K0(12, 0);                                                                        \
+		ROUND_00_TO_19_K0(13, 0);                                                                        \
+		ROUND_00_TO_19_K0(14, 0);                                                                        \
+		ROUND_00_TO_19_K0(15, 12 * 8);                                                                        \
 		                                                                                                   \
-		ROUND_00_TO_19_K0(16, PW[16] ^ W0_1                                   );                              \
-		ROUND_00_TO_19   (17, PW[17]                                          );                              \
-		ROUND_00_TO_19   (18, PW[18]                                          );                              \
-		ROUND_00_TO_19_K0(19, PW[19] ^ W0_2                                   );                              \
+		ROUND_00_TO_19_K0(16, PW16 ^ W0_1                                   );                              \
+		ROUND_00_TO_19   (17, PW17                                          );                              \
+		ROUND_00_TO_19   (18, PW18                                          );                              \
+		ROUND_00_TO_19_K0(19, PW19 ^ W0_2                                   );                              \
 		                                                                                                   \
-		ROUND_20_TO_39   (20, PW[20]                                          );                              \
-		ROUND_20_TO_39   (21, PW[21]                                          );                              \
-		ROUND_20_TO_39_K1(22, PW[22] ^ W0_3                                   );                              \
-		ROUND_20_TO_39   (23, PW[23]                                          );                              \
-		ROUND_20_TO_39_K1(24, PW[24] ^ W0_2                                   );                              \
-		ROUND_20_TO_39_K1(25, PW[25] ^ W0_4                                   );                              \
-		ROUND_20_TO_39   (26, PW[26]                                          );                              \
-		ROUND_20_TO_39   (27, PW[27]                                          );                              \
-		ROUND_20_TO_39_K1(28, PW[28] ^ W0_5                                   );                              \
-		ROUND_20_TO_39   (29, PW[29]                                          );                              \
-		ROUND_20_TO_39_K1(30, PW[30] ^ W0_4 ^ W0_2                            );                              \
-		ROUND_20_TO_39_K1(31, PW[31] ^ W0_6                                   );                              \
-		ROUND_20_TO_39_K1(32, PW[32] ^ W0_3 ^ W0_2                            );                              \
-		ROUND_20_TO_39   (33, PW[33]                                          );                              \
-		ROUND_20_TO_39_K1(34, PW[34] ^ W0_7                                   );                              \
-		ROUND_20_TO_39_K1(35, PW[35] ^ W0_4                                   );                              \
-		ROUND_20_TO_39_K1(36, PW[36] ^ W0_6___W0_4                            );                              \
-		ROUND_20_TO_39_K1(37, PW[37] ^ W0_8                                   );                              \
-		ROUND_20_TO_39_K1(38, PW[38] ^ W0_4                                   );                              \
-		ROUND_20_TO_39   (39, PW[39]                                          );                              \
+		ROUND_20_TO_39   (20, PW20                                          );                              \
+		ROUND_20_TO_39   (21, PW21                                          );                              \
+		ROUND_20_TO_39_K1(22, PW22 ^ W0_3                                   );                              \
+		ROUND_20_TO_39   (23, PW23                                          );                              \
+		ROUND_20_TO_39_K1(24, PW24 ^ W0_2                                   );                              \
+		ROUND_20_TO_39_K1(25, PW25 ^ W0_4                                   );                              \
+		ROUND_20_TO_39   (26, PW26                                          );                              \
+		ROUND_20_TO_39   (27, PW27                                          );                              \
+		ROUND_20_TO_39_K1(28, PW28 ^ W0_5                                   );                              \
+		ROUND_20_TO_39   (29, PW29                                          );                              \
+		ROUND_20_TO_39_K1(30, PW30 ^ W0_4 ^ W0_2                            );                              \
+		ROUND_20_TO_39_K1(31, PW31 ^ W0_6                                   );                              \
+		ROUND_20_TO_39_K1(32, PW32 ^ W0_3 ^ W0_2                            );                              \
+		ROUND_20_TO_39   (33, PW33                                          );                              \
+		ROUND_20_TO_39_K1(34, PW34 ^ W0_7                                   );                              \
+		ROUND_20_TO_39_K1(35, PW35 ^ W0_4                                   );                              \
+		ROUND_20_TO_39_K1(36, PW36 ^ W0_6___W0_4                            );                              \
+		ROUND_20_TO_39_K1(37, PW37 ^ W0_8                                   );                              \
+		ROUND_20_TO_39_K1(38, PW38 ^ W0_4                                   );                              \
+		ROUND_20_TO_39   (39, PW39                                          );                              \
 		                                                                                                   \
 		ROUND_40_TO_59_K2(40, PW[40] ^ W0_4 ^ W0_9                            );                              \
 		ROUND_40_TO_59   (41, PW[41]                                          );                              \

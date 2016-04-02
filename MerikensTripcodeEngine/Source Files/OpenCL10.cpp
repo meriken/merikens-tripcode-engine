@@ -49,6 +49,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
+// #define SAVE_ASSEMBLY_SOURCE
 
 typedef struct KeyInfo {
 	unsigned char partialKeyAndRandomBytes[10];
@@ -182,8 +183,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	OPENCL_ERROR(openCLError);
 
 
-	//
-	/*
+#ifdef SAVE_ASSEMBLY_SOURCE
 	size_t numDevices;
 	openCLError = clGetProgramInfo(*program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
 	OPENCL_ERROR(openCLError);
@@ -216,7 +216,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	system(assemblerCommand);
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
-	*/
+#endif
 }
 
 
@@ -254,7 +254,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, 
 		    "cmd /C \"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -o \"%s\" \"%s\"\"",
 			applicationDirectory,
-			"amd",
+			(strncmp(deviceVersion, "OpenCL 2.0", 10) == 0) ? "amdcl2" : "amd",
 			deviceName,
 			(   strcmp(deviceName, "CapeVerde") == 0
 			 || strcmp(deviceName, "Pitcairn" ) == 0
@@ -367,7 +367,9 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 						       || strcmp(deviceName, "Mullins") == 0
 						       || strcmp(deviceName, "Fiji") == 0
 						       || strcmp(deviceName, "Carrizo") == 0)
-						   && (strncmp(deviceVersion, "OpenCL 1.2", 10) == 0);
+						   && (   strncmp(deviceVersion, "OpenCL 1.2", 10) == 0
+						       /* || strncmp(deviceVersion, "OpenCL 2.0", 10) == 0  */);
+	useGCNAssembler = FALSE;
 	BOOL isIntelHDGraphics = FALSE;
 	if (   strcmp(deviceVendor, OPENCL_VENDOR_INTEL) == 0
 		&& strncmp(deviceName, "Intel(R) HD Graphics", strlen("Intel(R) HD Graphics")) == 0) {

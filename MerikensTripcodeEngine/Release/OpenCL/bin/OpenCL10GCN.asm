@@ -1,4 +1,15 @@
-	
+.globaldata
+    .byte 0x5e, 0x5f, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65
+    .byte 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d
+    .byte 0x6e, 0x6f, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75
+    .byte 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d
+.kernel OpenCL_DES_PerformSearching
+    .config
+ 	.sgprsnum 102
+	/*
+	s[78:79]: return address
+    */
+	.vgprsnum 128
 	/* # of VGPRs: 128 */
 	/*
 	v[0:63]: datablocks
@@ -10,17 +21,7 @@
 	v[100:127]: arguments for S-Boxes
 	*/
 
-	/* # of SGPRs: 104 */
-
-.globaldata
-    .byte 0x5e, 0x5f, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65
-    .byte 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d
-    .byte 0x6e, 0x6f, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75
-    .byte 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d
-.kernel OpenCL_DES_PerformSearching
-    .config
     .dims x	
-
 	.driver_version 180011
 
 	.arg searchMode,               int
@@ -38,6 +39,7 @@
     .userdata PTR_UAV_TABLE,0,2,2
     .userdata IMM_CONST_BUFFER,0,4,4
     .userdata IMM_CONST_BUFFER,1,8,4
+
     .text
 		v_mov_b32 v99, v0
 		
@@ -295,7 +297,7 @@
         v_bfi_b32 v116, v122, v116, v114
         v_xor_b32 v33, v116, v33
 
-		s_setpc_b64 s[100:101]
+		s_setpc_b64 s[78:79]
 
 
 
@@ -373,7 +375,7 @@
         v_xor_b32 v57, v113, v57
         v_bfi_b32 v116, v112, v114, v108
         v_xor_b32 v51, v116, v51
-		s_setpc_b64 s[100:101]
+		s_setpc_b64 s[78:79]
 
 
 
@@ -461,7 +463,7 @@
         v_xor_b32 v116, v116, v108
         v_bfi_b32 v116, v125, v116, v95
         v_xor_b32 v42, v116, v42
-		s_setpc_b64 s[100:101]
+		s_setpc_b64 s[78:79]
 
 
 
@@ -546,7 +548,7 @@
         v_xor_b32 v116, v108, v116
         v_bfi_b32 v116, v120, v110, v116
         v_xor_b32 v36, v116, v36
-		s_setpc_b64 s[100:101]
+		s_setpc_b64 s[78:79]
 		
 
 
@@ -634,7 +636,7 @@
         v_xor_b32 v114, v108, v118
         v_bfi_b32 v116, v106, v90, v114
         v_xor_b32 v27, v27, v116
-		s_setpc_b64 s[100:101]
+		s_setpc_b64 s[78:79]
 
 
 
@@ -712,7 +714,7 @@
         v_xor_b32 v0, v0, v114
         v_bfi_b32 v116, v107, v108, v116
         v_xor_b32 v9, v9, v116
-		s_setpc_b64 s[100:101]
+		s_setpc_b64 s[78:79]
 
 
 
@@ -800,7 +802,7 @@
         v_xor_b32 v24, v24, v116
         v_bfi_b32 v116, v125, v91, v114
         v_xor_b32 v18, v18, v116
-		s_setpc_b64 s[100:101]
+		s_setpc_b64 s[78:79]
 
 
 
@@ -885,7 +887,7 @@
         v_xor_b32 v21, v21, v108
         v_bfi_b32 v116, v106, v114, v97
         v_xor_b32 v31, v31, v116
-		s_setpc_b64 s[100:101]
+		s_setpc_b64 s[78:79]
 		
 		/*	
 		DB_EF00 = %v31
@@ -1017,7 +1019,7 @@
         v_xor_b32 v124, K13, DB_EF09
         v_xor_b32 v125, K18, DB_EF10
         v_xor_b32 v126, K40, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K04, v7
         v_xor_b32 v120, K32, v8
@@ -1031,7 +1033,7 @@
         v_xor_b32 v123, K25, v14
         v_xor_b32 v124, K19, v15
         v_xor_b32 v112, K41, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K15, DB_EF24
         v_xor_b32 v109, K24, DB_EF25
@@ -1045,7 +1047,7 @@
         v_xor_b32 v124, K44, DB_EF33
         v_xor_b32 v120, K14, DB_EF34
         v_xor_b32 v125, K23, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K51, v23
         v_xor_b32 v118, K16, v24
@@ -1059,7 +1061,7 @@
         v_xor_b32 v122, K50, v30
         v_xor_b32 v111, K42, v31
         v_xor_b32 v120, K21, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 1 */
@@ -1077,7 +1079,7 @@
         v_xor_b32 v107, K06, DB_EF57
         v_xor_b32 v104, K11, DB_EF58
         v_xor_b32 v103, K33, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K52, v39
         v_xor_b32 v118, K25, v40
@@ -1091,7 +1093,7 @@
         v_xor_b32 v126, K18, v46
         v_xor_b32 v122, K12, v47
         v_xor_b32 v107, K34, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K08, DB_EF72
         v_xor_b32 v118, K17, DB_EF73
@@ -1105,7 +1107,7 @@
         v_xor_b32 v119, K37, DB_EF81
 		v_xor_b32 v102, K07, DB_EF82
         v_xor_b32 v125, K16, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K44, v55
         v_xor_b32 v118, K09, v56
@@ -1119,7 +1121,7 @@
         v_xor_b32 v113, K43, v62
         v_xor_b32 v102, K35, v63
         v_xor_b32 v104, K14, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 2 */
@@ -1137,7 +1139,7 @@
         v_xor_b32 v124, K47, DB_EF09
         v_xor_b32 v125, K52, DB_EF10
         v_xor_b32 v126, K19, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K38, v7
         v_xor_b32 v120, K11, v8
@@ -1151,7 +1153,7 @@
         v_xor_b32 v123, K04, v14
         v_xor_b32 v124, K53, v15
         v_xor_b32 v112, K20, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K51, DB_EF24
         v_xor_b32 v109, K03, DB_EF25
@@ -1165,7 +1167,7 @@
         v_xor_b32 v124, K23, DB_EF33
         v_xor_b32 v120, K50, DB_EF34
         v_xor_b32 v125, K02, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K30, v23
         v_xor_b32 v118, K24, v24
@@ -1179,7 +1181,7 @@
         v_xor_b32 v122, K29, v30
         v_xor_b32 v111, K21, v31
         v_xor_b32 v120, K00, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 3 */
@@ -1197,7 +1199,7 @@
         v_xor_b32 v107, K33, DB_EF57
         v_xor_b32 v104, K38, DB_EF58
         v_xor_b32 v103, K05, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K55, v39
         v_xor_b32 v118, K52, v40
@@ -1211,7 +1213,7 @@
         v_xor_b32 v126, K45, v46
         v_xor_b32 v122, K39, v47
         v_xor_b32 v107, K06, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K37, DB_EF72
         v_xor_b32 v118, K42, DB_EF73
@@ -1225,7 +1227,7 @@
         v_xor_b32 v119, K09, DB_EF81
 		v_xor_b32 v102, K36, DB_EF82
         v_xor_b32 v125, K17, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K16, v55
         v_xor_b32 v118, K10, v56
@@ -1239,7 +1241,7 @@
         v_xor_b32 v113, K15, v62
         v_xor_b32 v102, K07, v63
         v_xor_b32 v104, K43, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 4 */
@@ -1257,7 +1259,7 @@
         v_xor_b32 v124, K19, DB_EF09
         v_xor_b32 v125, K55, DB_EF10
         v_xor_b32 v126, K46, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K41, v7
         v_xor_b32 v120, K38, v8
@@ -1271,7 +1273,7 @@
         v_xor_b32 v123, K31, v14
         v_xor_b32 v124, K25, v15
         v_xor_b32 v112, K47, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K23, DB_EF24
         v_xor_b32 v109, K28, DB_EF25
@@ -1285,7 +1287,7 @@
         v_xor_b32 v124, K24, DB_EF33
         v_xor_b32 v120, K22, DB_EF34
         v_xor_b32 v125, K03, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K02, v23
         v_xor_b32 v118, K49, v24
@@ -1299,7 +1301,7 @@
         v_xor_b32 v122, K01, v30
         v_xor_b32 v111, K50, v31
         v_xor_b32 v120, K29, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 5 */
@@ -1317,7 +1319,7 @@
         v_xor_b32 v107, K05, DB_EF57
         v_xor_b32 v104, K41, DB_EF58
         v_xor_b32 v103, K32, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K27, v39
         v_xor_b32 v118, K55, v40
@@ -1331,7 +1333,7 @@
         v_xor_b32 v126, K48, v46
         v_xor_b32 v122, K11, v47
         v_xor_b32 v107, K33, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K09, DB_EF72
         v_xor_b32 v118, K14, DB_EF73
@@ -1345,7 +1347,7 @@
         v_xor_b32 v119, K10, DB_EF81
 		v_xor_b32 v102, K08, DB_EF82
         v_xor_b32 v125, K42, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K17, v55
         v_xor_b32 v118, K35, v56
@@ -1359,7 +1361,7 @@
         v_xor_b32 v113, K44, v62
         v_xor_b32 v102, K36, v63
         v_xor_b32 v104, K15, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 6 */
@@ -1377,7 +1379,7 @@
         v_xor_b32 v124, K46, DB_EF09
         v_xor_b32 v125, K27, DB_EF10
         v_xor_b32 v126, K18, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K13, v7
         v_xor_b32 v120, K41, v8
@@ -1391,7 +1393,7 @@
         v_xor_b32 v123, K34, v14
         v_xor_b32 v124, K52, v15
         v_xor_b32 v112, K19, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K24, DB_EF24
         v_xor_b32 v109, K00, DB_EF25
@@ -1405,7 +1407,7 @@
         v_xor_b32 v124, K49, DB_EF33
         v_xor_b32 v120, K51, DB_EF34
         v_xor_b32 v125, K28, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K03, v23
         v_xor_b32 v118, K21, v24
@@ -1419,7 +1421,7 @@
         v_xor_b32 v122, K30, v30
         v_xor_b32 v111, K22, v31
         v_xor_b32 v120, K01, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 7 */
@@ -1437,7 +1439,7 @@
         v_xor_b32 v107, K32, DB_EF57
         v_xor_b32 v104, K13, DB_EF58
         v_xor_b32 v103, K04, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K54, v39
         v_xor_b32 v118, K27, v40
@@ -1451,7 +1453,7 @@
         v_xor_b32 v126, K20, v46
         v_xor_b32 v122, K38, v47
         v_xor_b32 v107, K05, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K10, DB_EF72
         v_xor_b32 v118, K43, DB_EF73
@@ -1465,7 +1467,7 @@
         v_xor_b32 v119, K35, DB_EF81
 		v_xor_b32 v102, K37, DB_EF82
         v_xor_b32 v125, K14, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K42, v55
         v_xor_b32 v118, K07, v56
@@ -1479,7 +1481,7 @@
         v_xor_b32 v113, K16, v62
         v_xor_b32 v102, K08, v63
         v_xor_b32 v104, K44, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 8 */
@@ -1497,7 +1499,7 @@
         v_xor_b32 v124, K25, DB_EF09
         v_xor_b32 v125, K06, DB_EF10
         v_xor_b32 v126, K52, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K47, v7
         v_xor_b32 v120, K20, v8
@@ -1511,7 +1513,7 @@
         v_xor_b32 v123, K13, v14
         v_xor_b32 v124, K31, v15
         v_xor_b32 v112, K53, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K03, DB_EF24
         v_xor_b32 v109, K36, DB_EF25
@@ -1525,7 +1527,7 @@
         v_xor_b32 v124, K28, DB_EF33
         v_xor_b32 v120, K30, DB_EF34
         v_xor_b32 v125, K07, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K35, v23
         v_xor_b32 v118, K00, v24
@@ -1539,7 +1541,7 @@
         v_xor_b32 v122, K09, v30
         v_xor_b32 v111, K01, v31
         v_xor_b32 v120, K37, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 9 */
@@ -1557,7 +1559,7 @@
         v_xor_b32 v107, K11, DB_EF57
         v_xor_b32 v104, K47, DB_EF58
         v_xor_b32 v103, K38, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K33, v39
         v_xor_b32 v118, K06, v40
@@ -1571,7 +1573,7 @@
         v_xor_b32 v126, K54, v46
         v_xor_b32 v122, K48, v47
         v_xor_b32 v107, K39, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K42, DB_EF72
         v_xor_b32 v118, K22, DB_EF73
@@ -1585,7 +1587,7 @@
         v_xor_b32 v119, K14, DB_EF81
 		v_xor_b32 v102, K16, DB_EF82
         v_xor_b32 v125, K50, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K21, v55
         v_xor_b32 v118, K43, v56
@@ -1599,7 +1601,7 @@
         v_xor_b32 v113, K24, v62
         v_xor_b32 v102, K44, v63
         v_xor_b32 v104, K23, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/********/
 		/* A 10 */
@@ -1617,7 +1619,7 @@
         v_xor_b32 v124, K52, DB_EF09
         v_xor_b32 v125, K33, DB_EF10
         v_xor_b32 v126, K55, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K19, v7
         v_xor_b32 v120, K47, v8
@@ -1631,7 +1633,7 @@
         v_xor_b32 v123, K40, v14
         v_xor_b32 v124, K34, v15
         v_xor_b32 v112, K25, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K28, DB_EF24
         v_xor_b32 v109, K08, DB_EF25
@@ -1645,7 +1647,7 @@
         v_xor_b32 v124, K00, DB_EF33
         v_xor_b32 v120, K02, DB_EF34
         v_xor_b32 v125, K36, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K07, v23
         v_xor_b32 v118, K29, v24
@@ -1659,7 +1661,7 @@
         v_xor_b32 v122, K10, v30
         v_xor_b32 v111, K30, v31
         v_xor_b32 v120, K09, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
  		/********/
 		/* B 11 */
@@ -1677,7 +1679,7 @@
         v_xor_b32 v107, K38, DB_EF57
         v_xor_b32 v104, K19, DB_EF58
         v_xor_b32 v103, K41, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K05, v39
         v_xor_b32 v118, K33, v40
@@ -1691,7 +1693,7 @@
         v_xor_b32 v126, K26, v46
         v_xor_b32 v122, K20, v47
         v_xor_b32 v107, K11, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K14, DB_EF72
         v_xor_b32 v118, K51, DB_EF73
@@ -1705,7 +1707,7 @@
         v_xor_b32 v119, K43, DB_EF81
 		v_xor_b32 v102, K17, DB_EF82
         v_xor_b32 v125, K22, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K50, v55
         v_xor_b32 v118, K15, v56
@@ -1719,7 +1721,7 @@
         v_xor_b32 v113, K49, v62
         v_xor_b32 v102, K16, v63
         v_xor_b32 v104, K24, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/********/
 		/* A 12 */
@@ -1737,7 +1739,7 @@
         v_xor_b32 v124, K55, DB_EF09
         v_xor_b32 v125, K05, DB_EF10
         v_xor_b32 v126, K27, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K46, v7
         v_xor_b32 v120, K19, v8
@@ -1751,7 +1753,7 @@
         v_xor_b32 v123, K12, v14
         v_xor_b32 v124, K06, v15
         v_xor_b32 v112, K52, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K00, DB_EF24
         v_xor_b32 v109, K37, DB_EF25
@@ -1765,7 +1767,7 @@
         v_xor_b32 v124, K29, DB_EF33
         v_xor_b32 v120, K03, DB_EF34
         v_xor_b32 v125, K08, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K36, v23
         v_xor_b32 v118, K01, v24
@@ -1779,7 +1781,7 @@
         v_xor_b32 v122, K35, v30
         v_xor_b32 v111, K02, v31
         v_xor_b32 v120, K10, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/********/
 		/* B 13 */
@@ -1797,7 +1799,7 @@
         v_xor_b32 v107, K41, DB_EF57
         v_xor_b32 v104, K46, DB_EF58
         v_xor_b32 v103, K13, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K32, v39
         v_xor_b32 v118, K05, v40
@@ -1811,7 +1813,7 @@
         v_xor_b32 v126, K53, v46
         v_xor_b32 v122, K47, v47
         v_xor_b32 v107, K38, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K43, DB_EF72
         v_xor_b32 v118, K23, DB_EF73
@@ -1825,7 +1827,7 @@
         v_xor_b32 v119, K15, DB_EF81
 		v_xor_b32 v102, K42, DB_EF82
         v_xor_b32 v125, K51, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K22, v55
         v_xor_b32 v118, K44, v56
@@ -1839,7 +1841,7 @@
         v_xor_b32 v113, K21, v62
         v_xor_b32 v102, K17, v63
         v_xor_b32 v104, K49, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
  		/********/
 		/* A 14 */
@@ -1857,7 +1859,7 @@
         v_xor_b32 v124, K27, DB_EF09
         v_xor_b32 v125, K32, DB_EF10
         v_xor_b32 v126, K54, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K18, v7
         v_xor_b32 v120, K46, v8
@@ -1871,7 +1873,7 @@
         v_xor_b32 v123, K39, v14
         v_xor_b32 v124, K33, v15
         v_xor_b32 v112, K55, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K29, DB_EF24
         v_xor_b32 v109, K09, DB_EF25
@@ -1885,7 +1887,7 @@
         v_xor_b32 v124, K01, DB_EF33
         v_xor_b32 v120, K28, DB_EF34
         v_xor_b32 v125, K37, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K08, v23
         v_xor_b32 v118, K30, v24
@@ -1899,7 +1901,7 @@
         v_xor_b32 v122, K07, v30
         v_xor_b32 v111, K03, v31
         v_xor_b32 v120, K35, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/********/
 		/* B 15 */
@@ -1917,7 +1919,7 @@
         v_xor_b32 v107, K20, DB_EF57
         v_xor_b32 v104, K25, DB_EF58
         v_xor_b32 v103, K47, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K11, v39
         v_xor_b32 v118, K39, v40
@@ -1931,7 +1933,7 @@
         v_xor_b32 v126, K32, v46
         v_xor_b32 v122, K26, v47
         v_xor_b32 v107, K48, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K22, DB_EF72
         v_xor_b32 v118, K02, DB_EF73
@@ -1945,7 +1947,7 @@
         v_xor_b32 v119, K51, DB_EF81
 		v_xor_b32 v102, K21, DB_EF82
         v_xor_b32 v125, K30, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K01, v55
         v_xor_b32 v118, K23, v56
@@ -1959,7 +1961,7 @@
         v_xor_b32 v113, K00, v62
         v_xor_b32 v102, K49, v63
         v_xor_b32 v104, K28, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*********************************************/
 	    s_cmp_eq_i32    s32, 1
@@ -1982,7 +1984,7 @@
         v_xor_b32 v107, K13, DB_EF57
         v_xor_b32 v104, K18, DB_EF58
         v_xor_b32 v103, K40, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K04, v39
         v_xor_b32 v118, K32, v40
@@ -1996,7 +1998,7 @@
         v_xor_b32 v126, K25, v46
         v_xor_b32 v122, K19, v47
         v_xor_b32 v107, K41, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K15, DB_EF72
         v_xor_b32 v118, K24, DB_EF73
@@ -2010,7 +2012,7 @@
         v_xor_b32 v119, K44, DB_EF81
         v_xor_b32 v102, K14, DB_EF82
         v_xor_b32 v125, K23, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K51, v55
         v_xor_b32 v118, K16, v56
@@ -2024,7 +2026,7 @@
         v_xor_b32 v113, K50, v62
         v_xor_b32 v102, K42, v63
         v_xor_b32 v104, K21, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 1 */
@@ -2042,7 +2044,7 @@
         v_xor_b32 v124, K06, DB_EF09
         v_xor_b32 v125, K11, DB_EF10
         v_xor_b32 v126, K33, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K52, v7
         v_xor_b32 v120, K25, v8
@@ -2056,7 +2058,7 @@
         v_xor_b32 v123, K18, v14
         v_xor_b32 v124, K12, v15
         v_xor_b32 v112, K34, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K08, DB_EF24
         v_xor_b32 v109, K17, DB_EF25
@@ -2070,7 +2072,7 @@
         v_xor_b32 v124, K37, DB_EF33
         v_xor_b32 v120, K07, DB_EF34
         v_xor_b32 v125, K16, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K44, v23
         v_xor_b32 v118, K09, v24
@@ -2084,7 +2086,7 @@
         v_xor_b32 v122, K43, v30
         v_xor_b32 v111, K35, v31
         v_xor_b32 v120, K14, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 2 */
@@ -2102,7 +2104,7 @@
         v_xor_b32 v107, K47, DB_EF57
         v_xor_b32 v104, K52, DB_EF58
         v_xor_b32 v103, K19, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K38, v39
         v_xor_b32 v118, K11, v40
@@ -2116,7 +2118,7 @@
         v_xor_b32 v126, K04, v46
         v_xor_b32 v122, K53, v47
         v_xor_b32 v107, K20, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K51, DB_EF72
         v_xor_b32 v118, K03, DB_EF73
@@ -2130,7 +2132,7 @@
         v_xor_b32 v119, K23, DB_EF81
         v_xor_b32 v102, K50, DB_EF82
         v_xor_b32 v125, K02, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K30, v55
         v_xor_b32 v118, K24, v56
@@ -2144,7 +2146,7 @@
         v_xor_b32 v113, K29, v62
         v_xor_b32 v102, K21, v63
         v_xor_b32 v104, K00, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 3 */
@@ -2162,7 +2164,7 @@
         v_xor_b32 v124, K33, DB_EF09
         v_xor_b32 v125, K38, DB_EF10
         v_xor_b32 v126, K05, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K55, v7
         v_xor_b32 v120, K52, v8
@@ -2176,7 +2178,7 @@
         v_xor_b32 v123, K45, v14
         v_xor_b32 v124, K39, v15
         v_xor_b32 v112, K06, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K37, DB_EF24
         v_xor_b32 v109, K42, DB_EF25
@@ -2190,7 +2192,7 @@
         v_xor_b32 v124, K09, DB_EF33
         v_xor_b32 v120, K36, DB_EF34
         v_xor_b32 v125, K17, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K16, v23
         v_xor_b32 v118, K10, v24
@@ -2204,7 +2206,7 @@
         v_xor_b32 v122, K15, v30
         v_xor_b32 v111, K07, v31
         v_xor_b32 v120, K43, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 4 */
@@ -2222,7 +2224,7 @@
         v_xor_b32 v107, K19, DB_EF57
         v_xor_b32 v104, K55, DB_EF58
         v_xor_b32 v103, K46, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K41, v39
         v_xor_b32 v118, K38, v40
@@ -2236,7 +2238,7 @@
         v_xor_b32 v126, K31, v46
         v_xor_b32 v122, K25, v47
         v_xor_b32 v107, K47, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K23, DB_EF72
         v_xor_b32 v118, K28, DB_EF73
@@ -2250,7 +2252,7 @@
         v_xor_b32 v119, K24, DB_EF81
         v_xor_b32 v102, K22, DB_EF82
         v_xor_b32 v125, K03, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K02, v55
         v_xor_b32 v118, K49, v56
@@ -2264,7 +2266,7 @@
         v_xor_b32 v113, K01, v62
         v_xor_b32 v102, K50, v63
         v_xor_b32 v104, K29, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 5 */
@@ -2282,7 +2284,7 @@
         v_xor_b32 v124, K05, DB_EF09
         v_xor_b32 v125, K41, DB_EF10
         v_xor_b32 v126, K32, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K27, v7
         v_xor_b32 v120, K55, v8
@@ -2296,7 +2298,7 @@
         v_xor_b32 v123, K48, v14
         v_xor_b32 v124, K11, v15
         v_xor_b32 v112, K33, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K09, DB_EF24
         v_xor_b32 v109, K14, DB_EF25
@@ -2310,7 +2312,7 @@
         v_xor_b32 v124, K10, DB_EF33
         v_xor_b32 v120, K08, DB_EF34
         v_xor_b32 v125, K42, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K17, v23
         v_xor_b32 v118, K35, v24
@@ -2324,7 +2326,7 @@
         v_xor_b32 v122, K44, v30
         v_xor_b32 v111, K36, v31
         v_xor_b32 v120, K15, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 6 */
@@ -2342,7 +2344,7 @@
         v_xor_b32 v107, K46, DB_EF57
         v_xor_b32 v104, K27, DB_EF58
         v_xor_b32 v103, K18, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K13, v39
         v_xor_b32 v118, K41, v40
@@ -2356,7 +2358,7 @@
         v_xor_b32 v126, K34, v46
         v_xor_b32 v122, K52, v47
         v_xor_b32 v107, K19, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K24, DB_EF72
         v_xor_b32 v118, K00, DB_EF73
@@ -2370,7 +2372,7 @@
         v_xor_b32 v119, K49, DB_EF81
         v_xor_b32 v102, K51, DB_EF82
         v_xor_b32 v125, K28, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K03, v55
         v_xor_b32 v118, K21, v56
@@ -2384,7 +2386,7 @@
         v_xor_b32 v113, K30, v62
         v_xor_b32 v102, K22, v63
         v_xor_b32 v104, K01, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 7 */
@@ -2402,7 +2404,7 @@
         v_xor_b32 v124, K32, DB_EF09
         v_xor_b32 v125, K13, DB_EF10
         v_xor_b32 v126, K04, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K54, v7
         v_xor_b32 v120, K27, v8
@@ -2416,7 +2418,7 @@
         v_xor_b32 v123, K20, v14
         v_xor_b32 v124, K38, v15
         v_xor_b32 v112, K05, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K10, DB_EF24
         v_xor_b32 v109, K43, DB_EF25
@@ -2430,7 +2432,7 @@
         v_xor_b32 v124, K35, DB_EF33
         v_xor_b32 v120, K37, DB_EF34
         v_xor_b32 v125, K14, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K42, v23
         v_xor_b32 v118, K07, v24
@@ -2444,7 +2446,7 @@
         v_xor_b32 v122, K16, v30
         v_xor_b32 v111, K08, v31
         v_xor_b32 v120, K44, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/*******/
 		/* B 8 */
@@ -2462,7 +2464,7 @@
         v_xor_b32 v107, K25, DB_EF57
         v_xor_b32 v104, K06, DB_EF58
         v_xor_b32 v103, K52, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K47, v39
         v_xor_b32 v118, K20, v40
@@ -2476,7 +2478,7 @@
         v_xor_b32 v126, K13, v46
         v_xor_b32 v122, K31, v47
         v_xor_b32 v107, K53, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K03, DB_EF72
         v_xor_b32 v118, K36, DB_EF73
@@ -2490,7 +2492,7 @@
         v_xor_b32 v119, K28, DB_EF81
         v_xor_b32 v102, K30, DB_EF82
         v_xor_b32 v125, K07, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K35, v55
         v_xor_b32 v118, K00, v56
@@ -2504,7 +2506,7 @@
         v_xor_b32 v113, K09, v62
         v_xor_b32 v102, K01, v63
         v_xor_b32 v104, K37, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/*******/
 		/* A 9 */
@@ -2522,7 +2524,7 @@
         v_xor_b32 v124, K11, DB_EF09
         v_xor_b32 v125, K47, DB_EF10
         v_xor_b32 v126, K38, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K33, v7
         v_xor_b32 v120, K06, v8
@@ -2536,7 +2538,7 @@
         v_xor_b32 v123, K54, v14
         v_xor_b32 v124, K48, v15
         v_xor_b32 v112, K39, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K42, DB_EF24
         v_xor_b32 v109, K22, DB_EF25
@@ -2550,7 +2552,7 @@
         v_xor_b32 v124, K14, DB_EF33
         v_xor_b32 v120, K16, DB_EF34
         v_xor_b32 v125, K50, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K21, v23
         v_xor_b32 v118, K43, v24
@@ -2564,7 +2566,7 @@
         v_xor_b32 v122, K24, v30
         v_xor_b32 v111, K44, v31
         v_xor_b32 v120, K23, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/********/
 		/* B 10 */
@@ -2582,7 +2584,7 @@
         v_xor_b32 v107, K52, DB_EF57
         v_xor_b32 v104, K33, DB_EF58
         v_xor_b32 v103, K55, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K19, v39
         v_xor_b32 v118, K47, v40
@@ -2596,7 +2598,7 @@
         v_xor_b32 v126, K40, v46
         v_xor_b32 v122, K34, v47
         v_xor_b32 v107, K25, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K28, DB_EF72
         v_xor_b32 v118, K08, DB_EF73
@@ -2610,7 +2612,7 @@
         v_xor_b32 v119, K00, DB_EF81
         v_xor_b32 v102, K02, DB_EF82
         v_xor_b32 v125, K36, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K07, v55
         v_xor_b32 v118, K29, v56
@@ -2624,7 +2626,7 @@
         v_xor_b32 v113, K10, v62
         v_xor_b32 v102, K30, v63
         v_xor_b32 v104, K09, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/********/
 		/* A 11 */
@@ -2642,7 +2644,7 @@
         v_xor_b32 v124, K38, DB_EF09
         v_xor_b32 v125, K19, DB_EF10
         v_xor_b32 v126, K41, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K05, v7
         v_xor_b32 v120, K33, v8
@@ -2656,7 +2658,7 @@
         v_xor_b32 v123, K26, v14
         v_xor_b32 v124, K20, v15
         v_xor_b32 v112, K11, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K14, DB_EF24
         v_xor_b32 v109, K51, DB_EF25
@@ -2670,7 +2672,7 @@
         v_xor_b32 v124, K43, DB_EF33
         v_xor_b32 v120, K17, DB_EF34
         v_xor_b32 v125, K22, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K50, v23
         v_xor_b32 v118, K15, v24
@@ -2684,7 +2686,7 @@
         v_xor_b32 v122, K49, v30
         v_xor_b32 v111, K16, v31
         v_xor_b32 v120, K24, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/********/
 		/* B 12 */
@@ -2702,7 +2704,7 @@
         v_xor_b32 v107, K55, DB_EF57
         v_xor_b32 v104, K05, DB_EF58
         v_xor_b32 v103, K27, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K46, v39
         v_xor_b32 v118, K19, v40
@@ -2716,7 +2718,7 @@
         v_xor_b32 v126, K12, v46
         v_xor_b32 v122, K06, v47
         v_xor_b32 v107, K52, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K00, DB_EF72
         v_xor_b32 v118, K37, DB_EF73
@@ -2730,7 +2732,7 @@
         v_xor_b32 v119, K29, DB_EF81
         v_xor_b32 v102, K03, DB_EF82
         v_xor_b32 v125, K08, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K36, v55
         v_xor_b32 v118, K01, v56
@@ -2744,7 +2746,7 @@
         v_xor_b32 v113, K35, v62
         v_xor_b32 v102, K02, v63
         v_xor_b32 v104, K10, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/********/
 		/* A 13 */
@@ -2762,7 +2764,7 @@
         v_xor_b32 v124, K41, DB_EF09
         v_xor_b32 v125, K46, DB_EF10
         v_xor_b32 v126, K13, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K32, v7
         v_xor_b32 v120, K05, v8
@@ -2776,7 +2778,7 @@
         v_xor_b32 v123, K53, v14
         v_xor_b32 v124, K47, v15
         v_xor_b32 v112, K38, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K43, DB_EF24
         v_xor_b32 v109, K23, DB_EF25
@@ -2790,7 +2792,7 @@
         v_xor_b32 v124, K15, DB_EF33
         v_xor_b32 v120, K42, DB_EF34
         v_xor_b32 v125, K51, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K22, v23
         v_xor_b32 v118, K44, v24
@@ -2804,7 +2806,7 @@
         v_xor_b32 v122, K21, v30
         v_xor_b32 v111, K17, v31
         v_xor_b32 v120, K49, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
 		/********/
 		/* B 14 */
@@ -2822,7 +2824,7 @@
         v_xor_b32 v107, K27, DB_EF57
         v_xor_b32 v104, K32, DB_EF58
         v_xor_b32 v103, K54, DB_EF59
-        s_swappc_b64 s[100:101], s[90:91]
+        s_swappc_b64 s[78:79], s[90:91]
 
         v_xor_b32 v125, K18, v39
         v_xor_b32 v118, K46, v40
@@ -2836,7 +2838,7 @@
         v_xor_b32 v126, K39, v46
         v_xor_b32 v122, K33, v47
         v_xor_b32 v107, K55, v48
-        s_swappc_b64 s[100:101], s[88:89]
+        s_swappc_b64 s[78:79], s[88:89]
 
         v_xor_b32 v103, K29, DB_EF72
         v_xor_b32 v118, K09, DB_EF73
@@ -2850,7 +2852,7 @@
         v_xor_b32 v119, K01, DB_EF81
         v_xor_b32 v102, K28, DB_EF82
         v_xor_b32 v125, K37, DB_EF83
-        s_swappc_b64 s[100:101], s[86:87]
+        s_swappc_b64 s[78:79], s[86:87]
 
         v_xor_b32 v106, K08, v55
         v_xor_b32 v118, K30, v56
@@ -2864,7 +2866,7 @@
         v_xor_b32 v113, K07, v62
         v_xor_b32 v102, K03, v63
         v_xor_b32 v104, K35, v32
-        s_swappc_b64 s[100:101], s[84:85]
+        s_swappc_b64 s[78:79], s[84:85]
 
 		/********/
 		/* A 15 */
@@ -2882,7 +2884,7 @@
         v_xor_b32 v124, K20, DB_EF09
         v_xor_b32 v125, K25, DB_EF10
         v_xor_b32 v126, K47, DB_EF11
-        s_swappc_b64 s[100:101], s[98:99]
+        s_swappc_b64 s[78:79], s[98:99]
 
         v_xor_b32 v126, K11, v7
         v_xor_b32 v120, K39, v8
@@ -2896,7 +2898,7 @@
         v_xor_b32 v123, K32, v14
         v_xor_b32 v124, K26, v15
         v_xor_b32 v112, K48, v16
-        s_swappc_b64 s[100:101], s[96:97]
+        s_swappc_b64 s[78:79], s[96:97]
 
         v_xor_b32 v116, K22, DB_EF24
         v_xor_b32 v109, K02, DB_EF25
@@ -2910,7 +2912,7 @@
         v_xor_b32 v124, K51, DB_EF33
         v_xor_b32 v120, K21, DB_EF34
         v_xor_b32 v125, K30, DB_EF35
-        s_swappc_b64 s[100:101], s[94:95]
+        s_swappc_b64 s[78:79], s[94:95]
 
         v_xor_b32 v116, K01, v23
         v_xor_b32 v118, K23, v24
@@ -2924,7 +2926,7 @@
         v_xor_b32 v122, K00, v30
         v_xor_b32 v111, K49, v31
         v_xor_b32 v120, K28, v0
-        s_swappc_b64 s[100:101], s[92:93]
+        s_swappc_b64 s[78:79], s[92:93]
 
         s_add_u32 s32, -1, s32
 		s_branch  .startLoop

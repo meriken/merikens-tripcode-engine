@@ -32,6 +32,11 @@
 
 
 
+// #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
+// #define SAVE_ASSEMBLY_SOURCE
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // INCLUDE FILE(S)                                                           //
 ///////////////////////////////////////////////////////////////////////////////
@@ -139,15 +144,15 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Cayman",                    22, "Radeon HD 6950",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, "-O5 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Cayman",                    -1, "Radeon HD 6970/6990",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290/390",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X/295X2/390X", "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290/390",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X/295X2/390X", "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O5 -cl-mad-enable"},
 
 	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
@@ -159,7 +164,7 @@ struct {
 	{OPENCL_VENDOR_AMD,    "Devastator",                -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Richland",                  -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 256, "-O1 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 256, "-O5 -cl-mad-enable"},
 
 	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, ""},
 
@@ -529,6 +534,9 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		// ERROR0(TRUE, ERROR_INTEL_HD_GRAPHICS, "This software is not compatible with the Intel(R) HD Graphics series.");
 		strcat(buildOptions, " -D INTEL_HD_GRAPHICS ");
 	}
+#ifdef DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
+	strcat(buildOptions, " -save-temps=OpenCL12.cl ");
+#endif
 
 	// Load an OpenCL source code
 	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
@@ -585,7 +593,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
    	OPENCL_ERROR(openCLError);
 
 	//
-	/*
+#ifdef SAVE_ASSEMBLY_SOURCE
 	size_t numDevices;
 	openCLError = clGetProgramInfo(program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
 	OPENCL_ERROR(openCLError);
@@ -618,7 +626,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	system(assemblerCommand);
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
-	*/
+#endif
 
 	// Create memory blocks for CPU.
 	unsigned int  sizeOutputArray = globalWorkSize;

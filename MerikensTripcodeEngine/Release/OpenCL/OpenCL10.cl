@@ -30,6 +30,10 @@
 
 
 
+// #define DEFINE_K
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // CONSTANTS AND TYPES                                                       //
 ///////////////////////////////////////////////////////////////////////////////
@@ -578,6 +582,82 @@ void s8(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 
 #define z(r) (db + (r))
 
+#ifdef DEFINE_K
+
+#define K00XOR(dest, val) (dest) = K00 ^ (val)
+#define K01XOR(dest, val) (dest) = K01 ^ (val)
+#define K02XOR(dest, val) (dest) = K02 ^ (val)
+#define K03XOR(dest, val) (dest) = K03 ^ (val)
+#define K04XOR(dest, val) (dest) = K04 ^ (val)
+#define K05XOR(dest, val) (dest) = K05 ^ (val)
+#define K06XOR(dest, val) (dest) = K06 ^ (val)
+
+#undef K07XOR
+#undef K08XOR
+#undef K09XOR
+#undef K10XOR
+#undef K11XOR
+#undef K12XOR
+#undef K13XOR
+
+#undef K14XOR
+#undef K15XOR
+#undef K16XOR
+#undef K17XOR
+#undef K18XOR
+#undef K19XOR
+#undef K20XOR
+
+#define K07XOR(dest, val) (dest) = K07 ^ (val)
+#define K08XOR(dest, val) (dest) = K08 ^ (val)
+#define K09XOR(dest, val) (dest) = K09 ^ (val)
+#define K10XOR(dest, val) (dest) = K10 ^ (val)
+#define K11XOR(dest, val) (dest) = K11 ^ (val)
+#define K12XOR(dest, val) (dest) = K12 ^ (val)
+#define K13XOR(dest, val) (dest) = K13 ^ (val)
+
+#define K14XOR(dest, val) (dest) = K14 ^ (val)
+#define K15XOR(dest, val) (dest) = K15 ^ (val)
+#define K16XOR(dest, val) (dest) = K16 ^ (val)
+#define K17XOR(dest, val) (dest) = K17 ^ (val)
+#define K18XOR(dest, val) (dest) = K18 ^ (val)
+#define K19XOR(dest, val) (dest) = K19 ^ (val)
+#define K20XOR(dest, val) (dest) = K20 ^ (val)
+
+#define K21XOR(dest, val) (dest) = K21 ^ (val)
+#define K22XOR(dest, val) (dest) = K22 ^ (val)
+#define K23XOR(dest, val) (dest) = K23 ^ (val)
+#define K24XOR(dest, val) (dest) = K24 ^ (val)
+#define K25XOR(dest, val) (dest) = K25 ^ (val)
+#define K26XOR(dest, val) (dest) = K26 ^ (val)
+#define K27XOR(dest, val) (dest) = K27 ^ (val)
+
+#define K28XOR(dest, val) (dest) = K28 ^ (val)
+#define K29XOR(dest, val) (dest) = K29 ^ (val)
+#define K30XOR(dest, val) (dest) = K30 ^ (val)
+#define K31XOR(dest, val) (dest) = K31 ^ (val)
+#define K32XOR(dest, val) (dest) = K32 ^ (val)
+#define K33XOR(dest, val) (dest) = K33 ^ (val)
+#define K34XOR(dest, val) (dest) = K34 ^ (val)
+
+#define K35XOR(dest, val) (dest) = K35 ^ (val)
+#define K36XOR(dest, val) (dest) = K36 ^ (val)
+#define K37XOR(dest, val) (dest) = K37 ^ (val)
+#define K38XOR(dest, val) (dest) = K38 ^ (val)
+#define K39XOR(dest, val) (dest) = K39 ^ (val)
+#define K40XOR(dest, val) (dest) = K40 ^ (val)
+#define K41XOR(dest, val) (dest) = K41 ^ (val)
+
+#define K42XOR(dest, val) (dest) = K42 ^ (val)
+#define K43XOR(dest, val) (dest) = K43 ^ (val)
+#define K44XOR(dest, val) (dest) = K44 ^ (val)
+#define K45XOR(dest, val) (dest) = K45 ^ (val)
+#define K46XOR(dest, val) (dest) = K46 ^ (val)
+#define K47XOR(dest, val) (dest) = K47 ^ (val)
+#define K48XOR(dest, val) (dest) = K48 ^ (val)
+
+#else
+
 #define K00XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  0)) ? (~(val)) : (val))
 #define K01XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  1)) ? (~(val)) : (val))
 #define K02XOR(dest, val) (dest) = ((keyFrom00To27 & (0x1U <<  2)) ? (~(val)) : (val))
@@ -650,6 +730,8 @@ void s8(vtype var0, vtype var1, vtype var2, vtype var3, vtype var4, vtype var5, 
 #define K47XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (47 - 28))) ? (~(val)) : (val))
 #define K48XOR(dest, val) (dest) = ((keyFrom28To48 & (0x1U << (48 - 28))) ? (~(val)) : (val))
 
+#endif
+
 void DES_Crypt(DES_DATA_BLOCKS_SPACE vtype *db, unsigned int keyFrom00To27, unsigned int keyFrom28To48)
 {
 	for (int i = 0; i < 64; ++i)
@@ -660,6 +742,64 @@ void DES_Crypt(DES_DATA_BLOCKS_SPACE vtype *db, unsigned int keyFrom00To27, unsi
 	int round = 0;
 	vtype DB00, DB01, DB02, DB03, DB04, DB05;
 	vtype DB10, DB11, DB12, DB13, DB14, DB15;
+
+#ifdef DEFINE_K
+	vtype K00 = ((keyFrom00To27 & (0x1U <<  0)) ? (0xffffffffU) : (0U));
+	vtype K01 = ((keyFrom00To27 & (0x1U <<  1)) ? (0xffffffffU) : (0U));
+	vtype K02 = ((keyFrom00To27 & (0x1U <<  2)) ? (0xffffffffU) : (0U));
+	vtype K03 = ((keyFrom00To27 & (0x1U <<  3)) ? (0xffffffffU) : (0U));
+	vtype K04 = ((keyFrom00To27 & (0x1U <<  4)) ? (0xffffffffU) : (0U));
+	vtype K05 = ((keyFrom00To27 & (0x1U <<  5)) ? (0xffffffffU) : (0U));
+	vtype K06 = ((keyFrom00To27 & (0x1U <<  6)) ? (0xffffffffU) : (0U));
+
+	vtype K07 = ((keyFrom00To27 & (0x1U <<  7)) ? (0xffffffffU) : (0U));
+	vtype K08 = ((keyFrom00To27 & (0x1U <<  8)) ? (0xffffffffU) : (0U));
+	vtype K09 = ((keyFrom00To27 & (0x1U <<  9)) ? (0xffffffffU) : (0U));
+	vtype K10 = ((keyFrom00To27 & (0x1U << 10)) ? (0xffffffffU) : (0U));
+	vtype K11 = ((keyFrom00To27 & (0x1U << 11)) ? (0xffffffffU) : (0U));
+	vtype K12 = ((keyFrom00To27 & (0x1U << 12)) ? (0xffffffffU) : (0U));
+	vtype K13 = ((keyFrom00To27 & (0x1U << 13)) ? (0xffffffffU) : (0U));
+
+	vtype K14 = ((keyFrom00To27 & (0x1U << 14)) ? (0xffffffffU) : (0U));
+	vtype K15 = ((keyFrom00To27 & (0x1U << 15)) ? (0xffffffffU) : (0U));
+	vtype K16 = ((keyFrom00To27 & (0x1U << 16)) ? (0xffffffffU) : (0U));
+	vtype K17 = ((keyFrom00To27 & (0x1U << 17)) ? (0xffffffffU) : (0U));
+	vtype K18 = ((keyFrom00To27 & (0x1U << 18)) ? (0xffffffffU) : (0U));
+	vtype K19 = ((keyFrom00To27 & (0x1U << 19)) ? (0xffffffffU) : (0U));
+	vtype K20 = ((keyFrom00To27 & (0x1U << 20)) ? (0xffffffffU) : (0U));
+
+	vtype K21 = ((keyFrom00To27 & (0x1U << 21)) ? (0xffffffffU) : (0U));
+	vtype K22 = ((keyFrom00To27 & (0x1U << 22)) ? (0xffffffffU) : (0U));
+	vtype K23 = ((keyFrom00To27 & (0x1U << 23)) ? (0xffffffffU) : (0U));
+	vtype K24 = ((keyFrom00To27 & (0x1U << 24)) ? (0xffffffffU) : (0U));
+	vtype K25 = ((keyFrom00To27 & (0x1U << 25)) ? (0xffffffffU) : (0U));
+	vtype K26 = ((keyFrom00To27 & (0x1U << 26)) ? (0xffffffffU) : (0U));
+	vtype K27 = ((keyFrom00To27 & (0x1U << 27)) ? (0xffffffffU) : (0U));
+
+	vtype K28 = ((keyFrom28To48 & (0x1U << (28 - 28))) ? (0xffffffffU) : (0U));
+	vtype K29 = ((keyFrom28To48 & (0x1U << (29 - 28))) ? (0xffffffffU) : (0U));
+	vtype K30 = ((keyFrom28To48 & (0x1U << (30 - 28))) ? (0xffffffffU) : (0U));
+	vtype K31 = ((keyFrom28To48 & (0x1U << (31 - 28))) ? (0xffffffffU) : (0U));
+	vtype K32 = ((keyFrom28To48 & (0x1U << (32 - 28))) ? (0xffffffffU) : (0U));
+	vtype K33 = ((keyFrom28To48 & (0x1U << (33 - 28))) ? (0xffffffffU) : (0U));
+	vtype K34 = ((keyFrom28To48 & (0x1U << (34 - 28))) ? (0xffffffffU) : (0U));
+
+	vtype K35 = ((keyFrom28To48 & (0x1U << (35 - 28))) ? (0xffffffffU) : (0U));
+	vtype K36 = ((keyFrom28To48 & (0x1U << (36 - 28))) ? (0xffffffffU) : (0U));
+	vtype K37 = ((keyFrom28To48 & (0x1U << (37 - 28))) ? (0xffffffffU) : (0U));
+	vtype K38 = ((keyFrom28To48 & (0x1U << (38 - 28))) ? (0xffffffffU) : (0U));
+	vtype K39 = ((keyFrom28To48 & (0x1U << (39 - 28))) ? (0xffffffffU) : (0U));
+	vtype K40 = ((keyFrom28To48 & (0x1U << (40 - 28))) ? (0xffffffffU) : (0U));
+	vtype K41 = ((keyFrom28To48 & (0x1U << (41 - 28))) ? (0xffffffffU) : (0U));
+
+	vtype K42 = ((keyFrom28To48 & (0x1U << (42 - 28))) ? (0xffffffffU) : (0U));
+	vtype K43 = ((keyFrom28To48 & (0x1U << (43 - 28))) ? (0xffffffffU) : (0U));
+	vtype K44 = ((keyFrom28To48 & (0x1U << (44 - 28))) ? (0xffffffffU) : (0U));
+	vtype K45 = ((keyFrom28To48 & (0x1U << (45 - 28))) ? (0xffffffffU) : (0U));
+	vtype K46 = ((keyFrom28To48 & (0x1U << (46 - 28))) ? (0xffffffffU) : (0U));
+	vtype K47 = ((keyFrom28To48 & (0x1U << (47 - 28))) ? (0xffffffffU) : (0U));
+	vtype K48 = ((keyFrom28To48 & (0x1U << (48 - 28))) ? (0xffffffffU) : (0U));
+#endif
 
 start:
 	if (round < 8) {
