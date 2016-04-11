@@ -1,5 +1,4 @@
 #regex
-#^[:digit:]{4}////
 ^TEST/
 #/TES\.$
 #\.TES\.

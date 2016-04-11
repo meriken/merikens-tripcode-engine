@@ -33,6 +33,7 @@
 
 
 // #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
+// #define DISABLE_GCN_ASSEMBLER
 // #define SAVE_ASSEMBLY_SOURCE
 
 
@@ -414,7 +415,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	// TO DO: Wait for child processes to exit.
 }
 
-static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion)
+static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion)
 {
 	cl_int         openCLError;
 	
@@ -426,9 +427,14 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	FILE   *sourceFile;
 	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN.asm", applicationDirectory);
 	
+	int driverMajorVersion;
+	int driverMinorVersion;
+	char rest[LEN_LINE_BUFFER_FOR_SCREEN];
+	sscanf(driverVersion, "%d.%d%s", &driverMajorVersion, &driverMinorVersion, rest);
+	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	sprintf(assemblerCommand, 
-		    "cmd /C \"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -o \"%s\" \"%s\"\"",
+		    "cmd /C \"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"\"",
 			applicationDirectory,
 			"amd",
 			deviceName,
@@ -445,6 +451,8 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 			 || strcmp(deviceName, "Iceland"  ) == 0
 			 || strcmp(deviceName, "Mullins"  ) == 0) ? "gcn1.1" :
 	                                                    "gcn1.2",
+            driverMajorVersion, 
+			driverMinorVersion, 
 			binaryFilePath,
 			sourceFilePath);
 	system(assemblerCommand);
@@ -525,8 +533,10 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 						       || strcmp(deviceName, "Mullins") == 0
 						       || strcmp(deviceName, "Fiji") == 0
 						       || strcmp(deviceName, "Carrizo") == 0)
-						   && (strncmp(deviceVersion, "OpenCL 1.2", 10) == 0);
-	//useGCNAssembler = FALSE;
+						   /* && (strncmp(deviceVersion, "OpenCL 1.2", 10) == 0) */;
+#ifdef DISABLE_GCN_ASSEMBLER
+	useGCNAssembler = FALSE;
+#endif
 	BOOL isIntelHDGraphics = FALSE;
 	if (   strcmp(deviceVendor, OPENCL_VENDOR_INTEL) == 0
 		&& strncmp(deviceName, "Intel(R) HD Graphics", strlen("Intel(R) HD Graphics")) == 0) {
@@ -557,7 +567,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	cl_command_queue commandQueue = clCreateCommandQueue(context, deviceID, 0, &openCLError);               OPENCL_ERROR(openCLError);
 	cl_program       program;
 	if (useGCNAssembler) {
-		CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion);
+		CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion);
 	} else {
 		// Create an OpenCL kernel from the source code.
 		if (options.maximizeKeySpace)

@@ -3,9 +3,9 @@
 .amd
 .gpu Hawaii
 .64bit
+*/
 .compile_options ""
 .driver_info "@(#) OpenCL 2.0 AMD-APP (1800.5).  Driver version: 1800.5 (VM)"
-*/
 .globaldata
     .byte 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48
     .byte 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, 0x50
@@ -24,7 +24,7 @@
     .metadata
         .ascii ";ARGSTART:__OpenCL_OpenCL_SHA1_PerformSearching_ForwardMatching_kernel\n"
         .ascii ";version:3:1:111\n"
-        /* .ascii ";device:hawaii\n" */
+        .ascii ";device:hawaii\n"
         .ascii ";uniqueid:1024\n"
         .ascii ";memory:uavprivate:0\n"
         .ascii ";memory:hwlocal:4416\n"

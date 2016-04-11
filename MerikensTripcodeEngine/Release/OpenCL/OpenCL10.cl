@@ -30,7 +30,7 @@
 
 
 
-// #define DEFINE_K
+#define DEFINE_K
 
 
 
@@ -1490,11 +1490,55 @@ next:
 		                                                                                                   \
 		BOOL found = FALSE;                                                                                \
 
+/*
+
 #define OPENCL_DES_END_OF_SEAERCH_FUNCTION                                                                 \
 	quit_loops:                                                                                            \
 		if (found == TRUE) {                                                                               \
 			output->numMatchingTripcodes = 1;                                                              \
 			output->pair.key.c[7] = key7Array[tripcodeIndex];                                              \
+		}                                                                                                  \
+		output->numGeneratedTripcodes = OPENCL_DES_BS_DEPTH;                                               \
+	}                                                                                                      \
+
+*/
+
+#define OPENCL_DES_END_OF_SEAERCH_FUNCTION                                                                 \
+	quit_loops:                                                                                            \
+		if (found == TRUE) {                                                                               \
+			output->numMatchingTripcodes = 1;                                                              \
+			output->pair.key.c[7] = (tripcodeIndex == 0) ? KEY7_00 :\
+                                    (tripcodeIndex == 1) ? KEY7_01 :\
+                                    (tripcodeIndex == 2) ? KEY7_02 :\
+                                    (tripcodeIndex == 3) ? KEY7_03 :\
+                                    (tripcodeIndex == 4) ? KEY7_04 :\
+                                    (tripcodeIndex == 5) ? KEY7_05 :\
+                                    (tripcodeIndex == 6) ? KEY7_06 :\
+                                    (tripcodeIndex == 7) ? KEY7_07 :\
+                                    (tripcodeIndex == 8) ? KEY7_08 :\
+                                    (tripcodeIndex == 9) ? KEY7_09 :\
+									(tripcodeIndex == 10) ? KEY7_10 :\
+                                    (tripcodeIndex == 11) ? KEY7_11 :\
+                                    (tripcodeIndex == 12) ? KEY7_12 :\
+                                    (tripcodeIndex == 13) ? KEY7_13 :\
+                                    (tripcodeIndex == 14) ? KEY7_14 :\
+                                    (tripcodeIndex == 15) ? KEY7_15 :\
+                                    (tripcodeIndex == 16) ? KEY7_16 :\
+                                    (tripcodeIndex == 17) ? KEY7_17 :\
+                                    (tripcodeIndex == 18) ? KEY7_18 :\
+                                    (tripcodeIndex == 19) ? KEY7_19 :\
+									(tripcodeIndex == 20) ? KEY7_20 :\
+                                    (tripcodeIndex == 21) ? KEY7_21 :\
+                                    (tripcodeIndex == 22) ? KEY7_22 :\
+                                    (tripcodeIndex == 23) ? KEY7_23 :\
+                                    (tripcodeIndex == 24) ? KEY7_24 :\
+                                    (tripcodeIndex == 25) ? KEY7_25 :\
+                                    (tripcodeIndex == 26) ? KEY7_26 :\
+                                    (tripcodeIndex == 27) ? KEY7_27 :\
+                                    (tripcodeIndex == 28) ? KEY7_28 :\
+                                    (tripcodeIndex == 29) ? KEY7_29 :\
+									(tripcodeIndex == 30) ? KEY7_30 :\
+                                                            KEY7_31;\
 		}                                                                                                  \
 		output->numGeneratedTripcodes = OPENCL_DES_BS_DEPTH;                                               \
 	}                                                                                                      \
