@@ -37,8 +37,6 @@
 
 
 // #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
-// #define DISABLE_GCN_ASSEMBLER
-// #define SAVE_ASSEMBLY_SOURCE
 // #define SINGLE_SALT
 
 
@@ -672,28 +670,26 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_NAME,              sizeof(deviceName),      &deviceName,      NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VERSION,           sizeof(deviceVersion),    &deviceVersion,    NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DRIVER_VERSION,           sizeof(driverVersion),    &driverVersion,    NULL));
-	BOOL useGCNAssembler =    (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
-		                   && (   strcmp(deviceName, "CapeVerde") == 0
-						       || strcmp(deviceName, "Pitcairn") == 0
-						       || strcmp(deviceName, "Tahiti") == 0
-						       || strcmp(deviceName, "Oland") == 0
-						       || strcmp(deviceName, "Bonaire") == 0
-						       || strcmp(deviceName, "Spectre") == 0
-						       || strcmp(deviceName, "Spooky") == 0
-						       || strcmp(deviceName, "Kalindi") == 0
-						       || strcmp(deviceName, "Hainan") == 0
-						       || strcmp(deviceName, "Hawaii") == 0
-						       || strcmp(deviceName, "Iceland") == 0
-						       || strcmp(deviceName, "Tonga") == 0
-						       || strcmp(deviceName, "Mullins") == 0
-						       || strcmp(deviceName, "Fiji") == 0
-						       || strcmp(deviceName, "Carrizo") == 0)
-						   && (   strncmp(deviceVersion, "OpenCL 1.2", 10) == 0
-						       || strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
+	BOOL enableGCNAssembler =    options.enableGCNAssembler
+		                      && (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
+		                      && (   strcmp(deviceName, "CapeVerde") == 0
+						          || strcmp(deviceName, "Pitcairn") == 0
+						          || strcmp(deviceName, "Tahiti") == 0
+						          || strcmp(deviceName, "Oland") == 0
+						          || strcmp(deviceName, "Bonaire") == 0
+						          || strcmp(deviceName, "Spectre") == 0
+						          || strcmp(deviceName, "Spooky") == 0
+						          || strcmp(deviceName, "Kalindi") == 0
+						          || strcmp(deviceName, "Hainan") == 0
+						          || strcmp(deviceName, "Hawaii") == 0
+						          || strcmp(deviceName, "Iceland") == 0
+						          || strcmp(deviceName, "Tonga") == 0
+						          || strcmp(deviceName, "Mullins") == 0
+						          || strcmp(deviceName, "Fiji") == 0
+						          || strcmp(deviceName, "Carrizo") == 0)
+						      && (   strncmp(deviceVersion, "OpenCL 1.2", 10) == 0
+						          || strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
 	BOOL isDriverOpenCL20Compatible = (strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
-#ifdef DISABLE_GCN_ASSEMBLER
-	useGCNAssembler = FALSE;
-#endif
 	BOOL isIntelHDGraphics = FALSE;
 	if (   strcmp(deviceVendor, OPENCL_VENDOR_INTEL) == 0
 		&& strncmp(deviceName, "Intel(R) HD Graphics", strlen("Intel(R) HD Graphics")) == 0) {
@@ -797,12 +793,12 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 #ifdef SINGLE_SALT
 			} while (salt[0] != '.' || salt[1] != '.');
 #endif
-			if (false && useGCNAssembler && isDriverOpenCL20Compatible) {
+			if (false && enableGCNAssembler && isDriverOpenCL20Compatible) {
 				char    dummyKernelBinaryFilePath[MAX_LEN_FILE_PATH + 1];
 				sprintf(dummyKernelBinaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, dummyKernelBinaryFilePath);
 				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, dummyKernelBinaryFilePath);
-			} else if (useGCNAssembler) {
+			} else if (enableGCNAssembler) {
 				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, NULL);
 			} else {
 				char    binaryFilePath[MAX_LEN_FILE_PATH + 1];

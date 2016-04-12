@@ -348,6 +348,10 @@
 		K53 = 0x001fffe0
 		K54 = 0x001fffff
 		K55 = 0xffe00000
+
+		KEY7_00 = 0xab
+		   :
+		KEY7_31 = 0xca
 		*/
 
         DB63 = %v23

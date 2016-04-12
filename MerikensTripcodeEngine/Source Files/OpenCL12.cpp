@@ -33,7 +33,6 @@
 
 
 // #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
-// #define DISABLE_GCN_ASSEMBLER
 // #define SAVE_ASSEMBLY_SOURCE
 
 
@@ -517,26 +516,24 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_NAME,              sizeof(deviceName),      &deviceName,      NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VERSION,           sizeof(deviceVersion),    &deviceVersion,    NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DRIVER_VERSION,           sizeof(driverVersion),    &driverVersion,    NULL));
-	BOOL useGCNAssembler =    (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
-		                   && (   strcmp(deviceName, "CapeVerde") == 0
-						       || strcmp(deviceName, "Pitcairn") == 0
-						       || strcmp(deviceName, "Tahiti") == 0
-						       || strcmp(deviceName, "Oland") == 0
-						       || strcmp(deviceName, "Bonaire") == 0
-						       || strcmp(deviceName, "Spectre") == 0
-						       || strcmp(deviceName, "Spooky") == 0
-						       || strcmp(deviceName, "Kalindi") == 0
-						       || strcmp(deviceName, "Hainan") == 0
-						       || strcmp(deviceName, "Hawaii") == 0
-						       || strcmp(deviceName, "Iceland") == 0
-						       || strcmp(deviceName, "Tonga") == 0
-						       || strcmp(deviceName, "Mullins") == 0
-						       || strcmp(deviceName, "Fiji") == 0
-						       || strcmp(deviceName, "Carrizo") == 0)
+	BOOL enableGCNAssembler =    options.enableGCNAssembler
+		                      && (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
+		                      && (   strcmp(deviceName, "CapeVerde") == 0
+						          || strcmp(deviceName, "Pitcairn") == 0
+						          || strcmp(deviceName, "Tahiti") == 0
+						          || strcmp(deviceName, "Oland") == 0
+						          || strcmp(deviceName, "Bonaire") == 0
+						          || strcmp(deviceName, "Spectre") == 0
+						          || strcmp(deviceName, "Spooky") == 0
+						          || strcmp(deviceName, "Kalindi") == 0
+						          || strcmp(deviceName, "Hainan") == 0
+						          || strcmp(deviceName, "Hawaii") == 0
+						          || strcmp(deviceName, "Iceland") == 0
+						          || strcmp(deviceName, "Tonga") == 0
+						          || strcmp(deviceName, "Mullins") == 0
+						          || strcmp(deviceName, "Fiji") == 0
+						          || strcmp(deviceName, "Carrizo") == 0)
 						   /* && (strncmp(deviceVersion, "OpenCL 1.2", 10) == 0) */;
-#ifdef DISABLE_GCN_ASSEMBLER
-	useGCNAssembler = FALSE;
-#endif
 	BOOL isIntelHDGraphics = FALSE;
 	if (   strcmp(deviceVendor, OPENCL_VENDOR_INTEL) == 0
 		&& strncmp(deviceName, "Intel(R) HD Graphics", strlen("Intel(R) HD Graphics")) == 0) {
@@ -566,7 +563,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	cl_context       context      = clCreateContext(NULL, 1, &deviceID, OnOpenCLError, NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_command_queue commandQueue = clCreateCommandQueue(context, deviceID, 0, &openCLError);               OPENCL_ERROR(openCLError);
 	cl_program       program;
-	if (useGCNAssembler) {
+	if (enableGCNAssembler) {
 		CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion);
 	} else {
 		// Create an OpenCL kernel from the source code.
