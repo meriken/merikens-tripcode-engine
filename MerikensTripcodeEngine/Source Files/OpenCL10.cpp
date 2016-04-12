@@ -36,6 +36,11 @@
 
 
 
+// #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
+// #define SINGLE_SALT
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // INCLUDE FILE(S)                                                           //
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,8 +52,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // OPENCL SEARCH THREAD FOR 10 CHARACTER TRIPCODES                           //
 ///////////////////////////////////////////////////////////////////////////////
-
-// #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
 
 typedef struct KeyInfo {
 	unsigned char partialKeyAndRandomBytes[10];
@@ -68,7 +71,7 @@ typedef struct PartialKeyFrom3To6 {
 		isSecondByte = FALSE;                   \
 	}                                           \
 
-static void CreateProgram(cl_context *context, cl_program *program, cl_device_id *deviceID, char *sourceFileName, char *buildOptions, char keyChar1, char keyChar2, unsigned char *expansionFunction)
+static void CreateProgram(cl_context *context, cl_program *program, cl_device_id *deviceID, char *sourceFileName, char *buildOptions, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction, char *binaryFilePath)
 {
 	cl_int         openCLError;
 
@@ -77,11 +80,13 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
 	salt[1] = CONVERT_CHAR_FOR_SALT(keyChar2);
 	DES_CreateExpansionFunction((char *)salt, expansionFunction);
+	//for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
+	//	printf("#define EF%02d %d\n", i, (int)expansionFunction[i]);
 
 	/*
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
-	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\%02x%02x.bin", applicationDirectory, salt[0], salt[1]);
+	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
 	if (binaryFile = fopen(binaryFilePath, "rb")) {
 		fseek(binaryFile, 0L, SEEK_END);
 		size_t binarySize = ftell(binaryFile);
@@ -142,14 +147,15 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	}
 	unsigned char key7Array[OPENCL_DES_BS_DEPTH];
 	int randomByteForKey7 = RandomByte();
-	strcat(sourceCode, "__constant unsigned char key7Array[] = {");
+	//strcat(sourceCode, "__constant unsigned char key7Array[] = {");
 	for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i) {
 		key7Array[i] = keyCharTable_SecondByteAndOneByte[randomByteForKey7 + i];
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; 
-		sprintf(s, "0x%02x,", key7Array[i]);
+		//sprintf(s, "0x%02x,", key7Array[i]);
+		sprintf(s, "#define KEY7_%02d 0x%02x\n", i, key7Array[i]);
 		strcat(sourceCode, s);
 	}
-	strcat(sourceCode, "};\n");
+	//strcat(sourceCode, "};\n");
 	for (int j = 0; j < 7; ++j) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
 		unsigned int k = 0;
@@ -179,34 +185,435 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	}
 	OPENCL_ERROR(openCLError);
 
-	/*
-	//
-	size_t numDevices;
-	openCLError = clGetProgramInfo(*program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
-	OPENCL_ERROR(openCLError);
-	size_t *binarySizeArray = (size_t *)malloc(sizeof(size_t) * numDevices);
-	ERROR0(binarySizeArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t) * numDevices, binarySizeArray, NULL);
-	OPENCL_ERROR(openCLError);
-	unsigned char **binaryArray = (unsigned char **)malloc(sizeof(unsigned char *) * numDevices);
-	ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	for(int i = 0; i < numDevices; ++i) {
-		binaryArray[i] = (unsigned char *)malloc(binarySizeArray[i]);
-		ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	if (binaryFilePath) {
+		size_t numDevices;
+		openCLError = clGetProgramInfo(*program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
+		OPENCL_ERROR(openCLError);
+		size_t *binarySizeArray = (size_t *)malloc(sizeof(size_t) * numDevices);
+		ERROR0(binarySizeArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t) * numDevices, binarySizeArray, NULL);
+		OPENCL_ERROR(openCLError);
+		unsigned char **binaryArray = (unsigned char **)malloc(sizeof(unsigned char *) * numDevices);
+		ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		for(int i = 0; i < numDevices; ++i) {
+			binaryArray[i] = (unsigned char *)malloc(binarySizeArray[i]);
+			ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		}
+		openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARIES, sizeof(unsigned char *) * numDevices, binaryArray, NULL);
+		OPENCL_ERROR(openCLError);
+		FILE   *binaryFile;
+		if (binaryFile = fopen(binaryFilePath, "wb")) {
+			fwrite(binaryArray[0], sizeof(unsigned char), binarySizeArray[0], binaryFile);
+			fclose(binaryFile);
+		}
+		free(binarySizeArray);
+		for(int i = 0; i < numDevices; ++i)
+			free(binaryArray[i]);
+		free(binaryArray);
 	}
-	openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARIES, sizeof(unsigned char *) * numDevices, binaryArray, NULL);
-	OPENCL_ERROR(openCLError);
+}
 
-	//
-	if (binaryFile = fopen(binaryFilePath, "wb")) {
-		fwrite(binaryArray[0], sizeof(unsigned char), binarySizeArray[0], binaryFile);
+#include <iostream>
+#include <fstream>
+#include <iterator>
+#include "elfio/elfio.hpp"
+
+using namespace std;
+using namespace ELFIO;
+
+static void ExtractTextSectionInELFFileIntoFile(char *ELFFilePath, char *textSectionFilePath)
+{
+    elfio reader;
+    
+    reader.load(ELFFilePath);
+    Elf_Half sec_num = reader.sections.size();
+    for ( int i = 0; i < sec_num; ++i ) {
+        section* psec = reader.sections[i];
+		if (psec->get_name() == ".text") {
+			ofstream textSectionFile;
+			textSectionFile.open(textSectionFilePath, ios::out | ios::binary);
+			textSectionFile.write(reader.sections[i]->get_data(), reader.sections[i]->get_size());
+			textSectionFile.close();
+		}
+    }
+}
+
+static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSectionFilePath, BOOL innerELFFile)
+{
+    elfio reader, writer;
+    
+	reader.load(ELFFilePath);
+
+	ifstream textSectionFile;
+	textSectionFile.open(textSectionFilePath, ios::in | ios::binary);
+	textSectionFile.seekg(0, ios::end);
+	size_t textSectionSize = textSectionFile.tellg();
+	char *textSection = new char[textSectionSize];
+	textSectionFile.seekg(0, ios::beg);
+	textSectionFile.read(textSection, textSectionSize);
+	textSectionFile.close();
+
+	writer.create(reader.get_class(), reader.get_encoding());
+
+	writer.set_os_abi(reader.get_os_abi());
+	writer.set_abi_version(reader.get_abi_version());
+	writer.set_type(reader.get_type());
+	writer.set_machine(reader.get_machine());
+
+	Elf_Half sec_num = reader.sections.size();
+	section* text_sec = NULL;
+    section* data_sec = NULL;
+    section* symtab_sec = NULL;
+    section* strtab_sec = NULL;
+    for ( int i = 0; i < sec_num; ++i ) {
+		if (reader.sections[i]->get_name() == ".strtab")
+			strtab_sec = reader.sections[i];
+	}
+    for ( int i = 0; i < sec_num; ++i ) {
+        section* src_sec = reader.sections[i];
+		if (src_sec->get_name() == ".shstrtab" || src_sec->get_type() == SHT_NULL)
+			continue;
+
+		section* dest_sec = writer.sections.add(src_sec->get_name());		
+		dest_sec->set_type(src_sec->get_type());
+		dest_sec->set_flags(src_sec->get_flags());
+		dest_sec->set_link(src_sec->get_link());
+		dest_sec->set_addr_align(src_sec->get_addr_align());
+		dest_sec->set_entry_size(src_sec->get_entry_size());
+		dest_sec->set_address(src_sec->get_address());
+		dest_sec->set_info(src_sec->get_info());
+		//dest_sec->set_size(src_sec->get_size());
+		//dest_sec->set_name_string_offset(src_sec->get_name_string_offset());
+		if (src_sec->get_name() == ".text") {
+			dest_sec->set_data(textSection, textSectionSize);
+			text_sec = dest_sec;
+		} else if (src_sec->get_name() == ".data") {
+			dest_sec->set_data(src_sec->get_data(), src_sec->get_size());
+			data_sec = dest_sec;
+		} else if (src_sec->get_name() == ".symtab") {
+			/*
+			symbol_section_accessor src_symbols (symbol_section_accessor(reader, src_sec));
+			symbol_section_accessor dest_symbols(symbol_section_accessor(reader, dest_sec));
+			std::string name;
+			Elf64_Addr value;
+			Elf_Xword size;
+			unsigned char bind;
+			unsigned char type;
+			Elf_Half section_index;
+			unsigned char other;
+
+			for (int i = 0; i < src_symbols.get_symbols_num(); ++i) {
+				int j = 0;
+				string_section_accessor strings = string_section_accessor(strtab_sec);
+
+				src_symbols.get_symbol(i, name, value, size, bind, type, section_index, other);
+				while (strings.get_string(j)) {
+					if (name == strings.get_string(j))
+						break;
+					++j;
+				}
+				if (type == STT_FUNC)
+					size = textSectionSize;
+				if (type == STT_NOTYPE)
+					continue;
+				dest_symbols.add_symbol(j, value, size, bind, type, other, section_index);
+			}
+			*/
+			char *data = new char [src_sec->get_size()];
+			for (int i = 0; i < src_sec->get_size(); ++i) {
+				data[i] = (src_sec->get_data())[i];
+				//printf("%02x ", (int)(((unsigned char *)data)[i]));
+				//if (i % 16 == 15)
+				//	printf("\n");
+			}
+			//printf("\n");
+			if (!innerELFFile && src_sec->get_size() >=  16 + 24 * 3)
+				*(uint64_t *)(data + 24 * 2 + 16) = textSectionSize;
+			dest_sec->set_data(data, src_sec->get_size());
+			//for (int i = 0; i < src_sec->get_size(); ++i) {
+			//	printf("%02x ", (int)(((unsigned char *)data)[i]));
+			//	if (i % 16 == 15)
+			//		printf("\n");
+			//}
+			delete [] data;
+			symtab_sec = dest_sec;
+		} else if (src_sec->get_name() == ".strtab") {
+			dest_sec->set_data(src_sec->get_data(), src_sec->get_size());
+			strtab_sec = dest_sec;
+		} else {
+			dest_sec->set_data(src_sec->get_data(), src_sec->get_size());
+		}
+	}
+
+	Elf_Half seg_num = reader.segments.size();
+    for ( int i = 0; i < seg_num; ++i ) {
+        segment* src_seg = reader.segments[i];
+		segment* dest_seg = writer.segments.add();
+		dest_seg->set_type(src_seg->get_type());
+		dest_seg->set_virtual_address(src_seg->get_virtual_address());
+		dest_seg->set_physical_address(src_seg->get_physical_address());
+		dest_seg->set_memory_size(src_seg->get_memory_size());
+		dest_seg->set_flags(src_seg->get_flags());
+		dest_seg->set_align(src_seg->get_align());
+
+		if (src_seg->get_type() == PT_LOAD && text_sec && data_sec && symtab_sec && strtab_sec) {
+			size_t text_sec_size   = text_sec->get_size();
+			size_t data_sec_size   = data_sec->get_size();
+			size_t symtab_sec_size = symtab_sec->get_size();
+			size_t strtab_sec_size = strtab_sec->get_size();
+			size_t size = text_sec_size + data_sec_size + symtab_sec_size + strtab_sec_size;
+			char *data = new char [size], *p = data;
+			const char *q;
+			int i;
+			for (i = 0, q = text_sec->get_data();   i < text_sec_size;   ++i) *p++ = *q++;
+			for (i = 0, q = data_sec->get_data();   i < data_sec_size;   ++i) *p++ = *q++;
+			for (i = 0, q = symtab_sec->get_data(); i < symtab_sec_size; ++i) *p++ = *q++;
+			for (i = 0, q = strtab_sec->get_data(); i < strtab_sec_size; ++i) *p++ = *q++;
+			dest_seg->set_memory_size(size);
+			dest_seg->set_data(data, size);
+			delete [] data;
+		} else { 
+			dest_seg->set_data(src_seg->get_data(), src_seg->get_file_size());
+		}
+
+		if (src_seg->get_type() == PT_NOTE && innerELFFile) {
+			unsigned char *data = (unsigned char *)(dest_seg->get_data());
+			for (int i = 0; i < dest_seg->get_file_size() - 8; ++i) {
+				if (   data[i    ] == 0x41
+					&& data[i + 1] == 0x10
+					&& data[i + 2] == 0x00
+					&& data[i + 3] == 0x80
+					&& data[i + 4] != 0
+					&& data[i + 5] == 0
+					&& data[i + 6] == 0
+					&& data[i + 7] == 0) {
+					//printf("VGPR: %d\n", (int)data[i + 4]);
+					data[i + 4] = 128U; // VGPR
+					//printf("VGPR: %d\n", (int)data[i + 4]);
+				} else if (   data[i    ] == 0x42
+						   && data[i + 1] == 0x10
+						   && data[i + 2] == 0x00
+						   && data[i + 3] == 0x80
+						   && data[i + 4] != 0
+						   && data[i + 5] == 0
+						   && data[i + 6] == 0
+						   && data[i + 7] == 0) {
+					//printf("SGPR: %d\n", (int)data[i + 4]);
+					data[i + 4] = 102U; // SGPR
+					//printf("SGPR: %d\n", (int)data[i + 4]);
+				}
+			}
+		}
+	}
+	delete textSection;
+
+	if (innerELFFile) {
+		ERROR0(!writer.save_inner_elf_file(ELFFilePath), ERROR_OPENCL, "elfio failed.");
+	} else {
+		ERROR0(!writer.save_outer_elf_file(ELFFilePath), ERROR_OPENCL, "elfio failed.");
+	}
+}
+
+static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction, char *dummyKernelBinaryFilePath)
+{
+	static char *registerMap[64] = {
+		"%v120",
+		"%v67",
+		"%v58",
+		"%v64",
+		"%v66",
+		"%v63",
+		"%v62",
+		"%v123",
+		"%v121",
+		"%v122",
+		"%v73",
+		"%v71",
+		"%v72",
+		"%v70",
+		"%v69",
+		"%v65",
+		"%v68",
+		"%v74",
+		"%v81",
+		"%v80",
+		"%v78",
+		"%v77",
+		"%v79",
+		"%v75",
+		"%v76",
+		"%v86",
+		"%v84",
+		"%v59",
+		"%v119",
+		"%v57",
+		"%v56",
+		"%v55",
+		"%v54",
+		"%v53",
+		"%v52",
+		"%v51",
+		"%v50",
+		"%v49",
+		"%v48",
+		"%v47",
+		"%v46",
+		"%v45",
+		"%v44",
+		"%v43",
+		"%v42",
+		"%v41",
+		"%v40",
+		"%v39",
+		"%v38",
+		"%v37",
+		"%v36",
+		"%v35",
+		"%v34",
+		"%v33",
+		"%v32",
+		"%v31",
+		"%v30",
+		"%v29",
+		"%v28",
+		"%v27",
+		"%v26",
+		"%v25",
+		"%v24",
+		"%v23",
+	};
+	cl_int         openCLError;
+
+	// Create an expansion function based on the salt.
+	unsigned char  salt[2];
+	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
+	salt[1] = CONVERT_CHAR_FOR_SALT(keyChar2);
+	DES_CreateExpansionFunction((char *)salt, expansionFunction);
+	
+	char    asssemblerOutputFilePath[MAX_LEN_FILE_PATH + 1];
+	char    assemblerOutputFileFullPath[MAX_LEN_FILE_PATH + 1];
+	sprintf(asssemblerOutputFilePath, "OpenCL\\bin\\OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(assemblerOutputFileFullPath, "%s\\%s", applicationDirectory, asssemblerOutputFilePath);
+
+	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
+	char    sourceFileFullPath[MAX_LEN_FILE_PATH + 1];
+	FILE   *sourceFile;
+	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(sourceFileFullPath, "%s\\%s", applicationDirectory, sourceFilePath);
+
+	if (sourceFile = fopen(sourceFileFullPath, "w")) {
+		for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
+			fprintf(sourceFile, "DB_EF%02d = %s\n", i, registerMap[expansionFunction[i]]);
+
+		unsigned char key7Array[OPENCL_DES_BS_DEPTH];
+		int randomByteForKey7 = RandomByte();
+		for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i) {
+			key7Array[i] = keyCharTable_SecondByteAndOneByte[randomByteForKey7 + i];
+			char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; 
+			fprintf(sourceFile, "KEY7_%02d = 0x%02x\n", i, key7Array[i]);
+		}
+		for (int j = 0; j < 7; ++j) {
+			char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
+			unsigned int k = 0;
+			for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i)
+				k |= ((key7Array[i] >> j) & 0x1) << i;
+			fprintf(sourceFile, "K%02d = 0x%08x\n", j + 49, k);
+		}
+
+		fclose(sourceFile);
+	}
+	
+	int driverMajorVersion;
+	int driverMinorVersion;
+	char rest[LEN_LINE_BUFFER_FOR_SCREEN];
+	sscanf(driverVersion, "%d.%d%s", &driverMajorVersion, &driverMinorVersion, rest);
+	
+	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
+	if (dummyKernelBinaryFilePath) {
+		sprintf(assemblerCommand, "type \"%s\\OpenCL\\bin\\OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
+	} else {
+		sprintf(assemblerCommand, "type \"%s\\OpenCL\\bin\\OpenCL10GCN.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
+	}
+	system(assemblerCommand);
+	sprintf(assemblerCommand, 
+		    "cmd /C \"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"\"",
+			applicationDirectory,
+			dummyKernelBinaryFilePath                     ? "rawcode" : 
+			strncmp(deviceVersion, "OpenCL 1.2", 10) == 0 ? "amd"     :
+			                                                "amd",
+			deviceName,
+			(   strcmp(deviceName, "CapeVerde") == 0
+			 || strcmp(deviceName, "Pitcairn" ) == 0
+			 || strcmp(deviceName, "Tahiti"   ) == 0
+			 || strcmp(deviceName, "Oland"    ) == 0) ? "gcn1.0" :
+	        (   strcmp(deviceName, "Bonaire"  ) == 0
+			 || strcmp(deviceName, "Spectre"  ) == 0
+			 || strcmp(deviceName, "Spooky"   ) == 0
+			 || strcmp(deviceName, "Kalindi"  ) == 0
+			 || strcmp(deviceName, "Hainan"   ) == 0
+			 || strcmp(deviceName, "Hawaii"   ) == 0
+			 || strcmp(deviceName, "Iceland"  ) == 0
+			 || strcmp(deviceName, "Mullins"  ) == 0) ? "gcn1.1" :
+	                                                    "gcn1.2",
+            driverMajorVersion, 
+			driverMinorVersion, 
+			assemblerOutputFileFullPath,
+			sourceFileFullPath);
+	system(assemblerCommand);
+	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", sourceFileFullPath);
+	system(assemblerCommand);
+
+	if (dummyKernelBinaryFilePath) {
+		char    innerELFFilePath[MAX_LEN_FILE_PATH + 1];
+		sprintf(innerELFFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_InnerELF_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+		char    GCNCodeFilePath[MAX_LEN_FILE_PATH + 1];
+		sprintf(GCNCodeFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_GCNCode_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+
+		//sprintf(assemblerCommand, "cmd /C \"copy \"%s\" \"%s.original\"\"", dummyKernelBinaryFilePath, dummyKernelBinaryFilePath);
+		//system(assemblerCommand);
+		
+		ExtractTextSectionInELFFileIntoFile(dummyKernelBinaryFilePath, innerELFFilePath);
+
+		//sprintf(assemblerCommand, "cmd /C \"copy \"%s\" \"%s.original\"\"", innerELFFilePath, innerELFFilePath);
+		//system(assemblerCommand);
+
+		//ExtractTextSectionInELFFileIntoFile(innerELFFilePath, GCNCodeFilePath);
+		//ReplaceTextSectionInELFFileWithFile(innerELFFilePath, GCNCodeFilePath, TRUE);
+		
+		ReplaceTextSectionInELFFileWithFile(innerELFFilePath, assemblerOutputFileFullPath, TRUE);
+		ReplaceTextSectionInELFFileWithFile(dummyKernelBinaryFilePath, innerELFFilePath, FALSE);
+		
+		sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", innerELFFilePath);
+		system(assemblerCommand);
+	}
+
+	FILE   *binaryFile;
+	if (binaryFile = fopen(dummyKernelBinaryFilePath ? dummyKernelBinaryFilePath : assemblerOutputFileFullPath, "rb")) {
+		fseek(binaryFile, 0L, SEEK_END);
+		size_t binarySize = ftell(binaryFile);
+		unsigned char *binary = (unsigned char *)malloc(binarySize);
+		const unsigned char *binaryArray[1] = {binary};
+		ERROR0(binary == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		fseek(binaryFile, 0L, SEEK_SET);
+		fread(binary, sizeof(unsigned char), binarySize, binaryFile);
+		fclose(binaryFile);
+
+		*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
+		OPENCL_ERROR(openCLError);
+		openCLError = clBuildProgram(*program, 1, deviceID, NULL, NULL, NULL);
+		OPENCL_ERROR(openCLError);
+		
+		free(binary);
 		fclose(binaryFile);
 	}
-	free(binarySizeArray);
-	for(int i = 0; i < numDevices; ++i)
-		free(binaryArray[i]);
-	free(binaryArray);
-	*/
+	
+	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", assemblerOutputFileFullPath);
+	system(assemblerCommand);
+
+	if (dummyKernelBinaryFilePath) {
+		sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", dummyKernelBinaryFilePath);
+		system(assemblerCommand);
+	}
 }
 
 unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
@@ -251,14 +658,38 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	// printf("globalWorkSize: %d\n", globalWorkSize);
 	// printf(" localWorkSize: %d\n",  localWorkSize);
 
-	char    deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
-	char    deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
+	char deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
+	char deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
+	char deviceVersion[LEN_LINE_BUFFER_FOR_SCREEN];
+	char driverVersion[LEN_LINE_BUFFER_FOR_SCREEN];
 	cl_ulong localMemorySize;
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(localMemorySize), &localMemorySize, NULL));
 	// printf("localMemorySize: %d\n", localMemorySize);
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VENDOR,            sizeof(deviceVendor),    &deviceVendor,    NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_NAME,              sizeof(deviceName),      &deviceName,      NULL));
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VERSION,           sizeof(deviceVersion),    &deviceVersion,    NULL));
+	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DRIVER_VERSION,           sizeof(driverVersion),    &driverVersion,    NULL));
+	BOOL enableGCNAssembler =    options.enableGCNAssembler
+		                      && (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
+		                      && (   strcmp(deviceName, "CapeVerde") == 0
+						          || strcmp(deviceName, "Pitcairn") == 0
+						          || strcmp(deviceName, "Tahiti") == 0
+						          || strcmp(deviceName, "Oland") == 0
+						          || strcmp(deviceName, "Bonaire") == 0
+						          || strcmp(deviceName, "Spectre") == 0
+						          || strcmp(deviceName, "Spooky") == 0
+						          || strcmp(deviceName, "Kalindi") == 0
+						          || strcmp(deviceName, "Hainan") == 0
+						          || strcmp(deviceName, "Hawaii") == 0
+						          || strcmp(deviceName, "Iceland") == 0
+						          || strcmp(deviceName, "Tonga") == 0
+						          || strcmp(deviceName, "Mullins") == 0
+						          || strcmp(deviceName, "Fiji") == 0
+						          || strcmp(deviceName, "Carrizo") == 0)
+						      && (   strncmp(deviceVersion, "OpenCL 1.2", 10) == 0
+						          || strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
+	BOOL isDriverOpenCL20Compatible = (strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
 	BOOL isIntelHDGraphics = FALSE;
 	if (   strcmp(deviceVendor, OPENCL_VENDOR_INTEL) == 0
 		&& strncmp(deviceName, "Intel(R) HD Graphics", strlen("Intel(R) HD Graphics")) == 0) {
@@ -289,11 +720,13 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	sprintf(tempBuildOption, " -DOPENCL_DES_BS_DEPTH=%d ", (int)OPENCL_DES_BS_DEPTH);
 	strcat(buildOptions, tempBuildOption);
 	strcat(buildOptions, " -w ");
+	strcat(buildOptions, " -fno-bin-source -fno-bin-llvmir -fbin-exe ");
 #ifdef DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
 	strcat(buildOptions, " -save-temps=OpenCL10.cl ");
 #endif
 
 	//
+	/*
 	char *nameKernelFunction;
 	if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
 		nameKernelFunction = (numTripcodeChunk == 1)                              ? "FORWARD_MATCHING_1CHUNK" :
@@ -314,6 +747,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	strcat(buildOptions, " -D");
 	strcat(buildOptions, nameKernelFunction);
 	strcat(buildOptions, " ");
+	*/
 
 	// The main loop of the thread.
 	double       timeElapsed = 0;
@@ -324,9 +758,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	double       deltaTime;
 	int          execCounter = 0;
 	BOOL         firstBuild = TRUE;
-	int          salt0NonDotCounter = 0;
-	int          salt1NonDotCounter = 0;
-
+	
 	// Create an OpenCL context.
 	context      = clCreateContext(NULL, 1, &deviceID, OnOpenCLError, NULL, &openCLError); OPENCL_ERROR(openCLError);
 	commandQueue = clCreateCommandQueue(context, deviceID, 0, &openCLError);               OPENCL_ERROR(openCLError);
@@ -351,43 +783,46 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 			}
 	
 			// Choose the first 3 characters of the keyInfo.partialKeyAndRandomBytes.
+			unsigned char  salt[2];
+#ifdef SINGLE_SALT
 			do {
+#endif
 				SetCharactersInTripcodeKey(keyInfo.partialKeyAndRandomBytes, 3);
-				unsigned char  salt[2];
 				salt[0] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[1]);
-				if (salt[0] == '.' && salt0NonDotCounter < 64) {
-					continue;
-				} else if (salt[0] == '.') {
-					salt0NonDotCounter -= 63;
-				} else {
-					++salt0NonDotCounter;
-				}
 				salt[1] = CONVERT_CHAR_FOR_SALT(keyInfo.partialKeyAndRandomBytes[2]);
-				if (salt[1] == '.' && salt1NonDotCounter < 64) {
-					continue;
-				} else if (salt[1] == '.') {
-					salt1NonDotCounter -= 63;
-				} else {
-					++salt1NonDotCounter;
-				}
-				break;
-			} while (TRUE);
-
-			CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction);
+#ifdef SINGLE_SALT
+			} while (salt[0] != '.' || salt[1] != '.');
+#endif
+			if (false && enableGCNAssembler && isDriverOpenCL20Compatible) {
+				char    dummyKernelBinaryFilePath[MAX_LEN_FILE_PATH + 1];
+				sprintf(dummyKernelBinaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, dummyKernelBinaryFilePath);
+				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, dummyKernelBinaryFilePath);
+			} else if (enableGCNAssembler) {
+				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, NULL);
+			} else {
+				char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
+				FILE   *binaryFile;
+				sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
+				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, binaryFilePath);
+			}
 			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL kernel...");
 			kernel = clCreateKernel(program, "OpenCL_DES_PerformSearching", &openCLError);
 			// printf("clCreateKernel(): done\n");
    			OPENCL_ERROR(openCLError);
 
 			// Set arguments for the kernel.
-			OPENCL_ERROR(clSetKernelArg(kernel, 0, sizeof(cl_mem),       (void *)&openCL_outputArray));
-			OPENCL_ERROR(clSetKernelArg(kernel, 1, sizeof(cl_mem),       (void *)&openCL_keyInfo));
-			OPENCL_ERROR(clSetKernelArg(kernel, 2, sizeof(cl_mem),       (void *)&openCL_tripcodeChunkArray));
-			OPENCL_ERROR(clSetKernelArg(kernel, 3, sizeof(unsigned int), (void *)&numTripcodeChunk));
-			OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_smallChunkBitmap));
-			OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_compactMediumChunkBitmap));
-			OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_chunkBitmap));
-			OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),       (void *)&openCL_partialKeyFrom3To6Array));
+			cl_int  openCL_searchMode       = searchMode;
+			cl_uint openCL_numTripcodeChunk = numTripcodeChunk;
+			OPENCL_ERROR(clSetKernelArg(kernel, 0, sizeof(cl_int),  (void *)&openCL_searchMode));
+			OPENCL_ERROR(clSetKernelArg(kernel, 1, sizeof(cl_mem),  (void *)&openCL_outputArray));
+			OPENCL_ERROR(clSetKernelArg(kernel, 2, sizeof(cl_mem),  (void *)&openCL_keyInfo));
+			OPENCL_ERROR(clSetKernelArg(kernel, 3, sizeof(cl_mem),  (void *)&openCL_tripcodeChunkArray));
+			OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_uint), (void *)&openCL_numTripcodeChunk));
+			OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),  (void *)&openCL_smallChunkBitmap));
+			OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),  (void *)&openCL_compactMediumChunkBitmap));
+			OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),  (void *)&openCL_chunkBitmap));
+			OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(cl_mem),  (void *)&openCL_partialKeyFrom3To6Array));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,   CL_TRUE, 0, sizeof(unsigned int) * numTripcodeChunk, tripcodeChunkArray,   0, NULL, NULL));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_smallChunkBitmap,       CL_TRUE, 0, SMALL_CHUNK_BITMAP_SIZE,                   smallChunkBitmap,       0, NULL, NULL));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_compactMediumChunkBitmap,       CL_TRUE, 0, MEDIUM_CHUNK_BITMAP_SIZE / 8,     compactMediumChunkBitmap,       0, NULL, NULL));
@@ -423,7 +858,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 			                          | ((keyInfo.partialKeyAndRandomBytes[1] & 0x7f) << 7)
 									  | ((keyInfo.partialKeyAndRandomBytes[2] & 0x7f) << 14)
 									  | ((keyInfo.partialKeyAndRandomBytes[3] & 0x7f) << 21);
-		OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(unsigned int), (void *)&keyFrom00To27));
+		OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(unsigned int), (void *)&keyFrom00To27));
 
 		// Generate random bytes for the keyInfo.partialKeyAndRandomBytes to ensure the randomness of generated keys.
 		for (int i = 4; i < lenTripcode; ++i)

@@ -105,6 +105,7 @@ struct Options {
 	BOOL openCLRunChildProcesses;
 	int  openCLNumProcesses;
 	BOOL checkTripcodes;
+	BOOL enableGCNAssembler;
 };
 
 struct CUDADeviceSearchThreadInfo {

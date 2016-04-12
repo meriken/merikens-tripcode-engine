@@ -54,9 +54,9 @@ Options options = {
 	DEFAULT_OPTION_TEST_NEW_CODE,                   // BOOL testNewCode;
 	DEFAULT_OPTION_NUM_CPU_SEARCH_THREADS,          // int  numCPUSearchThreads;
 	DEFAULT_OPTION_REDIRECTION,                     // BOOL redirection;
-	DEFAULT_OPTION_OPENCL_NUM_NUM_WORK_ITEMS_PER_CU,   // int  openCLNumWorkItemsPerCU;
-	DEFAULT_OPTION_OPENCL_NUM_WORK_ITEMS_PER_WG,    // int  openCLNumWorkItemsPerWG;
-	DEFAULT_OPTION_OPENCL_NUM_THREADS_PER_AMD_GPU,  // int  openCLNumThreads;
+	DEFAULT_OPTION_OPENCL_NUM_NUM_WORK_ITEMS_PER_CU, // int  openCLNumWorkItemsPerCU;
+	DEFAULT_OPTION_OPENCL_NUM_WORK_ITEMS_PER_WG,     // int  openCLNumWorkItemsPerWG;
+	DEFAULT_OPTION_OPENCL_NUM_THREADS_PER_AMD_GPU,   // int  openCLNumThreads;
 	DEFAULT_OPTION_USE_ONE_BYTE_CHARACTERS_FOR_KEYS, // BOOL useOneByteCharactersForKeys;
 	DEFAULT_OPTION_SEARCH_FOR_HISEKI_ON_CPU,
 	DEFAULT_OPTION_SEARCH_FOR_KAKUHI_ON_CPU,
@@ -71,7 +71,8 @@ Options options = {
 	DEFAULT_OPTION_IS_AVX2_ENABLED,
 	DEFAULT_OPTION_OPENCL_RUN_CHILD_PROCESSES_FOR_MULTIPLE_DEVICES, // BOOL openCLRunChildProcesses;
 	DEFAULT_OPTION_OPENCL_NUM_PROCESSES_PER_AMD_GPU, // int  openCLNumProcesses;
-	DEFAULT_OPTION_CHECK_TRIPCODES,               // BOOL checkTripcodes;
+	DEFAULT_OPTION_CHECK_TRIPCODES,                  // BOOL checkTripcodes;
+	DEFAULT_OPTION_ENABLE_GCN_ASSEMBLER,             // BOOL enableGCNAssembler;
 };
 
 // Search Parameters
@@ -525,7 +526,8 @@ void CheckSearchThreads()
 		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
 			                   ? (currentTime - info->timeLastUpdated)
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
-		// ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		/*
 		if (deltaTime > 60 * 1000) {
 			if (info->runChildProcess) {
 				strcpy(info->status, "[process] Restarting search thread...");
@@ -550,7 +552,7 @@ void CheckSearchThreads()
 																		  0,
 																		  &winThreadID);
 			ERROR0((openCLDeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart an OpenCL device search thread.");
-		}
+		}*/
 	}
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
@@ -1319,6 +1321,9 @@ void ObtainOptions(int argCount, char **arguments)
 		} else if (strcmp(arguments[indexArg], "--disable-tripcode-checks") == 0) {
 			options.checkTripcodes = FALSE;
 
+		} else if (strcmp(arguments[indexArg], "--disable-gcn-assembler") == 0) {
+			options.enableGCNAssembler = FALSE;
+
 		} else if (   strcmp(arguments[indexArg], "--display-device-information") == 0
 			       || strcmp(arguments[indexArg], "--list-expanded-patterns"    ) == 0
 				   || strcmp(arguments[indexArg], "--gpu-list"                  ) == 0) {
@@ -2075,7 +2080,7 @@ int main(int argc, char **argv)
 			break;
 				
 		//
-		// CheckSearchThreads();
+		CheckSearchThreads();
 		startingTime = timeGetTime();
 		PrintStatus();
 		
