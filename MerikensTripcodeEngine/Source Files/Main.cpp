@@ -526,7 +526,8 @@ void CheckSearchThreads()
 		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
 			                   ? (currentTime - info->timeLastUpdated)
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
-		// ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		/*
 		if (deltaTime > 60 * 1000) {
 			if (info->runChildProcess) {
 				strcpy(info->status, "[process] Restarting search thread...");
@@ -551,7 +552,7 @@ void CheckSearchThreads()
 																		  0,
 																		  &winThreadID);
 			ERROR0((openCLDeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart an OpenCL device search thread.");
-		}
+		}*/
 	}
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
@@ -2079,7 +2080,7 @@ int main(int argc, char **argv)
 			break;
 				
 		//
-		// CheckSearchThreads();
+		CheckSearchThreads();
 		startingTime = timeGetTime();
 		PrintStatus();
 		
