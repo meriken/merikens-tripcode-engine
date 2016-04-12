@@ -152,6 +152,7 @@ extern CRITICAL_SECTION  criticalSection_ProcessTripcodePair;
 extern CRITICAL_SECTION  criticalSection_currentState;
 extern CRITICAL_SECTION  criticalSection_RandomByte;
 extern CRITICAL_SECTION  criticalSection_CUDADeviceSearchThreadInfoArray;
+extern CRITICAL_SECTION  criticalSection_ANSISystemFunction;
 extern unsigned int      numGeneratedTripcodesByCUDADevice;
 extern unsigned int      numGeneratedTripcodesByCUDADeviceInMillions;
 extern unsigned int      numGeneratedTripcodesByCPU;

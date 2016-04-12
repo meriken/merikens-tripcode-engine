@@ -484,6 +484,8 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	};
 	cl_int         openCLError;
 
+	EnterCriticalSection(&criticalSection_ANSISystemFunction);
+
 	// Create an expansion function based on the salt.
 	unsigned char  salt[2];
 	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
@@ -614,6 +616,8 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", dummyKernelBinaryFilePath);
 		system(assemblerCommand);
 	}
+
+	LeaveCriticalSection(&criticalSection_ANSISystemFunction);
 }
 
 unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)

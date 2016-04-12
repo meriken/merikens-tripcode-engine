@@ -153,6 +153,7 @@ CRITICAL_SECTION criticalSection_ProcessTripcodePair;
 CRITICAL_SECTION criticalSection_currentState;
 CRITICAL_SECTION criticalSection_CUDADeviceSearchThreadInfoArray;
 CRITICAL_SECTION criticalSection_openCLDeviceSearchThreadInfoArray;
+CRITICAL_SECTION criticalSection_ANSISystemFunction;
 unsigned int     numGeneratedTripcodes_GPU;
 unsigned int     numGeneratedTripcodesByGPUInMillions;
 unsigned int     numGeneratedTripcodes_CPU;
@@ -818,7 +819,7 @@ void InitProcess()
 	InitializeCriticalSection(&criticalSection_numGeneratedTripcodes);
 	InitializeCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
 	InitializeCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
-
+	InitializeCriticalSection(&criticalSection_ANSISystemFunction);
 	SetConsoleCtrlHandler(ControlHandler, true);
 }
 

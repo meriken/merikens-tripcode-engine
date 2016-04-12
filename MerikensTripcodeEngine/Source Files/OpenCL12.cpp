@@ -418,6 +418,8 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 {
 	cl_int         openCLError;
 	
+	EnterCriticalSection(&criticalSection_ANSISystemFunction);
+
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
 	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
@@ -476,6 +478,8 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
+
+	LeaveCriticalSection(&criticalSection_ANSISystemFunction);
 }
 
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
