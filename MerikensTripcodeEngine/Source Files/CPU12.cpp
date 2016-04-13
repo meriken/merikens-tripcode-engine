@@ -641,7 +641,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
 {
 	BOOL useAVX2 = options.isAVX2Enabled && IsAVX2Supported();
 
-	// ERROR0(!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL), ERROR_SEARCH_THREAD, "SetThreadPriority() failed.");
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())

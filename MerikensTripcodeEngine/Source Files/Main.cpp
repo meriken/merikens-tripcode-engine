@@ -500,7 +500,7 @@ void CheckSearchThreads()
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
 		// if (deltaTime > 60 * 1000)
 		//	strcpy(info->status, "Search thread became unresponsive.");
-		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 		/*
 		if (deltaTime > 60 * 1000) {
 			strcpy(info->status, "Restarting search thread...");
@@ -527,7 +527,7 @@ void CheckSearchThreads()
 		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
 			                   ? (currentTime - info->timeLastUpdated)
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
-		ERROR0(deltaTime > 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 		/*
 		if (deltaTime > 60 * 1000) {
 			if (info->runChildProcess) {

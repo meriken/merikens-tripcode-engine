@@ -111,7 +111,7 @@ extern void CPU_DES_MainLoop_AVX2();
 
 unsigned WINAPI Thread_SearchForDESTripcodesOnCPU(LPVOID threadParams)
 {
-	// ERROR0(!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL), ERROR_SEARCH_THREAD, "SetThreadPriority() failed.");
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 
 	if (options.isAVX2Enabled && IsAVX2Supported()) {
 		CPU_DES_MainLoop_AVX2();

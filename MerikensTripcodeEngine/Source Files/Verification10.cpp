@@ -90,6 +90,9 @@ BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
 
 void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
+	DWORD threadPriority = GetThreadPriority(GetCurrentThread());
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
+
     if (!wasCriticalSectionInitialized) {
             InitializeCriticalSection(&criticalSection);
             wasCriticalSectionInitialized = TRUE;
@@ -112,6 +115,8 @@ void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
 	tripcode[10] = '\0';
 
     LeaveCriticalSection(&criticalSection);
+
+	SetThreadPriority(GetCurrentThread(), threadPriority);
 }
 
 
