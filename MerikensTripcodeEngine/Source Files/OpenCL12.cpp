@@ -239,9 +239,6 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 
 void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
-	DWORD threadPriority = GetThreadPriority(GetCurrentThread());
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-
 	// This thread may be restarted. See CheckSearchThreads().
 	double       prevTotalNumGeneratedTripcodes = info->totalNumGeneratedTripcodes;
 	unsigned int prevNumDiscardedTripcodes      = info->numDiscardedTripcodes;
@@ -415,8 +412,6 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	CloseHandle(hInputWrite);
 
 	// TO DO: Wait for child processes to exit.
-
-	SetThreadPriority(GetCurrentThread(), threadPriority);
 }
 
 static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion)
