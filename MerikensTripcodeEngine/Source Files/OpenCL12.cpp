@@ -484,7 +484,6 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 {
-
 	cl_int         openCLError;
 	cl_device_id   deviceID = ((OpenCLDeviceSearchThreadInfo *)info)->openCLDeviceID;
 	cl_uint        numComputeUnits;

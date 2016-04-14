@@ -500,8 +500,8 @@ void CheckSearchThreads()
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
 		// if (deltaTime > 60 * 1000)
 		//	strcpy(info->status, "Search thread became unresponsive.");
-		ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
-		/*
+		//ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		///*
 		if (deltaTime > 60 * 1000) {
 			strcpy(info->status, "Restarting search thread...");
 			TerminateThread(CUDADeviceSearchThreadArray[index], 1);
@@ -516,7 +516,7 @@ void CheckSearchThreads()
 																	    &winThreadID);
 			ERROR0((CUDADeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart a CUDA device search thread.");
 		}
-		*/
+		//*/
 	}
 	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
 
@@ -527,8 +527,8 @@ void CheckSearchThreads()
 		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
 			                   ? (currentTime - info->timeLastUpdated)
 							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
-		ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
-		/*
+		//ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+		///*
 		if (deltaTime > 60 * 1000) {
 			if (info->runChildProcess) {
 				strcpy(info->status, "[process] Restarting search thread...");
@@ -539,8 +539,8 @@ void CheckSearchThreads()
 				info->childProcess = NULL;
 			} else {
 				// If we restart the search thread, amdocl64.dll may crash.
-				// strcpy(info->status, "[thread] Restarting search thread...");
 				ERROR0(TRUE, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+				//strcpy(info->status, "[thread] Restarting search thread...");
 			}
 			TerminateThread(openCLDeviceSearchThreadArray[index], 1);
 			unsigned int winThreadID;
@@ -553,7 +553,8 @@ void CheckSearchThreads()
 																		  0,
 																		  &winThreadID);
 			ERROR0((openCLDeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart an OpenCL device search thread.");
-		}*/
+		}
+		//*/
 	}
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
