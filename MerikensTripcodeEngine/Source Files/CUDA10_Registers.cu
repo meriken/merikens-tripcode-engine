@@ -39,7 +39,7 @@
 
 
 
-// #define DEBUG_SALT_0
+// #define SINGLE_SALT
 
 // 841.6M t/s (1 chunk, DEBUG_SALT_0, 10m)
 // 833.9M t/s (1 chunk 2 streams, DEBUG_SALT_0, 5h)
@@ -161,8 +161,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	DWORD           startingTime;
 	DWORD           endingTime;
 	double          deltaTime;
-	int             salt0NonDotCounter = 0;
-	int             salt1NonDotCounter = 0;
 
 	keyAndRandomBytes[lenTripcode] = '\0';
 	salt[2] = '\0';
@@ -235,24 +233,10 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 			salt[1] = CONVERT_CHAR_FOR_SALT(keyAndRandomBytes[2]);
 			intSalt = charToIndexTableForDES[salt[0]] | (charToIndexTableForDES[salt[1]] << 6);
 		} while (
-#ifdef DEBUG_SALT_0
-                    intSalt
-#else
-			        (salt[0] == '.' && salt0NonDotCounter < 64)
-				 || (salt[1] == '.' && salt1NonDotCounter < 64)
+#ifdef SINGLE_SALT
+                    intSalt || 
 #endif
-				 || !IsValidKey(keyAndRandomBytes));
-		if (salt[0] == '.') {
-			salt0NonDotCounter -= 63;
-		} else {
-			++salt0NonDotCounter;
-		}
-		if (salt[1] == '.') {
-			salt1NonDotCounter -= 63;
-		} else {
-			++salt1NonDotCounter;
-		}
-		// printf("intSalt: %d\n", intSalt);
+				    !IsValidKey(keyAndRandomBytes));
 
 		//
 		unsigned char randomByteForKey0 = RandomByte();

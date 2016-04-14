@@ -1621,15 +1621,12 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	DWORD           startingTime;
 	DWORD           endingTime;
 	double          deltaTime;
-	int             salt0NonDotCounter = 0;
-	int             salt1NonDotCounter = 0;
 
 	unsigned char   *CUDA_key; // [12];
 	unsigned char   *CUDA_expansionFunction; // [96];
 	unsigned char   *CUDA_key0Array; // [CUDA_DES_MAX_PASS_COUNT];
 	unsigned char   *CUDA_key7Array; // [CUDA_DES_BS_DEPTH];
 	DES_Vector      *CUDA_keyFrom49To55Array; // [7];
-
 
 	key[lenTripcode] = '\0';
 	salt[2]          = '\0';
@@ -1676,26 +1673,10 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 
 	while (!GetTerminationState()) {
 		// Choose the first 3 characters of the key.
-		do {
-			SetCharactersInTripcodeKey(key, 3);
-			unsigned char  salt[2];
-			salt[0] = CONVERT_CHAR_FOR_SALT(key[1]);
-			salt[1] = CONVERT_CHAR_FOR_SALT(key[2]);
-			if (   (salt[0] == '.' && salt0NonDotCounter < 64)
-				|| (salt[1] == '.' && salt1NonDotCounter < 64))
-				continue;
-			if (salt[0] == '.') {
-				salt0NonDotCounter -= 63;
-			} else {
-				++salt0NonDotCounter;
-			}
-			if (salt[1] == '.') {
-				salt1NonDotCounter -= 63;
-			} else {
-				++salt1NonDotCounter;
-			}
-			break;
-		} while (TRUE);
+		SetCharactersInTripcodeKey(key, 3);
+		unsigned char  salt[2];
+		salt[0] = CONVERT_CHAR_FOR_SALT(key[1]);
+		salt[1] = CONVERT_CHAR_FOR_SALT(key[2]);
 		
 		//
 		unsigned char key0Array[CUDA_DES_MAX_PASS_COUNT];
