@@ -1,5 +1,5 @@
 // Meriken's Tripcode Engine
-// Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
+// Copyright (c) 2011-2016 /Meriken/. <meriken.ygch.net@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -261,6 +261,9 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	for (int patternFileIndex = 0; patternFileIndex < numPatternFiles; ++patternFileIndex) {
 		strcat(commandLine, " -f ");
 		strcat(commandLine, patternFilePathArray[patternFileIndex]);
+	}
+	if (!options.enableGCNAssembler) {
+		strcat(commandLine, " --disable-gcn-assembler");
 	}
 	if (options.useOnlyASCIICharactersForKeys) {
 		strcat(commandLine, " --use-ascii-characters-for-keys");

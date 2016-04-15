@@ -239,6 +239,8 @@
     <YASM Include="Source Files\CPU12_x86_AVX2.asm" />
     <YASM Include="Source Files\CPU12_x86_SSE2.asm" />
     <YASM Include="Source Files\CPU12_x86_Nehalem.asm" />
+    <YASM Include="Release\OpenCL\bin\OpenCL10GCN.asm" />
+    <YASM Include="Release\OpenCL\bin\OpenCL12GCN.asm" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Source Files\CUDA10_Registers.cu" />

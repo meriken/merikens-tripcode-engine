@@ -1,10 +1,39 @@
 /*
-.amd
-.gpu Hawaii
-.64bit
-.compile_options ""
-.driver_info "@(#) OpenCL 2.0 AMD-APP (1800.5).  Driver version: 1800.5 (VM)"
-*/
+ * Meriken's Tripcode Engine
+ * Copyright (c) 2011-2016 /Meriken/. <meriken.ygch.net@gmail.com>
+ *
+ * The initial versions of this software were based on:
+ * CUDA DES Tripper 0.2.1
+ * Copyright (c) 2009 Horo/.IBXjcg
+ * 
+ * The code that deals with DES decryption is partially adopted from:
+ * John the Ripper password cracker
+ * Copyright (c) 1996-2002, 2005, 2010 by Solar Designer
+ * DeepLearningJohnDoe's fork of Meriken's Tripcode Engine
+ * Copyright (c) 2015 by <deeplearningjohndoe at gmail.com>
+ *
+ * The code that deals with DES hash generation is partially adopted from:
+ * sha_digest-2.2
+ * Copyright (C) 2009 Jens Thoms Toerring <jt@toerring.de>
+ * VecTripper 
+ * Copyright (C) 2011 tmkk <tmkk@smoug.net>
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http: *www.gnu.org/licenses/>.
+ */
+
+
+
 .kernel OpenCL_DES_PerformSearching
     .header
         .byte 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00

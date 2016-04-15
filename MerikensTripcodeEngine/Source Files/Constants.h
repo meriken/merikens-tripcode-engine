@@ -1,5 +1,5 @@
 // Meriken's Tripcode Engine
-// Copyright (c) 2011-2015 Meriken.Z. <meriken.2ch@gmail.com>
+// Copyright (c) 2011-2016 /Meriken/. <meriken.ygch.net@gmail.com>
 //
 // The initial versions of this software were based on:
 // CUDA SHA-1 Tripper 0.2.1
@@ -157,7 +157,7 @@
 #define MAX_NUM_DEPTHS_IN_REGEX_PATTERN         (10 + 1)
 
 // For screen output
-#define PRODUCT_NAME                 "Meriken's Tripcode Engine 2.0.8"
+#define PRODUCT_NAME                 "Meriken's Tripcode Engine 2.1.0"
 #define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10
