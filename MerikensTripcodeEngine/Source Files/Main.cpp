@@ -445,11 +445,11 @@ void DisplayCopyrights()
 #ifdef ENGLISH_VERSION
 	printf("%s English\n", PRODUCT_NAME);
 	printf("[compiled at %s on %s (PST)]\n", __TIME__, __DATE__);
-	printf("Copyright (C) 2014-2015 !/Meriken/. <meriken.2ch@gmail.com>\n");
+	printf("Copyright (C) 2014-2016 !/Meriken/. <meriken.ygch.net@gmail.com>\n");
 #else
 	printf("%s\n", PRODUCT_NAME);
 	printf("[compiled at %s on %s (PST)]\n", __TIME__, __DATE__);
-	printf("Copyright (C) 2011-2015 %c%cMeriken//XXX <meriken.2ch@gmail.com>\n", 0x81, 0x9f);
+	printf("Copyright (C) 2011-2016 %c%c/Meriken/. <meriken.ygch.net@gmail.com>\n", 0x81, 0x9f);
 #endif
 	printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to redistribute it\n");
