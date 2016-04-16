@@ -547,14 +547,14 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 			(   strcmp(deviceName, "CapeVerde") == 0
 			 || strcmp(deviceName, "Pitcairn" ) == 0
 			 || strcmp(deviceName, "Tahiti"   ) == 0
-			 || strcmp(deviceName, "Oland"    ) == 0) ? "gcn1.0" :
+			 || strcmp(deviceName, "Oland"    ) == 0
+			 || strcmp(deviceName, "Iceland"  ) == 0) ? "gcn1.0" :
 	        (   strcmp(deviceName, "Bonaire"  ) == 0
 			 || strcmp(deviceName, "Spectre"  ) == 0
 			 || strcmp(deviceName, "Spooky"   ) == 0
 			 || strcmp(deviceName, "Kalindi"  ) == 0
 			 || strcmp(deviceName, "Hainan"   ) == 0
 			 || strcmp(deviceName, "Hawaii"   ) == 0
-			 || strcmp(deviceName, "Iceland"  ) == 0
 			 || strcmp(deviceName, "Mullins"  ) == 0) ? "gcn1.1" :
 	                                                    "gcn1.2",
             driverMajorVersion, 
@@ -680,17 +680,19 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 						          || strcmp(deviceName, "Pitcairn") == 0
 						          || strcmp(deviceName, "Tahiti") == 0
 						          || strcmp(deviceName, "Oland") == 0
+						          || strcmp(deviceName, "Iceland") == 0
+
 						          || strcmp(deviceName, "Bonaire") == 0
 						          || strcmp(deviceName, "Spectre") == 0
 						          || strcmp(deviceName, "Spooky") == 0
 						          || strcmp(deviceName, "Kalindi") == 0
 						          || strcmp(deviceName, "Hainan") == 0
 						          || strcmp(deviceName, "Hawaii") == 0
-						          || strcmp(deviceName, "Iceland") == 0
-						          || strcmp(deviceName, "Tonga") == 0
 						          || strcmp(deviceName, "Mullins") == 0
+								  /*
+						          || strcmp(deviceName, "Tonga") == 0
 						          || strcmp(deviceName, "Fiji") == 0
-						          || strcmp(deviceName, "Carrizo") == 0)
+						          || strcmp(deviceName, "Carrizo") == 0 */)
 						      && (   strncmp(deviceVersion, "OpenCL 1.2", 10) == 0
 						          || strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
 	BOOL isDriverOpenCL20Compatible = (strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
@@ -730,7 +732,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 #endif
 
 	//
-	/*
 	char *nameKernelFunction;
 	if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
 		nameKernelFunction = (numTripcodeChunk == 1)                              ? "FORWARD_MATCHING_1CHUNK" :
@@ -751,7 +752,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	strcat(buildOptions, " -D");
 	strcat(buildOptions, nameKernelFunction);
 	strcat(buildOptions, " ");
-	*/
 
 	// The main loop of the thread.
 	double       timeElapsed = 0;
