@@ -677,22 +677,22 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	BOOL enableGCNAssembler =    options.enableGCNAssembler
 		                      && (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
 		                      && (   strcmp(deviceName, "CapeVerde") == 0
-						          || strcmp(deviceName, "Pitcairn" ) == 0
-						          || strcmp(deviceName, "Tahiti"   ) == 0
-						          || strcmp(deviceName, "Oland"    ) == 0
-						          || strcmp(deviceName, "Iceland"  ) == 0
+						          || strcmp(deviceName, "Pitcairn") == 0
+						          || strcmp(deviceName, "Tahiti") == 0
+						          || strcmp(deviceName, "Oland") == 0
+						          || strcmp(deviceName, "Iceland") == 0
 
-						          || strcmp(deviceName, "Bonaire"  ) == 0
-						          || strcmp(deviceName, "Spectre"  ) == 0
-						          || strcmp(deviceName, "Spooky"   ) == 0
-						          || strcmp(deviceName, "Kalindi"  ) == 0
-						          || strcmp(deviceName, "Hainan"   ) == 0
-						          || strcmp(deviceName, "Hawaii"   ) == 0
-						          || strcmp(deviceName, "Mullins"  ) == 0
-								  
-						          || strcmp(deviceName, "Tonga"    ) == 0
-						          || strcmp(deviceName, "Fiji"     ) == 0
-						          || strcmp(deviceName, "Carrizo"  ) == 0)
+						          || strcmp(deviceName, "Bonaire") == 0
+						          || strcmp(deviceName, "Spectre") == 0
+						          || strcmp(deviceName, "Spooky") == 0
+						          || strcmp(deviceName, "Kalindi") == 0
+						          || strcmp(deviceName, "Hainan") == 0
+						          || strcmp(deviceName, "Hawaii") == 0
+						          || strcmp(deviceName, "Mullins") == 0
+								  /*
+						          || strcmp(deviceName, "Tonga") == 0
+						          || strcmp(deviceName, "Fiji") == 0
+						          || strcmp(deviceName, "Carrizo") == 0 */)
 						      && (   strncmp(deviceVersion, "OpenCL 1.2", 10) == 0
 						          || strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
 	BOOL isDriverOpenCL20Compatible = (strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
