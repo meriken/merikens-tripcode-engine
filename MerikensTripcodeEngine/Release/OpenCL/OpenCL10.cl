@@ -32,6 +32,297 @@
 
 #define DEFINE_K
 
+#ifndef K07C
+
+#define K07C 0xffffffffU
+#define K07XOR(dest, val) (dest) = ~(val)
+#define K07XORV(val) ~(val)
+#define K08C 0x0Urward-matching search on GPU(s)
+#define K08XOR(dest, val) (dest) = (val)ers:
+#define K08XORV(val) (val)Starting a tripcode search...
+#define K09C 0xffffffffU
+#define K09XOR(dest, val) (dest) = ~(val)h 0m 10s at:
+#define K09XORV(val) ~(val)rent)
+#define K10C 0x0Uode/s (average)
+#define K10XOR(dest, val) (dest) = (val)
+#define K10XORV(val) (val)t.
+#define K11C 0xffffffffU
+#define K11XOR(dest, val) (dest) = ~(val)
+#define K11XORV(val) ~(val)
+#define K12C 0xffffffffU
+#define K12XOR(dest, val) (dest) = ~(val)
+#define K12XORV(val) ~(val)
+#define K13C 0x0U
+#define K13XOR(dest, val) (dest) = (val)
+#define K13XORV(val) (val)
+#define K14C 0xffffffffU
+#define K14XOR(dest, val) (dest) = ~(val)
+#define K14XORV(val) ~(val)
+#define K15C 0x0U
+#define K15XOR(dest, val) (dest) = (val)
+#define K15XORV(val) (val)
+#define K16C 0xffffffffU
+#define K16XOR(dest, val) (dest) = ~(val)
+#define K16XORV(val) ~(val)
+#define K17C 0x0U
+#define K17XOR(dest, val) (dest) = (val)
+#define K17XORV(val) (val)
+#define K18C 0xffffffffU
+#define K18XOR(dest, val) (dest) = ~(val)
+#define K18XORV(val) ~(val)
+#define K19C 0x0U
+#define K19XOR(dest, val) (dest) = (val)
+#define K19XORV(val) (val)
+#define K20C 0xffffffffU
+#define K20XOR(dest, val) (dest) = ~(val)
+#define K20XORV(val) ~(val)
+#define EF00 31
+#define DB_EF00 DB31
+#define EF01 0
+#define DB_EF01 DB00
+#define EF02 1
+#define DB_EF02 DB01
+#define EF03 2
+#define DB_EF03 DB02
+#define EF04 3
+#define DB_EF04 DB03
+#define EF05 4
+#define DB_EF05 DB04
+#define EF06 3
+#define DB_EF06 DB03
+#define EF07 4
+#define DB_EF07 DB04
+#define EF08 5
+#define DB_EF08 DB05
+#define EF09 6
+#define DB_EF09 DB06
+#define EF10 7
+#define DB_EF10 DB07
+#define EF11 8
+#define DB_EF11 DB08
+#define EF12 7
+#define DB_EF12 DB07
+#define EF13 8
+#define DB_EF13 DB08
+#define EF14 9
+#define DB_EF14 DB09
+#define EF15 10
+#define DB_EF15 DB10
+#define EF16 11
+#define DB_EF16 DB11
+#define EF17 12
+#define DB_EF17 DB12
+#define EF18 11
+#define DB_EF18 DB11
+#define EF19 12
+#define DB_EF19 DB12
+#define EF20 13
+#define DB_EF20 DB13
+#define EF21 14
+#define DB_EF21 DB14
+#define EF22 15
+#define DB_EF22 DB15
+#define EF23 16
+#define DB_EF23 DB16
+#define EF24 15
+#define DB_EF24 DB15
+#define EF25 16
+#define DB_EF25 DB16
+#define EF26 17
+#define DB_EF26 DB17
+#define EF27 18
+#define DB_EF27 DB18
+#define EF28 19
+#define DB_EF28 DB19
+#define EF29 20
+#define DB_EF29 DB20
+#define EF30 19
+#define DB_EF30 DB19
+#define EF31 20
+#define DB_EF31 DB20
+#define EF32 21
+#define DB_EF32 DB21
+#define EF33 22
+#define DB_EF33 DB22
+#define EF34 23
+#define DB_EF34 DB23
+#define EF35 24
+#define DB_EF35 DB24
+#define EF36 23
+#define DB_EF36 DB23
+#define EF37 24
+#define DB_EF37 DB24
+#define EF38 25
+#define DB_EF38 DB25
+#define EF39 26
+#define DB_EF39 DB26
+#define EF40 27
+#define DB_EF40 DB27
+#define EF41 28
+#define DB_EF41 DB28
+#define EF42 27
+#define DB_EF42 DB27
+#define EF43 28
+#define DB_EF43 DB28
+#define EF44 29
+#define DB_EF44 DB29
+#define EF45 30
+#define DB_EF45 DB30
+#define EF46 31
+#define DB_EF46 DB31
+#define EF47 0
+#define DB_EF47 DB00
+#define EF48 63
+#define DB_EF48 DB63
+#define EF49 32
+#define DB_EF49 DB32
+#define EF50 33
+#define DB_EF50 DB33
+#define EF51 34
+#define DB_EF51 DB34
+#define EF52 35
+#define DB_EF52 DB35
+#define EF53 36
+#define DB_EF53 DB36
+#define EF54 35
+#define DB_EF54 DB35
+#define EF55 36
+#define DB_EF55 DB36
+#define EF56 37
+#define DB_EF56 DB37
+#define EF57 38
+#define DB_EF57 DB38
+#define EF58 39
+#define DB_EF58 DB39
+#define EF59 40
+#define DB_EF59 DB40
+#define EF60 39
+#define DB_EF60 DB39
+#define EF61 40
+#define DB_EF61 DB40
+#define EF62 41
+#define DB_EF62 DB41
+#define EF63 42
+#define DB_EF63 DB42
+#define EF64 43
+#define DB_EF64 DB43
+#define EF65 44
+#define DB_EF65 DB44
+#define EF66 43
+#define DB_EF66 DB43
+#define EF67 44
+#define DB_EF67 DB44
+#define EF68 45
+#define DB_EF68 DB45
+#define EF69 46
+#define DB_EF69 DB46
+#define EF70 47
+#define DB_EF70 DB47
+#define EF71 48
+#define DB_EF71 DB48
+#define EF72 47
+#define DB_EF72 DB47
+#define EF73 48
+#define DB_EF73 DB48
+#define EF74 49
+#define DB_EF74 DB49
+#define EF75 50
+#define DB_EF75 DB50
+#define EF76 51
+#define DB_EF76 DB51
+#define EF77 52
+#define DB_EF77 DB52
+#define EF78 51
+#define DB_EF78 DB51
+#define EF79 52
+#define DB_EF79 DB52
+#define EF80 53
+#define DB_EF80 DB53
+#define EF81 54
+#define DB_EF81 DB54
+#define EF82 55
+#define DB_EF82 DB55
+#define EF83 56
+#define DB_EF83 DB56
+#define EF84 55
+#define DB_EF84 DB55
+#define EF85 56
+#define DB_EF85 DB56
+#define EF86 57
+#define DB_EF86 DB57
+#define EF87 58
+#define DB_EF87 DB58
+#define EF88 59
+#define DB_EF88 DB59
+#define EF89 60
+#define DB_EF89 DB60
+#define EF90 59
+#define DB_EF90 DB59
+#define EF91 60
+#define DB_EF91 DB60
+#define EF92 61
+#define DB_EF92 DB61
+#define EF93 62
+#define DB_EF93 DB62
+#define EF94 63
+#define DB_EF94 DB63
+#define EF95 32
+#define DB_EF95 DB32
+#define KEY7_00 0xda
+#define KEY7_01 0xdb
+#define KEY7_02 0xdc
+#define KEY7_03 0xdd
+#define KEY7_04 0xde
+#define KEY7_05 0xdf
+#define KEY7_06 0x40
+#define KEY7_07 0x41
+#define KEY7_08 0x42
+#define KEY7_09 0x43
+#define KEY7_10 0x44
+#define KEY7_11 0x45
+#define KEY7_12 0x46
+#define KEY7_13 0x47
+#define KEY7_14 0x48
+#define KEY7_15 0x49
+#define KEY7_16 0x4a
+#define KEY7_17 0x4b
+#define KEY7_18 0x4c
+#define KEY7_19 0x4d
+#define KEY7_20 0x4e
+#define KEY7_21 0x4f
+#define KEY7_22 0x50
+#define KEY7_23 0x51
+#define KEY7_24 0x52
+#define KEY7_25 0x53
+#define KEY7_26 0x54
+#define KEY7_27 0x55
+#define KEY7_28 0x56
+#define KEY7_29 0x57
+#define KEY7_30 0x58
+#define KEY7_31 0x59
+#define K49C 0xaaaaaaaa
+#define K49XOR(dest, val) (dest) = ((val) ^ 0xaaaaaaaa)
+#define K49XORV(val) ((val) ^ 0xaaaaaaaa)
+#define K50C 0x33333333
+#define K50XOR(dest, val) (dest) = ((val) ^ 0x33333333)
+#define K50XORV(val) ((val) ^ 0x33333333)
+#define K51C 0x3c3c3c3c
+#define K51XOR(dest, val) (dest) = ((val) ^ 0x3c3c3c3c)
+#define K51XORV(val) ((val) ^ 0x3c3c3c3c)
+#define K52C 0xc03fc03f
+#define K52XOR(dest, val) (dest) = ((val) ^ 0xc03fc03f)
+#define K52XORV(val) ((val) ^ 0xc03fc03f)
+#define K53C 0xffc0003f
+#define K53XOR(dest, val) (dest) = ((val) ^ 0xffc0003f)
+#define K53XORV(val) ((val) ^ 0xffc0003f)
+#define K54C 0x00000000
+#define K54XOR(dest, val) (dest) = ((val) ^ 0x00000000)
+#define K54XORV(val) ((val) ^ 0x00000000)
+#define K55C 0xffffffff
+#define K55XOR(dest, val) (dest) = ((val) ^ 0xffffffff)
+#define K55XORV(val) ((val) ^ 0xffffffff)
+
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
