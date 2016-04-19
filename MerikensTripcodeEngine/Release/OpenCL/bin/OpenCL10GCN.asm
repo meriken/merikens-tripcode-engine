@@ -4954,7 +4954,7 @@
         v_mov_b32       v2, KEY7_29
         v_cndmask_b32   v1, v1, v2, s[66:67]
         v_mov_b32       v2, KEY7_28
-        v_cndmask_b32   v1, v1, v2, s[KEY7_06:65]
+        v_cndmask_b32   v1, v1, v2, s[64:65]
         v_mov_b32       v2, KEY7_27
         v_cndmask_b32   v1, v1, v2, s[62:63]
 .L20368_0:
