@@ -249,10 +249,15 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	size_t  localWorkSize = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_WORK_GROUP;
 	GetParametersForOpenCLDevice(info->openCLDeviceID, NULL, &numWorkItemsPerComputeUnit, &localWorkSize, NULL);
 
+	char childProcessPath[MAX_LEN_COMMAND_LINE + 1];
+	int applicationPathLen = strlen(applicationPath);
+	strcpy(childProcessPath, applicationPath);
+	if (strcmp(childProcessPath + applicationPathLen - 6, "64.exe") == 0)
+		strcpy(childProcessPath + applicationPathLen - 6, ".exe"); // For 32-bit OpenCL binaries
 	char commandLine[MAX_LEN_COMMAND_LINE + 1];
 	sprintf(commandLine,
 	        "\"%s\" --output-for-redirection --disable-tripcode-checks -l %d -g -d %d -y %d -z %d -a %d -b 1",
-			applicationPath,
+			childProcessPath,
 			lenTripcode,
 			info->deviceNo,
 			numWorkItemsPerComputeUnit,

@@ -417,36 +417,35 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction, char *dummyKernelBinaryFilePath)
 {
 	static char *registerMap[64] = {
-		"%v120",
-		"%v67",
-		"%v58",
-		"%v64",
-		"%v66",
-		"%v63",
-		"%v62",
-		"%v123",
-		"%v121",
-		"%v122",
-		"%v73",
-		"%v71",
-		"%v72",
-		"%v70",
-		"%v69",
+		"%v118",
 		"%v65",
 		"%v68",
-		"%v74",
-		"%v81",
-		"%v80",
-		"%v78",
-		"%v77",
-		"%v79",
-		"%v75",
-		"%v76",
-		"%v86",
-		"%v84",
-		"%v59",
+		"%v62",
+		"%v64",
+		"%v121",
+		"%v120",
 		"%v119",
 		"%v57",
+		"%v70",
+		"%v72",
+		"%v69",
+		"%v71",
+		"%v66",
+		"%v122",
+		"%v67",
+		"%v63",
+		"%v73",
+		"%v78",
+		"%v80",
+		"%v77",
+		"%v74",
+		"%v79",
+		"%v76",
+		"%v61",
+		"%v85",
+		"%v59",
+		"%v58",
+		"%v117",
 		"%v56",
 		"%v55",
 		"%v54",
@@ -481,6 +480,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		"%v25",
 		"%v24",
 		"%v23",
+		"%v22",
 	};
 	cl_int         openCLError;
 
@@ -502,7 +502,6 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	FILE   *sourceFile;
 	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	sprintf(sourceFileFullPath, "%s\\%s", applicationDirectory, sourceFilePath);
-
 	if (sourceFile = fopen(sourceFileFullPath, "w")) {
 		for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
 			fprintf(sourceFile, "DB_EF%02d = %s\n", i, registerMap[expansionFunction[i]]);
@@ -524,7 +523,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 
 		fclose(sourceFile);
 	}
-	
+
 	int driverMajorVersion;
 	int driverMinorVersion;
 	char rest[LEN_LINE_BUFFER_FOR_SCREEN];
@@ -547,8 +546,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 			(   strcmp(deviceName, "CapeVerde") == 0
 			 || strcmp(deviceName, "Pitcairn" ) == 0
 			 || strcmp(deviceName, "Tahiti"   ) == 0
-			 || strcmp(deviceName, "Oland"    ) == 0
-			 || strcmp(deviceName, "Iceland"  ) == 0) ? "gcn1.0" :
+			 || strcmp(deviceName, "Oland"    ) == 0) ? "gcn1.0" :
 	        (   strcmp(deviceName, "Bonaire"  ) == 0
 			 || strcmp(deviceName, "Spectre"  ) == 0
 			 || strcmp(deviceName, "Spooky"   ) == 0
@@ -677,22 +675,22 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	BOOL enableGCNAssembler =    options.enableGCNAssembler
 		                      && (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
 		                      && (   strcmp(deviceName, "CapeVerde") == 0
-						          || strcmp(deviceName, "Pitcairn") == 0
-						          || strcmp(deviceName, "Tahiti") == 0
-						          || strcmp(deviceName, "Oland") == 0
-						          || strcmp(deviceName, "Iceland") == 0
+						          || strcmp(deviceName, "Pitcairn" ) == 0
+						          || strcmp(deviceName, "Tahiti"   ) == 0
+						          || strcmp(deviceName, "Oland"    ) == 0
 
-						          || strcmp(deviceName, "Bonaire") == 0
-						          || strcmp(deviceName, "Spectre") == 0
-						          || strcmp(deviceName, "Spooky") == 0
-						          || strcmp(deviceName, "Kalindi") == 0
-						          || strcmp(deviceName, "Hainan") == 0
-						          || strcmp(deviceName, "Hawaii") == 0
-						          || strcmp(deviceName, "Mullins") == 0
-								  /*
-						          || strcmp(deviceName, "Tonga") == 0
-						          || strcmp(deviceName, "Fiji") == 0
-						          || strcmp(deviceName, "Carrizo") == 0 */)
+						          || strcmp(deviceName, "Bonaire"  ) == 0
+						          || strcmp(deviceName, "Spectre"  ) == 0
+						          || strcmp(deviceName, "Spooky"   ) == 0
+						          || strcmp(deviceName, "Kalindi"  ) == 0
+						          || strcmp(deviceName, "Hainan"   ) == 0
+						          || strcmp(deviceName, "Hawaii"   ) == 0
+						          || strcmp(deviceName, "Mullins"  ) == 0
+								  
+						          || strcmp(deviceName, "Tonga"    ) == 0
+						          || strcmp(deviceName, "Fiji"     ) == 0
+						          || strcmp(deviceName, "Carrizo"  ) == 0
+						          || strcmp(deviceName, "Iceland"  ) == 0)
 						      && (   strncmp(deviceVersion, "OpenCL 1.2", 10) == 0
 						          || strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
 	BOOL isDriverOpenCL20Compatible = (strncmp(deviceVersion, "OpenCL 2.0", 10) == 0);
