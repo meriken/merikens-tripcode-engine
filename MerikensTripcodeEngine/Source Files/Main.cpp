@@ -488,7 +488,6 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 }
 
-// This routine is not used anymore.
 void CheckSearchThreads()
 {
 	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
@@ -530,20 +529,22 @@ void CheckSearchThreads()
 		//ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 		///*
 		if (deltaTime > 60 * 1000) {
-			if (info->runChildProcess) {
-				strcpy(info->status, "[process] Restarting search thread...");
-				info->currentSpeed = 0;
-				info->averageSpeed = 0;
-				if (info->childProcess)
-					TerminateProcess(info->childProcess, 0);
-				info->childProcess = NULL;
-			} else {
-				// If we restart the search thread, amdocl64.dll may crash.
-				ERROR0(TRUE, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
-				//strcpy(info->status, "[thread] Restarting search thread...");
-			}
-			TerminateThread(openCLDeviceSearchThreadArray[index], 1);
+			// If we restart the search thread while the OpenCL kernel is running, amdocl64.dll may crash.
+			ERROR0(!info->runChildProcess, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
+
+			OpenCLDeviceSearchThreadInfo infoBackup = *info;
+			strcpy(info->status, "[process] Restarting search thread...");
+			info->currentSpeed = 0;
+			info->averageSpeed = 0;
+			TerminateProcess(info->childProcess, 0); // This seems to mess up *info
+			info->childProcess = NULL;
+			TerminateThread(openCLDeviceSearchThreadArray[index], 1); // The culpit may be this line. Who knows?
+
 			unsigned int winThreadID;
+			info->currentSpeed = 0;
+			info->averageSpeed = 0;
+			info->totalNumGeneratedTripcodes = infoBackup.totalNumGeneratedTripcodes;
+			info->numDiscardedTripcodes      = infoBackup.numDiscardedTripcodes;
 			openCLDeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
 																		  0,
 																		  (lenTripcode == 10) 
