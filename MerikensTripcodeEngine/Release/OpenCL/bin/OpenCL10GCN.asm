@@ -163,11 +163,11 @@
 
 		/* 68 SGPRs were used originally. */
 .ifarch gcn1.0
-        .entry 0x80001042, 0x00000048 /* 0x00000046 */ /* The last 2 SGPRs are reserved. */
+        .entry 0x80001042, 0x00000068 /* 0x00000046 */ /* The last 2 SGPRs are reserved. */
 .elseifarch gcn1.1
-        .entry 0x80001042, 0x00000046 /* 0x00000046 */ /* The last 2 SGPRs are reserved. */
+        .entry 0x80001042, 0x00000068 /* 0x00000046 */ /* The last 2 SGPRs are reserved. */
 .else
-        .entry 0x80001042, 0x0000005e /* 0x0000005e */ /* The last 26 SGPRs are reserved. */
+        .entry 0x80001042, 0x00000066 /* 0x0000005e */ /* The last 26 SGPRs are reserved. */
 .endif
 
         .entry 0x80001042, 0x0000005e
