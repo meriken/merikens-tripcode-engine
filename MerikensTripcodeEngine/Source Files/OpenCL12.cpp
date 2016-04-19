@@ -345,7 +345,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	while(!GetTerminationState())
 	{
 		// This line does not work well.
-		// We restart the child process in () instead.
+		// We restart the child process in CheckSearchThreads() instead.
 		// ERROR0(WaitForSingleObject(hChildProcess, 0) != WAIT_TIMEOUT, ERROR_CHILD_PROCESS, "A child process terminated unexpectedly.");
 
 		if (!ReadFile(hOutputRead, lpBuffer, sizeof(lpBuffer), &nBytesRead, NULL) || !nBytesRead) {

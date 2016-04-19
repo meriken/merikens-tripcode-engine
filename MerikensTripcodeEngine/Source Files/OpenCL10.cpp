@@ -32,10 +32,6 @@
 
 
 
-// TO DO: Make sure to test the following routines with HD 7970!
-
-
-
 // #define DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
 // #define SINGLE_SALT
 
