@@ -132,6 +132,7 @@ double       prevTotalNumGeneratedTripcodes_CPU = 0;
 BOOL         isSearchPaused      = FALSE;
 BOOL         wasSearchTerminated = FALSE;
 HANDLE       eventForTerminating = NULL;
+int prevLineCount = 0;
 
 
 
@@ -279,7 +280,9 @@ double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, unsig
 				CreateKey8AndKey9(key);
 			}
 			//printf("{%s, %s}\n", tripcode, key);
-			ERROR0(!IsTripcodeChunkValid(tripcode), ERROR_TRIPCODE_VERIFICATION_FAILED, "A generated tripcode was corrupt.");
+			ERROR0(!IsTripcodeChunkValid(tripcode),
+				   ERROR_TRIPCODE_VERIFICATION_FAILED, 
+				   "A corrupt tripcode was generated.\nThe hardware or device driver may be malfunctioning.\nPlease check the temperatures of CPU(s) and GPU(s).");
 			ProcessPossibleMatch(tripcode, key);
 		}
 	}
@@ -532,19 +535,15 @@ void CheckSearchThreads()
 			// If we restart the search thread while the OpenCL kernel is running, amdocl64.dll may crash.
 			ERROR0(!info->runChildProcess, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 
-			OpenCLDeviceSearchThreadInfo infoBackup = *info;
 			strcpy(info->status, "[process] Restarting search thread...");
+			TerminateThread(openCLDeviceSearchThreadArray[index], 1); // The culpit may be this line. Who knows?
+			TerminateProcess(info->childProcess, 0); // This seems to mess up *info
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
-			TerminateProcess(info->childProcess, 0); // This seems to mess up *info
 			info->childProcess = NULL;
-			TerminateThread(openCLDeviceSearchThreadArray[index], 1); // The culpit may be this line. Who knows?
+			++info->numRestarts;
 
 			unsigned int winThreadID;
-			info->currentSpeed = 0;
-			info->averageSpeed = 0;
-			info->totalNumGeneratedTripcodes = infoBackup.totalNumGeneratedTripcodes;
-			info->numDiscardedTripcodes      = infoBackup.numDiscardedTripcodes;
 			openCLDeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
 																		  0,
 																		  (lenTripcode == 10) 
@@ -580,7 +579,7 @@ void PrintStatus()
 
 	char msg[MAX_NUM_LINES_STATUS_MSG][LEN_LINE_BUFFER_FOR_SCREEN];
 	int lineCount = 0;
-	
+
 #define NEXT_LINE &(msg[lineCount++][0])
 
 	sprintf(NEXT_LINE, "%-79s", "");
@@ -755,6 +754,7 @@ void PrintStatus()
 		for (int i = 0; i < lineCount; ++i)
 			printf("%-79s\n", &(msg[i][0]));
 		ResetCursorPos(-lineCount);
+		prevLineCount = lineCount;
 	} else {
 		if (totalTime > 0 && !searchForSpecialPatternsOnCPU) {
 			printf("[status],%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,%.1lf,%s%d%%,%.0lf,%ld,%d,%.0lf,%.0lf,%u,%.0f%%\n",
@@ -1787,6 +1787,7 @@ void StartOpenCLDeviceSearchThreads()
 			openCLDeviceSearchThreadInfoArray[i].averageSpeed               = 0;
 			openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
 			openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
+			openCLDeviceSearchThreadInfoArray[i].numRestarts                = 0;
 			openCLDeviceSearchThreadInfoArray[i].timeLastUpdated            = timeGetTime();
 			openCLDeviceSearchThreadInfoArray[i].subindex                   = 0;
 			if (!openCLRunChildProcesses) {
@@ -1800,6 +1801,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = FALSE;
 					openCLDeviceSearchThreadInfoArray[i].childProcess = NULL;
+					openCLDeviceSearchThreadInfoArray[i].numRestarts = 0;
 					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
 				}
 			} else {
@@ -1820,6 +1822,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].averageSpeed               = 0;
 					openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
 					openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
+					openCLDeviceSearchThreadInfoArray[i].numRestarts = 0;
 					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
 				}
 			}
