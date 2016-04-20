@@ -42,7 +42,8 @@
 			fprintf(stderr, "%d\n", (code));                      \
 			fflush(stderr);                                       \
 		} else {                                                  \
-			fprintf(stderr, "%s: Error: %s\n\a", COMMAND, (msg)); \
+			ResetCursorPos(prevLineCount);                        \
+			printf("\nERROR\n=====\n\n%s", (msg));                \
 			getchar();                                            \
 			ShowCursor();                                         \
 		}                                                         \
@@ -56,10 +57,10 @@
 			fflush(stderr);                               \
 		} else {                                          \
 			char line[256];                               \
-			strcpy(line, "%s: Error: ");                  \
+			ResetCursorPos(prevLineCount);                        \
+			strcpy(line, "\nERROR\n=====\n\n");           \
 			strcat(line, (msg));                          \
-			strcat(line, "\n\a");                         \
-			fprintf(stderr, line, COMMAND, (arg1));       \
+			printf(line, (arg1));                         \
 			getchar();                                    \
 			ShowCursor();                                 \
 		}                                                 \
@@ -74,8 +75,9 @@
 				fprintf(stderr, "%d\n", ERROR_CUDA);                                          \
 				fflush(stderr);                                                               \
 			} else {                                                                          \
-				fprintf(stderr, "%s: CUDA FUNCTION CALL FAILED: %s [%d] (file '%s', line %d)\n\a", \
-						COMMAND, cudaGetErrorString(_errorCode), (int)_errorCode, __FILE__, __LINE__);         \
+				ResetCursorPos(prevLineCount);                        \
+				printf("\nERROR\n=====\n\nCUDA Function Call Failed: %s [%d] (file '%s', line %d)\n\a", \
+						cudaGetErrorString(_errorCode), (int)_errorCode, __FILE__, __LINE__);         \
 				getchar();                                                                    \
 				ShowCursor();                                                                 \
 			}                                                                                 \
@@ -91,8 +93,9 @@
 				fprintf(stderr, "%d\n", ERROR_OPENCL);                                             \
 				fflush(stderr);                                                                    \
 			} else {                                                                               \
-				fprintf(stderr, "%s: OPENCL FUNCTION CALL FAILED: %s (file '%s', line %d)\n\a",    \
-						COMMAND, ConvertOpenCLErrorCodeToString(_errorCode), __FILE__, __LINE__);  \
+				ResetCursorPos(prevLineCount);                        \
+				printf("\nERROR\n=====\n\nOpenCL Function Call Failed: %s (file '%s', line %d)\n\a",    \
+						ConvertOpenCLErrorCodeToString(_errorCode), __FILE__, __LINE__);  \
 				getchar();                                                                         \
 				ShowCursor();                                                                      \
 			}                                                                                      \
@@ -106,7 +109,8 @@
 			fprintf(stderr, "%d\n", ERROR_ASSERTION);                                                   \
 			fflush(stderr);                                                                             \
 		} else {                                                                                        \
-			fprintf(stderr, "%s: Assertion Failed: file %s, line %d\n\a", COMMAND, __FILE__, __LINE__); \
+			ResetCursorPos(prevLineCount);                        \
+			printf("\nERROR\n=====\n\nAssertion Failed: file %s, line %d\n\a", __FILE__, __LINE__); \
 			getchar();                                                                                  \
 			ShowCursor();                                                                               \
 		}                                                                                               \

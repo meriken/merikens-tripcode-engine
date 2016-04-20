@@ -391,10 +391,11 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 			currentToken = strtok(NULL, delimiter);                                                           // 	   averageSpeed_CPU);
 			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%u",  &numDiscardedTripcodes);      // 	   numDiscardedTripcodes
 			sprintf(status,
-					"[process] %.1lfM TPS, %d WI/CU, %d WI/WG",
+					"[process] %.1lfM TPS, %d WI/CU, %d WI/WG, Restarts: %u",
 					averageSpeed / 1000000,
 					numWorkItemsPerComputeUnit,
-					localWorkSize);
+					localWorkSize,
+					((OpenCLDeviceSearchThreadInfo *)info)->numRestarts);
 			UpdateOpenCLDeviceStatus_ChildProcess(((OpenCLDeviceSearchThreadInfo *)info), 
 				                                  status, 
 												  currentSpeed, 

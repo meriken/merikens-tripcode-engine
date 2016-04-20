@@ -1361,7 +1361,7 @@ void ProcessMatch(unsigned char *tripcode, unsigned char *key)
 	ERROR0(   (lenTripcode == 12 && !VerifySHA1Tripcode(tripcode, key))
 	       || (lenTripcode == 10 && !VerifyDESTripcode (tripcode, key)),
 			ERROR_TRIPCODE_VERIFICATION_FAILED,
-			"A generated tripcode was corrupt.");
+			"A corrupt tripcode was generated.\nThe hardware or device driver may be malfunctioning.\n Please check the temperatures of CPU(s) and GPU(s).");
 	if (!options.checkTripcodes || (!IsTripcodeDuplicate(tripcode) && IsValidKey((unsigned char *)key))) {
 		ProcessValidTripcodePair(tripcode, key);
 	} else {

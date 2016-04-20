@@ -1612,7 +1612,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	unsigned char  *CUDA_chunkBitmap = NULL;
 	unsigned int    sizeOutputArray;
 	unsigned char   key[MAX_LEN_TRIPCODE + 1];
-	unsigned char   salt[3];
 	unsigned char   expansionFunction[96];
 	char            status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 	double          timeElapsed = 0;
@@ -1629,7 +1628,6 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	DES_Vector      *CUDA_keyFrom49To55Array; // [7];
 
 	key[lenTripcode] = '\0';
-	salt[2]          = '\0';
 	
 	CUDA_ERROR(cudaSetDevice(((CUDADeviceSearchThreadInfo *)info)->CUDADeviceIndex));
 	CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceProperties, ((CUDADeviceSearchThreadInfo *)info)->CUDADeviceIndex));

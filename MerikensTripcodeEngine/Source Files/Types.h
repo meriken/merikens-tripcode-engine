@@ -130,6 +130,7 @@ struct OpenCLDeviceSearchThreadInfo {
 	double       averageSpeed;
 	double       totalNumGeneratedTripcodes;
 	unsigned int numDiscardedTripcodes;
+	unsigned int numRestarts;
 	BOOL         runChildProcess;
 	HANDLE       childProcess;
 	DWORD        timeLastUpdated;

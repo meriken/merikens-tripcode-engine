@@ -349,7 +349,9 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 				if (numTripcodes > 0 && (numTripcodes >= sizeof(tripcodes) / sizeof(TripcodeKeyPair) || i >= numThreadsPerGrid - 1)) {
 					Generate10CharTripcodes(tripcodes, numTripcodes);
 					for (int j = 0; j < numTripcodes; j++){
-						ERROR0(!IsTripcodeChunkValid(tripcodes[j].tripcode.c), ERROR_TRIPCODE_VERIFICATION_FAILED, "A generated tripcode was corrupt.");
+						ERROR0(!IsTripcodeChunkValid(tripcodes[j].tripcode.c), 
+							   ERROR_TRIPCODE_VERIFICATION_FAILED, 
+							   "A corrupt tripcode was generated.\nThe hardware or device driver may be malfunctioning.\nPlease check the temperatures of CPU(s) and GPU(s).");
 						ProcessPossibleMatch(tripcodes[j].tripcode.c, tripcodes[j].key.c);
 					}
 					numTripcodes = 0;

@@ -112,7 +112,7 @@ extern unsigned int numValidTripcodes,     numDiscardedTripcodes;
 extern unsigned int prevNumValidTripcodes, prevNumDiscardedTripcodes;
 extern double     numGeneratedTripcodes;
 extern double prevNumGeneratedTripcodes;
-// extern BOOL   isSearchPaused;
+extern int prevLineCount;
 
 // Search Parameters
 extern int searchMode;
