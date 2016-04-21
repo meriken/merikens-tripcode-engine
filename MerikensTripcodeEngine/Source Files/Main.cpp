@@ -170,33 +170,52 @@ unsigned int     numGeneratedTripcodesByCPUInMillions;
 char *GetErrorMessage(int errorCode)
 {
 	switch (errorCode) {
-    case ERROR_INVALID_TARGET_PATTERN: return "ERROR_INVALID_TARGET_PATTERN";
-    case ERROR_INVALID_REGEX: return "ERROR_INVALID_REGEX";
-    case ERROR_PATTERN_TOO_LONG: return "ERROR_PATTERN_TOO_LONG";
-    case ERROR_PATTERN_TOO_SHORT: return "ERROR_PATTERN_TOO_SHORT";
+    case ERROR_INVALID_TARGET_PATTERN: 
+		return "ERROR_INVALID_TARGET_PATTERN";
+    case ERROR_INVALID_REGEX: 
+		return "ERROR_INVALID_REGEX";
+    case ERROR_PATTERN_TOO_LONG: 
+		return "ERROR_PATTERN_TOO_LONG";
+    case ERROR_PATTERN_TOO_SHORT: 
+		return "ERROR_PATTERN_TOO_SHORT";
     case ERROR_CUDA:
-		return "CUDA fucnction call failed";
-    case ERROR_NO_MEMORY: return "ERROR_NO_MEMORY";
-    case ERROR_PATTERN_FILE: return "ERROR_PATTERN_FILE";
-    case ERROR_IGNORE_DIRECTIVE: return "ERROR_IGNORE_DIRECTIVE";
-    case ERROR_NO_TARGET_PATTERNS: return "ERROR_NO_TARGET_PATTERNS";
-    case ERROR_CRYPTOGRAPHIC_SERVICE: return "ERROR_CRYPTOGRAPHIC_SERVICE";
-    case ERROR_INVALID_OPTION: return "ERROR_INVALID_OPTION";
-    case ERROR_TRIPCODE_FILE: return "ERROR_TRIPCODE_FILE";
-    case ERROR_SEARCH_THREAD: return "ERROR_SEARCH_THREAD";
-    case ERROR_MUTEX: return "ERROR_MUTEX";
+		return "CUDA fucnction call failed.";
+    case ERROR_NO_MEMORY: 
+		return "ERROR_NO_MEMORY";
+    case ERROR_PATTERN_FILE: 
+		return "ERROR_PATTERN_FILE";
+    case ERROR_IGNORE_DIRECTIVE:
+		return "ERROR_IGNORE_DIRECTIVE";
+    case ERROR_NO_TARGET_PATTERNS: 
+		return "ERROR_NO_TARGET_PATTERNS";
+    case ERROR_CRYPTOGRAPHIC_SERVICE: 
+		return "ERROR_CRYPTOGRAPHIC_SERVICE";
+    case ERROR_INVALID_OPTION: 
+		return "ERROR_INVALID_OPTION";
+    case ERROR_TRIPCODE_FILE:
+		return "ERROR_TRIPCODE_FILE";
+    case ERROR_SEARCH_THREAD: 
+		return "ERROR_SEARCH_THREAD";
+    case ERROR_MUTEX:
+		return "ERROR_MUTEX";
     case ERROR_ASSERTION:
 		return "Assertion failed.";
-    case ERROR_OPENCL: return "OpenCL fucnction call failed.";
-    case ERROR_DES: return "ERROR_DES";
-    case ERROR_SHA1: return "ERROR_SHA1";
-    case ERROR_INTEL_HD_GRAPHICS: return "ERROR_INTEL_HD_GRAPHICS";
+    case ERROR_OPENCL:
+		return "OpenCL fucnction call failed.";
+    case ERROR_DES: 
+		return "ERROR_DES";
+    case ERROR_SHA1: 
+		return "ERROR_SHA1";
+    case ERROR_INTEL_HD_GRAPHICS:
+		return "ERROR_INTEL_HD_GRAPHICS";
     case ERROR_CHILD_PROCESS:
 		return "ERROR_CHILD_PROCESS";
     case ERROR_TRIPCODE_VERIFICATION_FAILED: 
 		return "A corrupt tripcode was generated.\n  The hardware or device driver may be malfunctioning.\n  Please check the temperatures of CPU(s) and GPU(s).";
-    case ERROR_EVENT: return "ERROR_EVENT";
-    case ERROR_SEARCH_THREAD_UNRESPONSIVE: return "ERROR_SEARCH_THREAD_UNRESPONSIVE";
+    case ERROR_EVENT: 
+		return "ERROR_EVENT";
+    case ERROR_SEARCH_THREAD_UNRESPONSIVE:
+		return "ERROR_SEARCH_THREAD_UNRESPONSIVE";
     case ERROR_GCN_ASSEMBLER: 
 		return "GCN assembler failed.";
     default: return "ERROR_UNKNOWN";
