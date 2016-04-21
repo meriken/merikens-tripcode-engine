@@ -214,10 +214,10 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	cudaStream_t currentStream;
 	CUDA_ERROR(cudaStreamCreate(&currentStream));
 	BOOL prevDataExists = FALSE;
-	passCountArray         = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(passCountArray         == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	tripcodeIndexArray     = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(tripcodeIndexArray     == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	prevPassCountArray     = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(prevPassCountArray     == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	prevTripcodeIndexArray = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(prevTripcodeIndexArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	passCountArray         = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(passCountArray         == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	tripcodeIndexArray     = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(tripcodeIndexArray     == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	prevPassCountArray     = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(prevPassCountArray     == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	prevTripcodeIndexArray = (unsigned char *)malloc(sizeof(unsigned char) * numThreadsPerGrid); ERROR0(prevTripcodeIndexArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	CUDA_ERROR(cudaMalloc((void **)&cudaPassCountArray,           sizeof(unsigned char) * numThreadsPerGrid));
 	CUDA_ERROR(cudaMalloc((void **)&cudaTripcodeIndexArray,       sizeof(unsigned char) * numThreadsPerGrid));
 	CUDA_ERROR(cudaMalloc((void **)&cudaPrevPassCountArray,       sizeof(unsigned char) * numThreadsPerGrid));
@@ -351,7 +351,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 					for (int j = 0; j < numTripcodes; j++){
 						ERROR0(!IsTripcodeChunkValid(tripcodes[j].tripcode.c), 
 							   ERROR_TRIPCODE_VERIFICATION_FAILED, 
-							   "A corrupt tripcode was generated.\nThe hardware or device driver may be malfunctioning.\nPlease check the temperatures of CPU(s) and GPU(s).");
+							   GetErrorMessage(ERROR_TRIPCODE_VERIFICATION_FAILED));
 						ProcessPossibleMatch(tripcodes[j].tripcode.c, tripcodes[j].key.c);
 					}
 					numTripcodes = 0;

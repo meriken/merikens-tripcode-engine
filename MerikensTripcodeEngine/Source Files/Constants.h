@@ -80,6 +80,8 @@
 #define ERROR_TRIPCODE_VERIFICATION_FAILED 20
 #define ERROR_EVENT                  21
 #define ERROR_SEARCH_THREAD_UNRESPONSIVE 22
+#define ERROR_UNKNOWN                23
+#define ERROR_GCN_ASSEMBLER          24
 
 
 
@@ -157,7 +159,7 @@
 #define MAX_NUM_DEPTHS_IN_REGEX_PATTERN         (10 + 1)
 
 // For screen output
-#define PRODUCT_NAME                 "Meriken's Tripcode Engine 2.1.0"
+#define PRODUCT_NAME                 "Meriken's Tripcode Engine 2.1.1"
 #define COMMAND                      "MerikensTripcodeEngine"
 #define STATUS_UPDATE_INTERVAL       10.000       // in seconds
 #define NUM_CHECKS_PER_INTERVAL      10
@@ -187,7 +189,6 @@
 #define OPENCL_SHA1_DEFAULT_SOURCE_FILE         "OpenCL\\OpenCL12.cl"
 #define OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_COMPUTE_UNIT 256
 #define OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_WORK_GROUP      32
-#define OPENCL_SHA1_MAX_PASS_COUNT              2048
 #define OPENCL_DES_DEFAULT_SOURCE_FILE          "OpenCL\\OpenCL10.cl"
 #define OPENCL_DES_MAX_LEN_BUILD_OPTIONS        4096
 #define OPENCL_DES_BS_DEPTH                     32

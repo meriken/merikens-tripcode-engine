@@ -376,33 +376,46 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 			double       currentSpeed, averageSpeed, totalNumGeneratedTripcodes;
 			unsigned int numDiscardedTripcodes;
 			char *delimiter = ",";
-			char *currentToken = strtok(lpBuffer, delimiter);                                                 //       "[status]"
-			currentToken = strtok(NULL, delimiter);                                                           //       totalTime,
-			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%lf", &currentSpeed);               // 	   currentSpeed,
-			currentToken = strtok(NULL, delimiter);                                                           // 	   currentSpeed_GPU,
-			currentToken = strtok(NULL, delimiter);                                                           // 	   currentSpeed_CPU,
-			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%lf", &averageSpeed);               // 	   averageSpeed,
-			currentToken = strtok(NULL, delimiter);                                                           // 	   timeForOneMatch,
-			currentToken = strtok(NULL, delimiter);                                                           // 	   (int)(matchingProbDiff * 100),
-			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%lf", &totalNumGeneratedTripcodes); // 	   prevTotalNumGeneratedTripcodes,
-			currentToken = strtok(NULL, delimiter);                                                           // 	   prevNumValidTripcodes,
-			currentToken = strtok(NULL, delimiter);                                                           // 	   IsCUDADeviceOptimizationInProgress(),
-			currentToken = strtok(NULL, delimiter);                                                           // 	   averageSpeed_GPU,
-			currentToken = strtok(NULL, delimiter);                                                           // 	   averageSpeed_CPU);
-			currentToken = strtok(NULL, delimiter); sscanf(currentToken, "%u",  &numDiscardedTripcodes);      // 	   numDiscardedTripcodes
-			sprintf(status,
-					"[process] %.1lfM TPS, %d WI/CU, %d WI/WG, Restarts: %u",
-					averageSpeed / 1000000,
-					numWorkItemsPerComputeUnit,
-					localWorkSize,
-					((OpenCLDeviceSearchThreadInfo *)info)->numRestarts);
-			UpdateOpenCLDeviceStatus_ChildProcess(((OpenCLDeviceSearchThreadInfo *)info), 
-				                                  status, 
-												  currentSpeed, 
-												  averageSpeed, 
-												  prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes, 
-												  prevNumDiscardedTripcodes      + numDiscardedTripcodes, 
-												  hChildProcess);
+			char *currentToken = strtok(lpBuffer, delimiter);                                                                                           //     "[status]"
+			BOOL isGood = (currentToken != NULL);
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          //     totalTime,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%lf", &currentSpeed);       // 	   currentSpeed,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   currentSpeed_GPU,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   currentSpeed_CPU,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%lf", &averageSpeed);       // 	   averageSpeed,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   timeForOneMatch,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   (int)(matchingProbDiff * 100),
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%lf", &totalNumGeneratedTripcodes); // 	   prevTotalNumGeneratedTripcodes,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   prevNumValidTripcodes,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   IsCUDADeviceOptimizationInProgress(),
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   averageSpeed_GPU,
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   averageSpeed_CPU);
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%u",  &numDiscardedTripcodes);      // 	   numDiscardedTripcodes
+			if (isGood) {
+				sprintf(status,
+						"[process] %.1lfM TPS, %d WI/CU, %d WI/WG, Restarts: %u",
+						averageSpeed / 1000000,
+						numWorkItemsPerComputeUnit,
+						localWorkSize,
+						((OpenCLDeviceSearchThreadInfo *)info)->numRestarts);
+				UpdateOpenCLDeviceStatus_ChildProcess(((OpenCLDeviceSearchThreadInfo *)info), 
+													  status, 
+													  currentSpeed, 
+													  averageSpeed, 
+													  prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes, 
+													  prevNumDiscardedTripcodes      + numDiscardedTripcodes, 
+													  hChildProcess);
+			}
+		} else if (strncmp(lpBuffer, "[error],", strlen("[error],")) == 0) {
+			int   errorCode;
+			char *delimiter = ",";
+			char *currentToken = strtok(lpBuffer, delimiter); // "[error]"
+			BOOL isGood = (currentToken != NULL);
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%d", &errorCode);
+			errorCode = (isGood) ? (errorCode) : (ERROR_UNKNOWN);
+			if (errorCode != ERROR_SEARCH_THREAD_UNRESPONSIVE) {
+				ERROR0(TRUE, errorCode, GetErrorMessage(errorCode));
+			}
 		}
 	}
 
@@ -465,25 +478,29 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 			driverMinorVersion, 
 			binaryFilePath,
 			sourceFilePath);
-	system(assemblerCommand);
+	ERROR0(system(assemblerCommand) != 0, ERROR_GCN_ASSEMBLER, "Failed to assemble GCN kernel.");
 
-	if (binaryFile = fopen(binaryFilePath, "rb")) {
-		fseek(binaryFile, 0L, SEEK_END);
-		size_t binarySize = ftell(binaryFile);
-		unsigned char *binary = (unsigned char *)malloc(binarySize);
-		const unsigned char *binaryArray[1] = {binary};
-		ERROR0(binary == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-		fseek(binaryFile, 0L, SEEK_SET);
-		fread(binary, sizeof(unsigned char), binarySize, binaryFile);
-		fclose(binaryFile);
+	binaryFile = fopen(binaryFilePath, "rb");
+	ERROR0(   binaryFile == NULL
+		   || fseek(binaryFile, 0L, SEEK_END) != 0, 
+		   ERROR_GCN_ASSEMBLER,
+		   "Failed to load GCN kernel.");
+	size_t binarySize = ftell(binaryFile);
+	unsigned char *binary = (unsigned char *)malloc(binarySize);
+	const unsigned char *binaryArray[1] = {binary};
+	ERROR0(binary == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0(   fseek(binaryFile, 0L, SEEK_SET) != 0
+		   || fread(binary, sizeof(unsigned char), binarySize, binaryFile) != binarySize,
+		   ERROR_GCN_ASSEMBLER,
+		   "Failed to load GCN kernel.");
+	fclose(binaryFile);
 
-		*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
-		OPENCL_ERROR(openCLError);
-		openCLError = clBuildProgram(*program, 1, deviceID, NULL, NULL, NULL);
-		OPENCL_ERROR(openCLError);
+	*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
+	OPENCL_ERROR(openCLError);
+	openCLError = clBuildProgram(*program, 1, deviceID, NULL, NULL, NULL);
+	OPENCL_ERROR(openCLError);
 		
-		free(binary);
-	}
+	free(binary);
 	
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
@@ -571,7 +588,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
     sourceFile = fopen(sourceFilePath, "r");
     ERROR0(!sourceFile, ERROR_OPENCL, "Failed to load an OpenCL source file.");
     sourceCode = (char*)malloc(OPENCL_MAX_SIZE_SOURCE_CODE);
-	ERROR0(sourceCode == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(sourceCode == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
     sizeSourceCode = fread(sourceCode, 1, OPENCL_MAX_SIZE_SOURCE_CODE, sourceFile);
     fclose(sourceFile);
 
@@ -620,14 +637,14 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	openCLError = clGetProgramInfo(program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
 	OPENCL_ERROR(openCLError);
 	size_t *binarySizeArray = (size_t *)malloc(sizeof(size_t) * numDevices);
-	ERROR0(binarySizeArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(binarySizeArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	openCLError = clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t) * numDevices, binarySizeArray, NULL);
 	OPENCL_ERROR(openCLError);
 	unsigned char **binaryArray = (unsigned char **)malloc(sizeof(unsigned char *) * numDevices);
-	ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	for(int i = 0; i < numDevices; ++i) {
 		binaryArray[i] = (unsigned char *)malloc(binarySizeArray[i]);
-		ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	}
 	openCLError = clGetProgramInfo(program, CL_PROGRAM_BINARIES, sizeof(unsigned char *) * numDevices, binaryArray, NULL);
 	OPENCL_ERROR(openCLError);
@@ -653,7 +670,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	// Create memory blocks for CPU.
 	unsigned int  sizeOutputArray = globalWorkSize;
 	GPUOutput    *outputArray     = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
-	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	// printf("sizeOutputArray = %u\n", sizeOutputArray);
 
 	// Create memory blocks for the OpenCL device.
@@ -716,6 +733,11 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		OPENCL_ERROR(clEnqueueReadBuffer(commandQueue, openCL_outputArray, CL_TRUE, 0, sizeOutputArray * sizeof(GPUOutput), outputArray, 0, NULL, NULL));
 	    OPENCL_ERROR(clFlush (commandQueue));
 	    OPENCL_ERROR(clFinish(commandQueue));
+		for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
+			GPUOutput *output = &outputArray[indexOutput];
+			ASSERT(output->numGeneratedTripcodes <= 2048);
+			ASSERT(output->numMatchingTripcodes <= 1);
+		}
 		numGeneratedTripcodes += ProcessGPUOutput(key, outputArray, sizeOutputArray, TRUE);
 
 		// Measure the current speed.

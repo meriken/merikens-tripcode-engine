@@ -88,7 +88,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		size_t binarySize = ftell(binaryFile);
 		unsigned char *binary = (unsigned char *)malloc(binarySize);
 		const unsigned char *binaryArray[1] = {binary};
-		ERROR0(binary == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		ERROR0(binary == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 		fseek(binaryFile, 0L, SEEK_SET);
 		fread(binary, sizeof(unsigned char), binarySize, binaryFile);
 		fclose(binaryFile);
@@ -114,7 +114,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	sourceFile = fopen(sourceFilePath, "r");
 	ERROR0(!sourceFile, ERROR_OPENCL, "Failed to load an OpenCL source file.");
 	sourceCode = (char*)malloc(OPENCL_MAX_SIZE_SOURCE_CODE);
-	ERROR0(sourceCode == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(sourceCode == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	sourceCode[0] = '\0';
 	for (int i = 0; i < 7; ++i) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
@@ -173,7 +173,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		size_t lenBuildLog= 0;
 		clGetProgramBuildInfo(*program, *deviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &lenBuildLog);
 		char *buildLog = (char *)malloc(lenBuildLog + 1);
-		ERROR0(buildLog == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		ERROR0(buildLog == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 		clGetProgramBuildInfo(*program, *deviceID, CL_PROGRAM_BUILD_LOG, lenBuildLog, buildLog, &lenBuildLog);
 		buildLog[lenBuildLog] = '\0';
 		fprintf(stderr, "%s\n", buildLog);
@@ -186,14 +186,14 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		openCLError = clGetProgramInfo(*program, CL_PROGRAM_NUM_DEVICES, sizeof(size_t), &numDevices, NULL);
 		OPENCL_ERROR(openCLError);
 		size_t *binarySizeArray = (size_t *)malloc(sizeof(size_t) * numDevices);
-		ERROR0(binarySizeArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		ERROR0(binarySizeArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 		openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t) * numDevices, binarySizeArray, NULL);
 		OPENCL_ERROR(openCLError);
 		unsigned char **binaryArray = (unsigned char **)malloc(sizeof(unsigned char *) * numDevices);
-		ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+		ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 		for(int i = 0; i < numDevices; ++i) {
 			binaryArray[i] = (unsigned char *)malloc(binarySizeArray[i]);
-			ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+			ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 		}
 		openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARIES, sizeof(unsigned char *) * numDevices, binaryArray, NULL);
 		OPENCL_ERROR(openCLError);
@@ -555,7 +555,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 			driverMinorVersion, 
 			assemblerOutputFileFullPath,
 			sourceFileFullPath);
-	system(assemblerCommand);
+	ERROR0(system(assemblerCommand) != 0, ERROR_GCN_ASSEMBLER, "Failed to assemble GCN kernel.");
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", sourceFileFullPath);
 	system(assemblerCommand);
 
@@ -583,26 +583,28 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		system(assemblerCommand);
 	}
 
-	FILE   *binaryFile;
-	if (binaryFile = fopen(dummyKernelBinaryFilePath ? dummyKernelBinaryFilePath : assemblerOutputFileFullPath, "rb")) {
-		fseek(binaryFile, 0L, SEEK_END);
-		size_t binarySize = ftell(binaryFile);
-		unsigned char *binary = (unsigned char *)malloc(binarySize);
-		const unsigned char *binaryArray[1] = {binary};
-		ERROR0(binary == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-		fseek(binaryFile, 0L, SEEK_SET);
-		fread(binary, sizeof(unsigned char), binarySize, binaryFile);
-		fclose(binaryFile);
+	FILE   *binaryFile = fopen(assemblerOutputFileFullPath, "rb");
+	ERROR0(   binaryFile == NULL
+		   || fseek(binaryFile, 0L, SEEK_END) != 0, 
+		   ERROR_GCN_ASSEMBLER,
+		   "Failed to load GCN kernel.");
+	size_t binarySize = ftell(binaryFile);
+	unsigned char *binary = (unsigned char *)malloc(binarySize);
+	const unsigned char *binaryArray[1] = {binary};
+	ERROR0(binary == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0(   fseek(binaryFile, 0L, SEEK_SET) != 0
+		   || fread(binary, sizeof(unsigned char), binarySize, binaryFile) != binarySize,
+		   ERROR_GCN_ASSEMBLER,
+		   "Failed to load GCN kernel.");
+	fclose(binaryFile);
 
-		*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
-		OPENCL_ERROR(openCLError);
-		openCLError = clBuildProgram(*program, 1, deviceID, NULL, NULL, NULL);
-		OPENCL_ERROR(openCLError);
+	*program = clCreateProgramWithBinary(*context, 1, deviceID, &binarySize, binaryArray, NULL, &openCLError);
+	OPENCL_ERROR(openCLError);
+	openCLError = clBuildProgram(*program, 1, deviceID, NULL, NULL, NULL);
+	OPENCL_ERROR(openCLError);
 		
-		free(binary);
-		fclose(binaryFile);
-	}
-	
+	free(binary);
+
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", assemblerOutputFileFullPath);
 	system(assemblerCommand);
 
@@ -701,15 +703,15 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	// Create memory blocks for CPU.
 	unsigned int  sizeOutputArray = globalWorkSize;
 	GPUOutput    *outputArray     = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
-	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	unsigned int *compactMediumChunkBitmap = (unsigned int *)calloc(MEDIUM_CHUNK_BITMAP_SIZE / 8, sizeof(unsigned int));
-	ERROR0(compactMediumChunkBitmap == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(compactMediumChunkBitmap == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	for (int i = 0; i < MEDIUM_CHUNK_BITMAP_SIZE; ++i)
 		if (mediumChunkBitmap[i])
 			compactMediumChunkBitmap[i >> 5] |= 0x1 << (i & 0x1f);
 	// printf("sizeOutputArray = %u\n", sizeOutputArray);
 	PartialKeyFrom3To6 *partialKeyFrom3To6Array = (PartialKeyFrom3To6 *)malloc(sizeof(PartialKeyFrom3To6) * globalWorkSize);
-	ERROR0(partialKeyFrom3To6Array == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(partialKeyFrom3To6Array == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 
     // 
 	if (options.maximizeKeySpace)
@@ -880,6 +882,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		// We can save registers this way.
 		for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
 			GPUOutput *output = &outputArray[indexOutput];
+			ASSERT(output->numGeneratedTripcodes <= 32);
+			ASSERT(output->numMatchingTripcodes <= 1);
 			if (output->numMatchingTripcodes > 0) {
 				output->pair.key.c[0] = keyInfo.partialKeyAndRandomBytes[0];
 				output->pair.key.c[1] = keyInfo.partialKeyAndRandomBytes[1];
@@ -903,7 +907,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		startingTime = timeGetTime();
 		timeElapsed += deltaTime;
 		averageSpeed = numGeneratedTripcodes / timeElapsed;
-		
+
 		// Update the current status.
 		sprintf(status,
 			    "[thread] %.1lfM TPS, %d WI, %d WI/CU, %d WI/WG",

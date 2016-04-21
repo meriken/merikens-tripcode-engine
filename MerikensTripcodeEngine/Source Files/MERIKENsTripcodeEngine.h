@@ -53,6 +53,8 @@
 #include <process.h>
 #include <tlhelp32.h>
 #include <mmsystem.h> // for timeGetTime()
+#include <conio.h>
+#include <ctype.h>
 
 // Standard C libraries
 #include <stdio.h>
@@ -172,8 +174,11 @@ extern void          CreateKey8AndKey9(unsigned char *key);
 // 
 extern void SetPauseState(BOOL state);
 extern BOOL GetPauseState();
+extern void SetErrorState();
+extern BOOL GetErrorState();
 extern void SetTerminationState();
 extern BOOL GetTerminationState();
+extern char *GetErrorMessage(int errorCode);
 
 //
 extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, char *status);

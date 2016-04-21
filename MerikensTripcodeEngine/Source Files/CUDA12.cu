@@ -484,7 +484,6 @@ CUDA_SHA1_END_OF_SEAERCH_FUNCTION
 
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 {
-	cudaError_t    cudaError;
 	cudaDeviceProp CUDADeviceProperties;
 	unsigned int         numBlocksPerSM;
 	unsigned int         numBlocksPerGrid;
@@ -517,7 +516,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	numBlocksPerGrid = numBlocksPerSM * CUDADeviceProperties.multiProcessorCount;
 	sizeOutputArray = CUDA_SHA1_NUM_THREADS_PER_BLOCK * numBlocksPerGrid;
 	outputArray = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
-	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_outputArray, sizeof(GPUOutput) * sizeOutputArray));
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_chunkBitmap, CHUNK_BITMAP_SIZE));
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk)); 

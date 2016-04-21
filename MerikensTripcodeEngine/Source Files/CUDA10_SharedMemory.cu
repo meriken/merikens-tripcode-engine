@@ -1647,7 +1647,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	numBlocksPerGrid = numBlocksPerSM * CUDADeviceProperties.multiProcessorCount;
 	sizeOutputArray = numBitsliceDESPerBlock * numBlocksPerGrid;
 	outputArray = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
-	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_outputArray,        sizeof(GPUOutput) * sizeOutputArray));
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_chunkBitmap,        CHUNK_BITMAP_SIZE));
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk)); 

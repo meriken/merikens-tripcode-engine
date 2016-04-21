@@ -131,6 +131,7 @@ double       prevTotalNumGeneratedTripcodes_GPU = 0;
 double       prevTotalNumGeneratedTripcodes_CPU = 0;
 BOOL         isSearchPaused      = FALSE;
 BOOL         wasSearchTerminated = FALSE;
+BOOL         wasSearchAbortedWithError = FALSE;
 HANDLE       eventForTerminating = NULL;
 int prevLineCount = 0;
 
@@ -165,6 +166,42 @@ unsigned int     numGeneratedTripcodesByCPUInMillions;
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS                                                                 //
 ///////////////////////////////////////////////////////////////////////////////
+
+char *GetErrorMessage(int errorCode)
+{
+	switch (errorCode) {
+    case ERROR_INVALID_TARGET_PATTERN: return "ERROR_INVALID_TARGET_PATTERN";
+    case ERROR_INVALID_REGEX: return "ERROR_INVALID_REGEX";
+    case ERROR_PATTERN_TOO_LONG: return "ERROR_PATTERN_TOO_LONG";
+    case ERROR_PATTERN_TOO_SHORT: return "ERROR_PATTERN_TOO_SHORT";
+    case ERROR_CUDA:
+		return "CUDA fucnction call failed";
+    case ERROR_NO_MEMORY: return "ERROR_NO_MEMORY";
+    case ERROR_PATTERN_FILE: return "ERROR_PATTERN_FILE";
+    case ERROR_IGNORE_DIRECTIVE: return "ERROR_IGNORE_DIRECTIVE";
+    case ERROR_NO_TARGET_PATTERNS: return "ERROR_NO_TARGET_PATTERNS";
+    case ERROR_CRYPTOGRAPHIC_SERVICE: return "ERROR_CRYPTOGRAPHIC_SERVICE";
+    case ERROR_INVALID_OPTION: return "ERROR_INVALID_OPTION";
+    case ERROR_TRIPCODE_FILE: return "ERROR_TRIPCODE_FILE";
+    case ERROR_SEARCH_THREAD: return "ERROR_SEARCH_THREAD";
+    case ERROR_MUTEX: return "ERROR_MUTEX";
+    case ERROR_ASSERTION:
+		return "Assertion failed.";
+    case ERROR_OPENCL: return "OpenCL fucnction call failed.";
+    case ERROR_DES: return "ERROR_DES";
+    case ERROR_SHA1: return "ERROR_SHA1";
+    case ERROR_INTEL_HD_GRAPHICS: return "ERROR_INTEL_HD_GRAPHICS";
+    case ERROR_CHILD_PROCESS:
+		return "ERROR_CHILD_PROCESS";
+    case ERROR_TRIPCODE_VERIFICATION_FAILED: 
+		return "A corrupt tripcode was generated.\n  The hardware or device driver may be malfunctioning.\n  Please check the temperatures of CPU(s) and GPU(s).";
+    case ERROR_EVENT: return "ERROR_EVENT";
+    case ERROR_SEARCH_THREAD_UNRESPONSIVE: return "ERROR_SEARCH_THREAD_UNRESPONSIVE";
+    case ERROR_GCN_ASSEMBLER: 
+		return "GCN assembler failed.";
+    default: return "ERROR_UNKNOWN";
+	}
+}
 
 unsigned char RandomByte()
 {
@@ -282,7 +319,7 @@ double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, unsig
 			//printf("{%s, %s}\n", tripcode, key);
 			ERROR0(!IsTripcodeChunkValid(tripcode),
 				   ERROR_TRIPCODE_VERIFICATION_FAILED, 
-				   "A corrupt tripcode was generated.\nThe hardware or device driver may be malfunctioning.\nPlease check the temperatures of CPU(s) and GPU(s).");
+				   GetErrorMessage(ERROR_TRIPCODE_VERIFICATION_FAILED));
 			ProcessPossibleMatch(tripcode, key);
 		}
 	}
@@ -536,8 +573,8 @@ void CheckSearchThreads()
 			ERROR0(!info->runChildProcess, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 
 			strcpy(info->status, "[process] Restarting search thread...");
-			TerminateThread(openCLDeviceSearchThreadArray[index], 1); // The culpit may be this line. Who knows?
-			TerminateProcess(info->childProcess, 0); // This seems to mess up *info
+			TerminateThread(openCLDeviceSearchThreadArray[index], 1);
+			TerminateProcess(info->childProcess, 0);
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
 			info->childProcess = NULL;
@@ -574,6 +611,9 @@ void KeepSearchThreadsAlive()
 
 void PrintStatus()
 {
+	if (GetErrorState() || GetTerminationState())
+		return;
+
 	EnterCriticalSection(&criticalSection_currentState);
 	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
 
@@ -852,7 +892,7 @@ void CountOpenCLDevices()
     if (errorCode != CL_SUCCESS || numPlatforms <= 0)
 		return;
 	cl_platform_id* platforms = (cl_platform_id*)malloc(sizeof(cl_platform_id) * numPlatforms);
-	ERROR0(platforms == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0(platforms == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
     errorCode = clGetPlatformIDs(numPlatforms, platforms, NULL);
     OPENCL_ERROR(errorCode);
 
@@ -877,7 +917,7 @@ void CountOpenCLDevices()
 			if (errorCode != CL_SUCCESS)
 				continue;
 			devices = (cl_device_id*)malloc(sizeof(cl_device_id) * deviceCount);
-			ERROR0(devices == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+			ERROR0(devices == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 			errorCode = clGetDeviceIDs(platforms[platformIndex], CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_ACCELERATOR, deviceCount, devices, &deviceCount);
 			if (errorCode != CL_DEVICE_NOT_FOUND) {
 				OPENCL_ERROR(errorCode);
@@ -893,7 +933,7 @@ void CountOpenCLDevices()
 		}
 		if (pass == 0) {
 			openCLDeviceIDArray = (cl_device_id *)malloc(sizeof(cl_device_id) * openCLDeviceCount);
-			ERROR0(openCLDeviceIDArray == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+			ERROR0(openCLDeviceIDArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 		}
 	}
 
@@ -1554,6 +1594,22 @@ BOOL GetPauseState()
 	return ret;
 }
 
+void SetErrorState()
+{
+	EnterCriticalSection(&criticalSection_currentState);
+	wasSearchAbortedWithError = TRUE;
+	LeaveCriticalSection(&criticalSection_currentState);
+}
+
+BOOL GetErrorState()
+{
+	BOOL ret;
+	EnterCriticalSection(&criticalSection_currentState);
+	ret = wasSearchAbortedWithError;
+	LeaveCriticalSection(&criticalSection_currentState);
+	return ret;
+}
+
 void SetTerminationState()
 {
 	EnterCriticalSection(&criticalSection_currentState);
@@ -1701,8 +1757,8 @@ void StartCUDADeviceSearchThreads()
 	
 	ASSERT(numCUDADeviceSearchThreads > 0);
 
-	ERROR0((CUDADeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	ERROR0((CUDADeviceSearchThreadInfoArray = (struct CUDADeviceSearchThreadInfo *)malloc(sizeof(struct CUDADeviceSearchThreadInfo) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0((CUDADeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0((CUDADeviceSearchThreadInfoArray = (struct CUDADeviceSearchThreadInfo *)malloc(sizeof(struct CUDADeviceSearchThreadInfo) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	if (options.GPUIndex == GPU_INDEX_ALL) {
 		int CUDADeviceIndex;
 		for (CUDADeviceIndex = 0, i = 0; CUDADeviceIndex < CUDADeviceCount; ++CUDADeviceIndex) {
@@ -1769,8 +1825,8 @@ void StartOpenCLDeviceSearchThreads()
 	
 	ASSERT(numOpenCLDeviceSearchThreads > 0);
 
-	ERROR0((openCLDeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
-	ERROR0((openCLDeviceSearchThreadInfoArray = (struct OpenCLDeviceSearchThreadInfo *)malloc(sizeof(struct OpenCLDeviceSearchThreadInfo) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0((openCLDeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0((openCLDeviceSearchThreadInfoArray = (struct OpenCLDeviceSearchThreadInfo *)malloc(sizeof(struct OpenCLDeviceSearchThreadInfo) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	if (options.GPUIndex == GPU_INDEX_ALL) {
 		int openCLDeviceIDArrayIndex = 0;
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
@@ -1918,7 +1974,7 @@ void StartCPUSearchThreads()
 	
 	if (CPUSearchThreadArray)
 		free(CPUSearchThreadArray);
-	ERROR0((CPUSearchThreadArray = (HANDLE *)malloc(sizeof(HANDLE) * numCPUSearchThreads)) == NULL, ERROR_NO_MEMORY, "Not enough memory.");
+	ERROR0((CPUSearchThreadArray = (HANDLE *)malloc(sizeof(HANDLE) * numCPUSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	
 	for (int i = 0; i < numCPUSearchThreads; ++i) {
 		if (lenTripcode == 12) {

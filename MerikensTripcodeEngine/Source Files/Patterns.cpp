@@ -175,14 +175,14 @@ size_t uniq(void *array, size_t num, size_t size, int (*comp)(const void *, cons
 {                                                                        \
 	if ((array) == NULL) {                                               \
 		(array) = (type *)malloc(sizeof(type) * MIN_SIZE_ARRAY);         \
-		ERROR0((array) == NULL, ERROR_NO_MEMORY, "Not enough memory.");  \
+		ERROR0((array) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));  \
 		(num)       = 0;                                                 \
 		(size) = MIN_SIZE_ARRAY;                                         \
 	} else if ((size) <= (num)) {                                        \
 		type *oldArray = (array);                                        \
 		unsigned int newSize = (size) * 2;                               \
 		type *newArray = (type *)malloc(sizeof(type) * (size_t)newSize); \
-		ERROR0(newArray == NULL, ERROR_NO_MEMORY, "Not enough memory."); \
+		ERROR0(newArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY)); \
 		for (unsigned int i = 0; i < (size); ++i)                        \
 			newArray[i] = oldArray[i];                                   \
 		free(oldArray);                                                  \
@@ -1361,7 +1361,7 @@ void ProcessMatch(unsigned char *tripcode, unsigned char *key)
 	ERROR0(   (lenTripcode == 12 && !VerifySHA1Tripcode(tripcode, key))
 	       || (lenTripcode == 10 && !VerifyDESTripcode (tripcode, key)),
 			ERROR_TRIPCODE_VERIFICATION_FAILED,
-			"A corrupt tripcode was generated.\nThe hardware or device driver may be malfunctioning.\n Please check the temperatures of CPU(s) and GPU(s).");
+			GetErrorMessage(ERROR_TRIPCODE_VERIFICATION_FAILED));
 	if (!options.checkTripcodes || (!IsTripcodeDuplicate(tripcode) && IsValidKey((unsigned char *)key))) {
 		ProcessValidTripcodePair(tripcode, key);
 	} else {

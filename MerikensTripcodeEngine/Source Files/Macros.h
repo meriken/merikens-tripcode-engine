@@ -37,84 +37,100 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #define ERROR0(cond, code, msg)                                   \
-	if (cond) {                                                   \
+	if (cond && !GetErrorState()) {                                                   \
+		SetErrorState(); \
 		if (options.redirection) {                                \
 			fprintf(stderr, "%d\n", (code));                      \
 			fflush(stderr);                                       \
+			printf("[error],%d\n", (code));                      \
+			fflush(stdout);                                       \
 		} else {                                                  \
 			ResetCursorPos(prevLineCount);                        \
-			printf("\nERROR\n=====\n\n%s", (msg));                \
-			getchar();                                            \
+			printf("\nERROR\n=====\n  %s\n\a\n  Hit any key to exit.", (msg));                \
+			_getch();                                            \
 			ShowCursor();                                         \
 		}                                                         \
-		ExitProcess(0);                                           \
+		ExitProcess(1);                                           \
 	}                                                             \
 	
 #define ERROR1(cond, code, msg, arg1)                     \
-	if (cond) {                                           \
+	if (cond && !GetErrorState()) {                                           \
+		SetErrorState(); \
 		if (options.redirection) {                        \
 			fprintf(stderr, "%d,%s\n", (code), (arg1));   \
 			fflush(stderr);                               \
+			printf("[error],%d\n", (code));                      \
+			fflush(stdout);                                       \
 		} else {                                          \
 			char line[256];                               \
 			ResetCursorPos(prevLineCount);                        \
-			strcpy(line, "\nERROR\n=====\n\n");           \
+			strcpy(line, "\nERROR\n=====\n  ");           \
 			strcat(line, (msg));                          \
+			strcat(line, "\n\a\n  Hit any key to exit.");                          \
 			printf(line, (arg1));                         \
-			getchar();                                    \
+			_getch();                                    \
 			ShowCursor();                                 \
 		}                                                 \
-		ExitProcess(0);                                   \
+		ExitProcess(1);                                   \
 	}                                                     \
 
 #define CUDA_ERROR(error)                                                                     \
 	{                                                                                         \
 		cudaError_t _errorCode;                                                               \
-		if ((_errorCode = (error)) != cudaSuccess) {                                          \
+		if ((_errorCode = (error)) != cudaSuccess && !GetErrorState()) {                                          \
+			SetErrorState(); \
 			if (options.redirection) {                                                        \
 				fprintf(stderr, "%d\n", ERROR_CUDA);                                          \
 				fflush(stderr);                                                               \
+				printf("[error],%d\n", ERROR_CUDA);                      \
+				fflush(stdout);                                       \
 			} else {                                                                          \
 				ResetCursorPos(prevLineCount);                        \
-				printf("\nERROR\n=====\n\nCUDA Function Call Failed: %s [%d] (file '%s', line %d)\n\a", \
+				printf("\nERROR\n=====\n  CUDA Function Call Failed: %s [%d] (file '%s', line %d)\n\a\n  Hit any key to exit.", \
 						cudaGetErrorString(_errorCode), (int)_errorCode, __FILE__, __LINE__);         \
-				getchar();                                                                    \
+				_getch();                                                                    \
 				ShowCursor();                                                                 \
 			}                                                                                 \
-			ExitProcess(0);                                                                   \
+			ExitProcess(1);                                                                   \
 		}                                                                                     \
 	}                                                                                         \
 
 #define OPENCL_ERROR(error)                                                                        \
 	{                                                                                              \
 		cl_int _errorCode;                                                                         \
-		if ((_errorCode = (error)) != CL_SUCCESS) {                                                \
+		if ((_errorCode = (error)) != CL_SUCCESS && !GetErrorState()) {                                                \
+			SetErrorState();                                                                           \
 			if (options.redirection) {                                                             \
 				fprintf(stderr, "%d\n", ERROR_OPENCL);                                             \
 				fflush(stderr);                                                                    \
+				printf("[error],%d\n", ERROR_OPENCL);                                              \
+				fflush(stdout);                                                                    \
 			} else {                                                                               \
-				ResetCursorPos(prevLineCount);                        \
-				printf("\nERROR\n=====\n\nOpenCL Function Call Failed: %s (file '%s', line %d)\n\a",    \
-						ConvertOpenCLErrorCodeToString(_errorCode), __FILE__, __LINE__);  \
-				getchar();                                                                         \
+				ResetCursorPos(prevLineCount);                                                     \
+				printf("\nERROR\n=====\n  OpenCL Function Call Failed: %s (file '%s', line %d)\n\a\n  Hit any key to exit.", \
+						ConvertOpenCLErrorCodeToString(_errorCode), __FILE__, __LINE__);           \
+				_getch();                                                                         \
 				ShowCursor();                                                                      \
 			}                                                                                      \
-			ExitProcess(0);                                                                        \
+			ExitProcess(1);                                                                        \
 		}                                                                                          \
 	}                                                                                              \
 
 #define ASSERT(cond)                                                                                    \
-	if (!(cond)) {                                                                                      \
+	if (!(cond) && !GetErrorState()) {                                                                                      \
+		SetErrorState(); \
 		if (options.redirection) {                                                                      \
 			fprintf(stderr, "%d\n", ERROR_ASSERTION);                                                   \
 			fflush(stderr);                                                                             \
+			printf("[error],%d\n", ERROR_ASSERTION);                                              \
+			fflush(stdout);                                                                    \
 		} else {                                                                                        \
 			ResetCursorPos(prevLineCount);                        \
-			printf("\nERROR\n=====\n\nAssertion Failed: file %s, line %d\n\a", __FILE__, __LINE__); \
-			getchar();                                                                                  \
+			printf("\nERROR\n=====\n  Assertion Failed: file %s, line %d\n\a\n  Hit any key to exit.", __FILE__, __LINE__); \
+			_getch();                                                                                  \
 			ShowCursor();                                                                               \
 		}                                                                                               \
-		ExitProcess(0);                                                                                 \
+		ExitProcess(1);                                                                                 \
 	}                                                                                                   \
 
 // for 1-byte characters
