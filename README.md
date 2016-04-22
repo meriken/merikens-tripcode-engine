@@ -14,22 +14,6 @@ This program is part of "Meriken's Tripcode Generator," a GUI-based tripcode gen
 
 http://meriken.ygch.net/programming/merikens-tripcode-generator/
 
-## Prerequisites
-
-You need the following software installed:
-
-* [Microsoft Visual C++ 2010 Redistributable Package (x86)][1]
-* Microsoft Visual C++ 2010 Redistributable Package (x64)
-  (if you are using a 64bit operating system)
-* Visual C++ Redistributable for Visual Studio 2015
-  (if you are using an AMD graphics card)
-* NVIDIA Display Driver Version 352.78 or later
-  (if you are using an NVIDIA graphics card) 
-* AMD Radeon Desktop Video Card Driver
-  (if you are using an AMD graphics card)
-
-[1]: https://www.microsoft.com/en-us/download/details.aspx?id=5555
-
 ## Building
 
 You need the following tools to build Meriken's Tripcode Engine.
@@ -43,19 +27,30 @@ This program uses Multiple Precision Integers and Rationals (MPIR). Make sure to
 
 See MerikensTripcodeEngine.h for various build options. Don't forget to define ENGLISH_VERSION if you want to build an English version for 4chan.
 
-## Installation
+## Dependencies
+
+You need the following software installed in order to run the application:
+
+* [Microsoft Visual C++ 2010 Redistributable Package (x86)][1]
+* Microsoft Visual C++ 2010 Redistributable Package (x64)
+  (if you are using a 64bit operating system)
+* Visual C++ Redistributable for Visual Studio 2015
+  (if you are using an AMD graphics card)
+* NVIDIA Display Driver Version 352.78 or later
+  (if you are using an NVIDIA graphics card) 
+* AMD Radeon Desktop Video Card Driver
+  (if you are using an AMD graphics card)
+
+[1]: https://www.microsoft.com/en-us/download/details.aspx?id=5555
+
+
+## Usage
 
 Make sure to download and install the required software packages before 
-executing the program. IF YOU WANT TO USE A VIDEO CARD AS A SEARCH
-DEVICE, YOU MUST INSTALL THE LATEST DISPLAY DRIVER FROM THE VENDOR'S
-WEBSITE.
-
-If there is no OpenCL driver in the system, make sure to copy
+executing the program. If there is no OpenCL driver in the system, make sure to copy
 either OpenCL\x86\OpenCL.dll or OpenCL\x64\OpenCL.dll,
 depending on the operating system, to the folder where 
 the executables are located.
-
-## USAGE
 
 Specify search patterns in "patterns.txt" and run either
 "MerikensTripcodeEngine.exe", if you are using a 32-bit operating system, or
