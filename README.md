@@ -43,6 +43,94 @@ This program uses Multiple Precision Integers and Rationals (MPIR). Make sure to
 
 See MerikensTripcodeEngine.h for various build options. Don't forget to define ENGLISH_VERSION if you want to build an English version for 4chan.
 
+## Installation
+
+Make sure to download and install the required software packages before 
+executing the program. IF YOU WANT TO USE A VIDEO CARD AS A SEARCH
+DEVICE, YOU MUST INSTALL THE LATEST DISPLAY DRIVER FROM THE VENDOR'S
+WEBSITE.
+
+If there is no OpenCL driver in the system, make sure to copy
+either OpenCL\x86\OpenCL.dll or OpenCL\x64\OpenCL.dll,
+depending on the operating system, to the folder where 
+the executables are located.
+
+## USAGE
+
+Specify search patterns in "patterns.txt" and run either
+"MerikensTripcodeEngine.exe", if you are using a 32-bit operating system, or
+"MerikensTripcodeEngine64.exe", if you are using a 64-bit operating system.
+Matching tripcodes will be displayed and saved in "tripcodes.txt".
+
+Example of "patterns.txt":
+
+```
+# Meriken's Tripcode Engine English
+# Copyright (c) 2011-2016 !/Meriken/. <meriken.ygch.net@gmail.com>
+#
+# - Specify only one pattern in each line.
+# - Patterns must be at least 5 characters in length.
+# - Patterns that are too long will be ignored.
+# - Strings after '#' are treated as comments.
+
+
+
+# Specify non-regex patterns after the "#noregex" directive.
+# You can only use [A-Za-z0-9./] for patterns.
+
+#noregex
+
+TEST/                   # Matches "!TEST/UH3.F", "!TEST/ZXVew", etc.
+
+
+
+# Specify regex patterns after the "#regex" directive.
+# The following operators and specifiers are available for use:
+# 
+#     ^ $ () | [] [^] . + * ? \ {n} {m,n} \n
+#     [:alpha:] [:upper:] [:lower:] [:digit:] [:alnum:] [:punct:]
+# 
+# It is encouraged to use '^' whenever possible to achieve maximum
+# search speed.
+
+#regex
+
+#^TEST/                 # Matches "!TEST/UH3.F", "!TEST/ZXVew", etc.
+#/TEST$                 # Matches "!15ycs/TEST", "!wtra5/TEST", etc.
+#/TEST/                 # Matches "!y/TEST/5uj", "!anj/TEST/.", etc.
+#^[0-9]*$               # Matches "!8710915015", "!9104552720", etc.
+#^([:upper:]{5})\1$     # Matches "!IOPAFIOPAF", "!UIABTUIABT", etc.
+#^[Mm]eriken[:punct:]   # Matches "!meriken/u6", "!Meriken.qe", etc.
+
+
+
+#ignore
+Lines between "#ignore" are "#endignore" will be ignored.
+#endignore
+
+
+
+# You cannot specify a pattern in the last line.
+```
+
+## OPTIONS
+
+-g : Use GPUs as search devices. (This option can be used in combination with "-c".)
+
+-d [device number] : Specify a GPU to use.
+
+-c : Use CPUs as search devices. (This option can be used in combination with "-g".)
+
+-l [length of tripcodes] : Specify either 10 or 12. (Please note that you can use 12 character tripcodes only at 2ch.net.)
+
+-t [number of threads]   : Specify the number of CPU search threads.
+
+-o [output file] : Specify an output file.
+
+-f [input file] : Specify an input file.
+
+--use-one-and-two-byte-characters-for-keys : Use Shift-JIS characters for keys.
+
 ## License
 
 Meriken's Tripcode Engine is free software: you can redistribute it and/or modify
