@@ -1,6 +1,11 @@
 ﻿Meriken's Tripcode Engine
 =========================
 
+"Meriken's Tripcode Engine" is a Windows application designed to generate custom/vanity tripcodes at maximum speed. 
+It is arguably the fastest and most powerful program of its kind. It makes effecitive use of available computing power of CPUs and GPUs, 
+and the user can specify flexible regex patterns for tripcodes. It features highly optimized, extensively parallelized 
+implementations of bitslice DES and SHA-1 for OpenCL, AMD GCN, NVIDIA CUDA, and Intel SSE2/AVX/AVX2.
+
 The English version of this program is available for free download here:
 
 http://meriken.ygch.net/programming/merikens-tripcode-engine-english/
@@ -8,11 +13,6 @@ http://meriken.ygch.net/programming/merikens-tripcode-engine-english/
 This program is part of "Meriken's Tripcode Generator," a GUI-based tripcode generator targeted primarily to users in Japan:
 
 http://meriken.ygch.net/programming/merikens-tripcode-generator/
-
-"Meriken's Tripcode Engine" is a Windows application designed to generate custom/vanity tripcodes at maximum speed. 
-It is arguably the fastest and most powerful program of its kind. It makes effecitive use of available computing power of CPUs and GPUs, 
-and the user can specify flexible regex patterns for tripcodes. It features highly optimized, extensively parallelized 
-implementations of bitslice DES and SHA-1 for OpenCL, AMD GCN, NVIDIA CUDA, and Intel SSE2/AVX/AVX2.
 
 ## Prerequisites
 
