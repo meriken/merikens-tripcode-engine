@@ -722,7 +722,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	sprintf(tempBuildOption, " -DOPENCL_DES_BS_DEPTH=%d ", (int)OPENCL_DES_BS_DEPTH);
 	strcat(buildOptions, tempBuildOption);
 	strcat(buildOptions, " -w ");
-	strcat(buildOptions, " -fno-bin-source -fno-bin-llvmir -fbin-exe ");
+	if (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
+		strcat(buildOptions, " -fno-bin-source -fno-bin-llvmir -fbin-exe ");
 #ifdef DEBUG_KEEP_TEMPORARY_FILES_FOR_OPENCL
 	strcat(buildOptions, " -save-temps=OpenCL10.cl ");
 #endif

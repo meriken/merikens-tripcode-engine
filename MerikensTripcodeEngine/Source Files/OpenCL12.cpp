@@ -166,7 +166,7 @@ struct {
 
 	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 256, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, ""},
+	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, "-cl-nv-opt-level=3"},
 
 	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 2500", -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, ""},
 	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 4000", -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, ""},
@@ -266,6 +266,9 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	for (int patternFileIndex = 0; patternFileIndex < numPatternFiles; ++patternFileIndex) {
 		strcat(commandLine, " -f ");
 		strcat(commandLine, patternFilePathArray[patternFileIndex]);
+	}
+	if (options.useOpenCLForCUDADevices) {
+		strcat(commandLine, " --use-opencl-for-cuda-devices");
 	}
 	if (!options.enableGCNAssembler) {
 		strcat(commandLine, " --disable-gcn-assembler");
