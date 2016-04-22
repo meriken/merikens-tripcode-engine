@@ -113,7 +113,7 @@ Lines between "#ignore" are "#endignore" will be ignored.
 # You cannot specify a pattern in the last line.
 ```
 
-## OPTIONS
+## Options
 
 -g : Use GPUs as search devices. (This option can be used in combination with "-c".)
 
@@ -130,6 +130,8 @@ Lines between "#ignore" are "#endignore" will be ignored.
 -f [input file] : Specify an input file.
 
 --use-one-and-two-byte-characters-for-keys : Use Shift-JIS characters for keys.
+
+--disable-gcn-assembler : Disable GCN assembler and use OpenCL kernels instead.
 
 ## License
 
