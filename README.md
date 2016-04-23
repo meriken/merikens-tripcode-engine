@@ -14,35 +14,6 @@ This program is part of "Meriken's Tripcode Generator," a GUI-based tripcode gen
 
 http://meriken.ygch.net/programming/merikens-tripcode-generator/
 
-## Building
-
-You need the following tools to build Meriken's Tripcode Engine.
-
-* Visual Studio 2010 Professional
-* CUDA Toolkit 7.5
-* AMD APP SDK 3.0
-* YASM 1.2.0
-
-This program uses Multiple Precision Integers and Rationals (MPIR). Make sure to copy MPIR header and library files into appropriate Visual Studio folders.
-
-See MerikensTripcodeEngine.h for various build options. Don't forget to define ENGLISH_VERSION if you want to build an English version for 4chan.
-
-## Dependencies
-
-You need the following software installed in order to run the application:
-
-* [Microsoft Visual C++ 2010 Redistributable Package (x86)][1]
-* Microsoft Visual C++ 2010 Redistributable Package (x64)
-  (if you are using a 64bit operating system)
-* Visual C++ Redistributable for Visual Studio 2015
-  (if you are using an AMD graphics card)
-* NVIDIA Display Driver Version 352.78 or later
-  (if you are using an NVIDIA graphics card) 
-* AMD Radeon Desktop Video Card Driver
-  (if you are using an AMD graphics card)
-
-[1]: https://www.microsoft.com/en-us/download/details.aspx?id=5555
-
 ## Performance
 
 Here are some actual speeds the author achieved with this tripcode generator:
@@ -55,6 +26,39 @@ Here are some actual speeds the author achieved with this tripcode generator:
 Currently [MTY CL][2] is the only practical alternative to this program, and this program runs much faster than MTY CL in most cases.
 
 [2]: https://github.com/madsbuvi/MTY_CL
+
+## Building
+
+You need the following tools to build Meriken's Tripcode Engine.
+
+* Visual Studio 2010 Professional
+* CUDA Toolkit 7.5
+* AMD APP SDK 3.0
+* YASM 1.2.0
+
+This program uses Multiple Precision Integers and Rationals (MPIR). Make sure to copy MPIR header and library files into appropriate Visual Studio folders.
+
+See `MerikensTripcodeEngine.h` for various build options. Don't forget to define `ENGLISH_VERSION` if you want to build an English version for 4chan.
+
+## Dependencies
+
+You need the following software installed in order to run the application:
+
+* [Microsoft Visual C++ 2010 Redistributable Package (x86)][1]
+* [Microsoft Visual C++ 2010 Redistributable Package (x64)][2]
+  (if you are using a 64bit operating system)
+* [Visual C++ Redistributable for Visual Studio 2015][3]
+  (if you are using an AMD graphics card) 
+* [AMD Radeon Desktop Video Card Driver][4]
+  (if you are using an AMD graphics card)
+* [NVIDIA Display Driver Version 352.78 or later][5]
+  (if you are using an NVIDIA graphics card)
+
+[1]: https://www.microsoft.com/en-us/download/details.aspx?id=5555
+[2]: https://www.microsoft.com/en-us/download/details.aspx?id=14632
+[3]: https://www.microsoft.com/en-us/download/details.aspx?id=48145
+[4]: http://support.amd.com/en-us/download
+[5]: http://www.nvidia.com/Download/index.aspx?lang=en-us
 
 ## Usage
 
