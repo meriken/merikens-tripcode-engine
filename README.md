@@ -18,10 +18,10 @@ http://meriken.ygch.net/programming/merikens-tripcode-generator/
 
 Here are some actual speeds the author achieved with this tripcode generator:
 
-* AMD Radeon HD 7990 **1022MH/s** (1250mV +20% 1180MHz)
-* NVIDIA GeForce GTX 980 Ti **996MH/s** (110% +250MHz)
-* AMD Radeon HD 290X **647M tripcode/s** (+100mV +50% 1074MHz)
-* AMD Radeon HD 7970 **408M tripcode/s** (1000MHz)
+* AMD Radeon HD 7990 **1022MH/s** (descrypt; 1250mV +20% 1180MHz)
+* NVIDIA GeForce GTX 980 Ti **996MH/s** (descrypt; 110% +250MHz)
+* AMD Radeon HD 290X **647M tripcode/s** (descrypt; +100mV +50% 1074MHz)
+* AMD Radeon HD 7970 **408M tripcode/s** (descrypt; 1000MHz)
 
 Currently [MTY CL][2] is the only practical alternative to this program, and this program runs much faster than MTY CL in most cases.
 
@@ -64,16 +64,16 @@ You need the following software installed in order to run the application:
 
 Make sure to download and install the required software packages before 
 executing the program. If there is no OpenCL driver in the system, make sure to copy
-either OpenCL\x86\OpenCL.dll or OpenCL\x64\OpenCL.dll,
+either `OpenCL\x86\OpenCL.dll` or `OpenCL\x64\OpenCL.dll`,
 depending on the operating system, to the folder where 
 the executables are located.
 
-Specify search patterns in "patterns.txt" and run either
-"MerikensTripcodeEngine.exe", if you are using a 32-bit operating system, or
-"MerikensTripcodeEngine64.exe", if you are using a 64-bit operating system.
-Matching tripcodes will be displayed and saved in "tripcodes.txt".
+Specify search patterns in `patterns.txt` and run either
+`MerikensTripcodeEngine.exe`, if you are using a 32-bit operating system, or
+`MerikensTripcodeEngine64.exe`, if you are using a 64-bit operating system.
+Matching tripcodes will be displayed and saved in `tripcodes.txt`.
 
-Example of "patterns.txt":
+Example of `patterns.txt`:
 
 ```
 # Meriken's Tripcode Engine English
@@ -126,23 +126,23 @@ Lines between "#ignore" are "#endignore" will be ignored.
 
 ## Options
 
--g : Use GPUs as search devices. (This option can be used in combination with "-c".)
+**-g** : Use GPUs as search devices. (This option can be used in combination with "-c".)
 
--d [device number] : Specify a GPU to use.
+**-d** [device number] : Specify a GPU to use.
 
--c : Use CPUs as search devices. (This option can be used in combination with "-g".)
+**-c** : Use CPUs as search devices. (This option can be used in combination with "-g".)
 
--l [length of tripcodes] : Specify either 10 or 12. (Please note that you can use 12 character tripcodes only at 2ch.net.)
+**-l** [length of tripcodes] : Specify either 10 or 12. (Please note that you can use 12 character tripcodes only at 2ch.net.)
 
--t [number of threads]   : Specify the number of CPU search threads.
+**-t** [number of threads]   : Specify the number of CPU search threads.
 
--o [output file] : Specify an output file.
+**-o** [output file] : Specify an output file.
 
--f [input file] : Specify an input file.
+**-f** [input file] : Specify an input file.
 
---use-one-and-two-byte-characters-for-keys : Use Shift-JIS characters for keys.
+**--use-one-and-two-byte-characters-for-keys** : Use Shift-JIS characters for keys.
 
---disable-gcn-assembler : Disable GCN assembler and use OpenCL kernels instead.
+**--disable-gcn-assembler** : Disable GCN assembler and use OpenCL kernels instead.
 
 ## License
 
@@ -159,4 +159,4 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Meriken's Tripcode Engine.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright © 2016 ◆Meriken.Z.
+Copyright © 2016 ◆/Meriken/.
