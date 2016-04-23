@@ -252,8 +252,11 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	char childProcessPath[MAX_LEN_COMMAND_LINE + 1];
 	int applicationPathLen = strlen(applicationPath);
 	strcpy(childProcessPath, applicationPath);
-	if (strcmp(childProcessPath + applicationPathLen - 6, "64.exe") == 0)
+	if (strcmp(childProcessPath + applicationPathLen - 6, "64.exe") == 0) {
 		strcpy(childProcessPath + applicationPathLen - 6, ".exe"); // For 32-bit OpenCL binaries
+	} else if (strcmp(childProcessPath + applicationPathLen - 13, "64_NVIDIA.exe") == 0) {
+		strcpy(childProcessPath + applicationPathLen - 13, ".exe"); // For 32-bit OpenCL binaries
+		{
 	char commandLine[MAX_LEN_COMMAND_LINE + 1];
 	sprintf(commandLine,
 	        "\"%s\" --output-for-redirection --disable-tripcode-checks -l %d -g -d %d -y %d -z %d -a %d -b 1",
