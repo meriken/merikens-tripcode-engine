@@ -18,10 +18,10 @@ http://meriken.ygch.net/programming/merikens-tripcode-generator/
 
 Here are some actual speeds the author achieved with this tripcode generator:
 
-* AMD Radeon HD 7990 *1022MH/s* (1250mV +20% 1180MHz)
-* NVIDIA GeForce GTX 980 Ti *996MH/s* (110% +250MHz)
-* AMD Radeon HD 290X *647M tripcode/s* (+100mV +50% 1074MHz)
-* AMD Radeon HD 7970 *408M tripcode/s* (1000MHz)
+* AMD Radeon HD 7990 **1022MH/s** (1250mV +20% 1180MHz)
+* NVIDIA GeForce GTX 980 Ti **996MH/s** (110% +250MHz)
+* AMD Radeon HD 290X **647M tripcode/s** (+100mV +50% 1074MHz)
+* AMD Radeon HD 7970 **408M tripcode/s** (1000MHz)
 
 Currently [MTY CL][2] is the only practical alternative to this program, and this program runs much faster than MTY CL in most cases.
 
