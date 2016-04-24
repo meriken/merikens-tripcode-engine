@@ -14,6 +14,14 @@ This program is part of "Meriken's Tripcode Generator," a GUI-based tripcode gen
 
 http://meriken.ygch.net/programming/merikens-tripcode-generator/
 
+## Donations
+
+I would really appreciate donations as it is quite expensive to buy hardware for testing.
+I am also working on the English version of my tripcode search service and would like to add more servers.
+
+* PayPal: `meriken.ygch.net@gmail.com`
+* Bitcoin: `1BZrWADRhLr9DyQYYRJhRcmudE3vntT5em`
+
 ## Performance
 
 Here are some actual speeds the author achieved with this tripcode generator:
