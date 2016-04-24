@@ -741,7 +741,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	    OPENCL_ERROR(clFinish(commandQueue));
 		for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
 			GPUOutput *output = &outputArray[indexOutput];
-			ASSERT(output->numGeneratedTripcodes <= 2048);
+			ASSERT(output->numGeneratedTripcodes <= 2048 * 4);
 			ASSERT(output->numMatchingTripcodes <= 1);
 		}
 		numGeneratedTripcodes += ProcessGPUOutput(key, outputArray, sizeOutputArray, TRUE);
