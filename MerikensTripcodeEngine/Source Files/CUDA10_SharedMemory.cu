@@ -1657,7 +1657,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_key7Array,          sizeof(unsigned char) * CUDA_DES_BS_DEPTH)); 
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_keyFrom49To55Array, sizeof(DES_Vector)    * 7)); 
 
-	((CUDADeviceSearchThreadInfo *)info)->criticalSection.lock();
+	ACQUIRE_SPIN_LOCK(((CUDADeviceSearchThreadInfo *)info)->spin_lock);
 	CUDA_ERROR(cudaMemcpy(CUDA_tripcodeChunkArray, tripcodeChunkArray, sizeof(uint32_t) * numTripcodeChunk, cudaMemcpyHostToDevice));
 	CUDA_ERROR(cudaMemcpy(CUDA_chunkBitmap, chunkBitmap, CHUNK_BITMAP_SIZE, cudaMemcpyHostToDevice));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_base64CharTable,      base64CharTable,      sizeof(base64CharTable)));
@@ -1665,7 +1665,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_FirstByte,   keyCharTable_FirstByte,   SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByte,  keyCharTable_SecondByte,  SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_smallChunkBitmap, smallChunkBitmap, SMALL_CHUNK_BITMAP_SIZE));
-	((CUDADeviceSearchThreadInfo *)info)->criticalSection.unlock();
+	RELEASE_SPIN_LOCK(((CUDADeviceSearchThreadInfo *)info)->spin_lock);
 	
 	startingTime = timeGetTime();
 

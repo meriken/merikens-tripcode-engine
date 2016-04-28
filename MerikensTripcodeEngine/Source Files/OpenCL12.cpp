@@ -446,7 +446,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 {
 	cl_int         openCLError;
 	
-	mutex_ansi_system_function.lock();
+	ACQUIRE_SPIN_LOCK(ansi_system_function_lock);
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
@@ -511,7 +511,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
 
-	mutex_ansi_system_function.unlock();
+	ACQUIRE_SPIN_LOCK(ansi_system_function_lock);
 }
 
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)

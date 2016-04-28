@@ -183,7 +183,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	CUDA_ERROR(cudaMalloc((void **)&cudaKeyVectorsFrom49To55, sizeof(DES_Vector) * 7 * 2)); 
 	CUDA_ERROR(cudaMalloc((void **)&cudaKeyAndRandomBytes,    sizeof(unsigned char) * 8)); 
 	
-	(((CUDADeviceSearchThreadInfo *)info)->criticalSection).lock();
+	ACQUIRE_SPIN_LOCK(((CUDADeviceSearchThreadInfo *)info)->spin_lock);
 #ifdef CUDA_DES_ENABLE_MULTIPLE_KERNELS_MODE
 	CUDA_DES_InitializeKernelLauncher0();
 	CUDA_DES_InitializeKernelLauncher1();
@@ -207,7 +207,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByte, keyCharTable_SecondByte, SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaChunkBitmap,               chunkBitmap,               CHUNK_BITMAP_SIZE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaCompactMediumChunkBitmap,  compactMediumChunkBitmap,  COMPACT_MEDIUM_CHUNK_BITMAP_SIZE));
-	(((CUDADeviceSearchThreadInfo *)info)->criticalSection).unlock();
+	RELEASE_SPIN_LOCK(((CUDADeviceSearchThreadInfo *)info)->spin_lock);
 		
 	startingTime = timeGetTime();
 

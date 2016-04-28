@@ -114,9 +114,11 @@ struct CUDADeviceSearchThreadInfo {
 	int32_t          subindex;
 	cudaDeviceProp  properties;
 	char  status[LEN_LINE_BUFFER_FOR_SCREEN];
-	std::mutex criticalSection;
+	std::atomic_flag spin_lock;
 	//
 	DWORD timeLastUpdated;
+
+	CUDADeviceSearchThreadInfo() { spin_lock.clear(); }
 };
 
 struct OpenCLDeviceSearchThreadInfo {

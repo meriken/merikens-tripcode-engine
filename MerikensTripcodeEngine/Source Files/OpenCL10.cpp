@@ -480,7 +480,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	};
 	cl_int         openCLError;
 
-	mutex_ansi_system_function.lock();
+	ACQUIRE_SPIN_LOCK(ansi_system_function_lock);
 
 	// Create an expansion function based on the salt.
 	unsigned char  salt[2];
@@ -613,7 +613,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		system(assemblerCommand);
 	}
 
-	mutex_ansi_system_function.unlock();
+	RELEASE_SPIN_LOCK(ansi_system_function_lock);
 }
 
 unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)

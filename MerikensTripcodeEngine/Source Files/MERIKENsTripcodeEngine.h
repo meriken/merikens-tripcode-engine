@@ -66,7 +66,7 @@
 #include <stddef.h>
 
 // Standard C++ libraries
-#include <mutex>
+#include <atomic>
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 #include <nmmintrin.h>
@@ -152,16 +152,18 @@ extern struct CUDADeviceSearchThreadInfo *CUDADeviceSearchThreadInfoArray;
 extern HANDLE                            *CUDADeviceSearchThreadArray;
 extern int32_t                                numCPUSearchThreads;
 extern HANDLE                            *CPUSearchThreadArray;
-extern std::mutex  mutex_num_generated_tripcodes;
-extern std::mutex  mutex_process_tripcode_pair;
-extern std::mutex  mutex_current_state;
-extern std::mutex  mutex_ansi_system_function;
+extern std::atomic_flag  num_generated_tripcodes_lock;
+extern std::atomic_flag  process_tripcode_pair_lock;
+extern std::atomic_flag  current_state_lock;
+extern std::atomic_flag  ansi_system_function_lock;
 extern uint32_t      numGeneratedTripcodesByCUDADevice;
 extern uint32_t      numGeneratedTripcodesByCUDADeviceInMillions;
 extern uint32_t      numGeneratedTripcodesByCPU;
 extern uint32_t      numGeneratedTripcodesByCPUInMillions;
 extern char              nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
 extern char              nameEventForTerminating[MAX_LEN_INPUT_LINE + 1];
+#define ACQUIRE_SPIN_LOCK(lock) while ((lock).test_and_set(std::memory_order_acquire))
+#define RELEASE_SPIN_LOCK(lock) (lock).clear(std::memory_order_release)
 
 //
 extern void          AddToNumGeneratedTripcodesByCPU(uint32_t num);

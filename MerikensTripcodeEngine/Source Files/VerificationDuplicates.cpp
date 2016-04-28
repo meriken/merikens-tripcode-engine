@@ -47,7 +47,7 @@
 char *crypt(char *key, char *salt);
 
 static BOOL             wasCriticalSectionInitialized = FALSE;
-static std::mutex criticalSection;
+static std::atomic_flag spin_lock = ATOMIC_FLAG_INIT;
 
 typedef struct TripcodeLinkedList {
 	struct TripcodeLinkedList *next;
@@ -69,7 +69,7 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 {
 	BOOL result = FALSE;
 
-	criticalSection.lock();
+	ACQUIRE_SPIN_LOCK(spin_lock);
 
 	// Initialize the table.
 	if (!wasMatchedTripcodeTableInitialized) {
@@ -116,6 +116,6 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 	matchedTripcodeTable[tableIndex] = newNode;
 
 exit:
-	criticalSection.unlock();
+	RELEASE_SPIN_LOCK(spin_lock);
 	return result;
 }
