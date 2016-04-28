@@ -303,7 +303,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	HANDLE hInputWriteTmp,hInputRead,hInputWrite;
 	HANDLE hErrorWrite;
 	HANDLE hThread;
-	DWORD  ThreadId;
+	uint32_t  ThreadId;
 	SECURITY_ATTRIBUTES securityAttributes;
 
 	securityAttributes.nLength= sizeof(SECURITY_ATTRIBUTES);
@@ -346,7 +346,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 
 	CHAR  lpBuffer[LEN_LINE_BUFFER_FOR_SCREEN];
 	DWORD nBytesRead;
-	DWORD nCharsWritten;
+	uint32_t nCharsWritten;
 
 	while(!GetTerminationState())
 	{
@@ -456,10 +456,10 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	FILE   *sourceFile;
 	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN.asm", applicationDirectory);
 	
-	int32_t driverMajorVersion;
-	int32_t driverMinorVersion;
+	int driverMajorVersion;
+	int driverMinorVersion;
 	char rest[LEN_LINE_BUFFER_FOR_SCREEN];
-	sscanf(driverVersion, "%d.%d%s", &driverMajorVersion, &driverMinorVersion, rest);
+	sscanf(driverVersion, "%d.%d%1023s", &driverMajorVersion, &driverMinorVersion, rest);
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	sprintf(assemblerCommand, 
@@ -511,7 +511,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
 
-	ACQUIRE_SPIN_LOCK(ansi_system_function_lock);
+	RELEASE_SPIN_LOCK(ansi_system_function_lock);
 }
 
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
@@ -529,7 +529,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	}
 
 	// Random wait time between 0 and 10 seconds for increased stability.
-	Sleep((DWORD)RandomByte() * 10000 / 256);
+	Sleep((uint32_t)RandomByte() * 10000 / 256);
 
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	key[lenTripcode] = '\0';
@@ -701,8 +701,8 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	double       timeElapsed = 0;
 	double       numGeneratedTripcodes = 0;
 	double       averageSpeed = 0;
-	DWORD        startingTime = timeGetTime();
-	DWORD        endingTime;
+	uint64_t        startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	uint64_t        endingTime;
 	double       deltaTime;
 	while (!GetTerminationState()) {
 		// Choose a random key.
@@ -747,13 +747,11 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		numGeneratedTripcodes += ProcessGPUOutput(key, outputArray, sizeOutputArray, TRUE);
 
 		// Measure the current speed.
-		endingTime = timeGetTime();
-		deltaTime = (endingTime >= startingTime)
-		                ? ((double)endingTime - (double)startingTime                     ) * 0.001
-		                : ((double)endingTime - (double)startingTime + (double)0xffffffff) * 0.001;
+		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		deltaTime = endingTime - startingTime;
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
-		startingTime = timeGetTime();
+		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		timeElapsed += deltaTime;
 		averageSpeed = numGeneratedTripcodes / timeElapsed;
 		

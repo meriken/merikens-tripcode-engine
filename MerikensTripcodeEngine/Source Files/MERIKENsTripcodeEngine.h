@@ -52,7 +52,6 @@
 #include <windows.h>
 #include <process.h>
 #include <tlhelp32.h>
-#include <mmsystem.h> // for timeGetTime()
 #include <conio.h>
 #include <ctype.h>
 
@@ -67,6 +66,7 @@
 
 // Standard C++ libraries
 #include <atomic>
+#include <chrono>
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 #include <nmmintrin.h>
@@ -118,6 +118,7 @@ extern uint32_t prevNumValidTripcodes, prevNumDiscardedTripcodes;
 extern double     numGeneratedTripcodes;
 extern double prevNumGeneratedTripcodes;
 extern int32_t prevLineCount;
+#define TIME_SINCE_EPOCH_IN_MILLISECONDS ((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())).count())
 
 // Search Parameters
 extern int32_t searchMode;

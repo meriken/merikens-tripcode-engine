@@ -520,10 +520,10 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		fclose(sourceFile);
 	}
 
-	int32_t driverMajorVersion;
-	int32_t driverMinorVersion;
+	int driverMajorVersion;
+	int driverMinorVersion;
 	char rest[LEN_LINE_BUFFER_FOR_SCREEN];
-	sscanf(driverVersion, "%d.%d%s", &driverMajorVersion, &driverMinorVersion, rest);
+	sscanf(driverVersion, "%d.%d%1023s", &driverMajorVersion, &driverMinorVersion, rest);
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	if (dummyKernelBinaryFilePath) {
@@ -645,7 +645,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Starting a tripcode search...");
 
 	// Random wait time between 0 and 10 seconds for increased stability.
-	Sleep((DWORD)RandomByte() * 10000 / 256);
+	Sleep((uint32_t)RandomByte() * 10000 / 256);
 
 	// Determine the sizes of local and global work items.
 	size_t  numWorkItemsPerComputeUnit;
@@ -754,8 +754,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	double       timeElapsed = 0;
 	double       numGeneratedTripcodes = 0;
 	double       averageSpeed = 0;
-	DWORD        startingTime = timeGetTime();
-	DWORD        endingTime;
+	int64_t        startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	int64_t        endingTime;
 	double       deltaTime;
 	int32_t          execCounter = 0;
 	BOOL         firstBuild = TRUE;
@@ -899,13 +899,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		numGeneratedTripcodes += ProcessGPUOutput(keyInfo.partialKeyAndRandomBytes, outputArray, sizeOutputArray, FALSE);
 
 		// Measure the current speed.
-		endingTime = timeGetTime();
-		deltaTime = (endingTime >= startingTime)
-		                ? ((double)endingTime - (double)startingTime                     ) * 0.001
-		                : ((double)endingTime - (double)startingTime + (double)0xffffffff) * 0.001;
+		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		deltaTime = (endingTime - startingTime) * 0.001;
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
-		startingTime = timeGetTime();
+		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		timeElapsed += deltaTime;
 		averageSpeed = numGeneratedTripcodes / timeElapsed;
 

@@ -116,7 +116,7 @@ struct CUDADeviceSearchThreadInfo {
 	char  status[LEN_LINE_BUFFER_FOR_SCREEN];
 	std::atomic_flag spin_lock;
 	//
-	DWORD timeLastUpdated;
+	uint64_t timeLastUpdated;
 
 	CUDADeviceSearchThreadInfo() { spin_lock.clear(); }
 };
@@ -135,6 +135,6 @@ struct OpenCLDeviceSearchThreadInfo {
 	uint32_t numRestarts;
 	BOOL         runChildProcess;
 	HANDLE       childProcess;
-	DWORD        timeLastUpdated;
+	uint64_t        timeLastUpdated;
 };
 

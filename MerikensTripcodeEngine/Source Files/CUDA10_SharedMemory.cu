@@ -1617,8 +1617,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	double          timeElapsed = 0;
 	double          numGeneratedTripcodes = 0;
 	double          speed = 0;
-	DWORD           startingTime;
-	DWORD           endingTime;
+	uint64_t           startingTime;
+	uint64_t           endingTime;
 	double          deltaTime;
 
 	unsigned char   *CUDA_key; // [12];
@@ -1667,7 +1667,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_smallChunkBitmap, smallChunkBitmap, SMALL_CHUNK_BITMAP_SIZE));
 	RELEASE_SPIN_LOCK(((CUDADeviceSearchThreadInfo *)info)->spin_lock);
 	
-	startingTime = timeGetTime();
+	startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 
 	while (!GetTerminationState()) {
 		// Choose the first 3 characters of the key.
@@ -1839,13 +1839,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 		numGeneratedTripcodes += ProcessGPUOutput(key, outputArray, sizeOutputArray, FALSE);
 		
 		//
-		endingTime = timeGetTime();
-		deltaTime = (endingTime >= startingTime)
-						? ((double)endingTime - (double)startingTime                     ) * 0.001
-						: ((double)endingTime - (double)startingTime + (double)0xffffffff) * 0.001;
+		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		deltaTime = (endingTime - startingTime) * 0.001;
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
-		startingTime = timeGetTime();
+		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		timeElapsed += deltaTime;
 		speed = numGeneratedTripcodes / timeElapsed;
 		//

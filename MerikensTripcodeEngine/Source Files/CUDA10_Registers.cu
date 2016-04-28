@@ -158,8 +158,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	double          timeElapsed = 0;
 	double          numGeneratedTripcodes = 0;
 	double          speed = 0;
-	DWORD           startingTime;
-	DWORD           endingTime;
+	uint64_t           startingTime;
+	uint64_t           endingTime;
 	double          deltaTime;
 
 	keyAndRandomBytes[lenTripcode] = '\0';
@@ -209,7 +209,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaCompactMediumChunkBitmap,  compactMediumChunkBitmap,  COMPACT_MEDIUM_CHUNK_BITMAP_SIZE));
 	RELEASE_SPIN_LOCK(((CUDADeviceSearchThreadInfo *)info)->spin_lock);
 		
-	startingTime = timeGetTime();
+	startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 
 	cudaStream_t currentStream;
 	CUDA_ERROR(cudaStreamCreate(&currentStream));
@@ -376,13 +376,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 		prevDataExists = TRUE;
 
 		//
-		endingTime = timeGetTime();
-		deltaTime = (endingTime >= startingTime)
-						? ((double)endingTime - (double)startingTime                     ) * 0.001
-						: ((double)endingTime - (double)startingTime + (double)0xffffffff) * 0.001;
+		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		deltaTime = (endingTime - startingTime) * 0.001;
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
-		startingTime = timeGetTime();
+		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		timeElapsed += deltaTime;
 		speed = numGeneratedTripcodes / timeElapsed;
 		sprintf(status,
