@@ -114,7 +114,7 @@ struct CUDADeviceSearchThreadInfo {
 	int          subindex;
 	cudaDeviceProp  properties;
 	char  status[LEN_LINE_BUFFER_FOR_SCREEN];
-	CRITICAL_SECTION criticalSection;
+	std::mutex criticalSection;
 	//
 	DWORD timeLastUpdated;
 };

@@ -522,7 +522,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk)); 
 	CUDA_ERROR(cudaMalloc((void **)&cudaKeyAndRandomBytes, sizeof(unsigned char) * 12)); 
  
-	EnterCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
+	(((CUDADeviceSearchThreadInfo *)info)->criticalSection).lock();
 	CUDA_ERROR(cudaMemcpy(CUDA_tripcodeChunkArray, tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk, cudaMemcpyHostToDevice));
 	CUDA_ERROR(cudaMemcpy(CUDA_chunkBitmap, chunkBitmap, CHUNK_BITMAP_SIZE, cudaMemcpyHostToDevice));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_base64CharTable,                   base64CharTable,                    sizeof(base64CharTable)));
@@ -531,7 +531,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByte,           keyCharTable_SecondByte,            SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByteAndOneByte, keyCharTable_SecondByteAndOneByte,  SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_smallChunkBitmap,                    smallChunkBitmap,                     SMALL_CHUNK_BITMAP_SIZE));
-	LeaveCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
+	(((CUDADeviceSearchThreadInfo *)info)->criticalSection).unlock();
 
 	startingTime = timeGetTime();
 

@@ -65,6 +65,9 @@
 // #include <stdint.h>
 #include <stddef.h>
 
+// Standard C++ libraries
+#include <mutex>
+
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 #include <nmmintrin.h>
 #include <smmintrin.h>
@@ -149,12 +152,10 @@ extern struct CUDADeviceSearchThreadInfo *CUDADeviceSearchThreadInfoArray;
 extern HANDLE                            *CUDADeviceSearchThreadArray;
 extern int                                numCPUSearchThreads;
 extern HANDLE                            *CPUSearchThreadArray;
-extern CRITICAL_SECTION  criticalSection_numGeneratedTripcodes;
-extern CRITICAL_SECTION  criticalSection_ProcessTripcodePair;
-extern CRITICAL_SECTION  criticalSection_currentState;
-extern CRITICAL_SECTION  criticalSection_RandomByte;
-extern CRITICAL_SECTION  criticalSection_CUDADeviceSearchThreadInfoArray;
-extern CRITICAL_SECTION  criticalSection_ANSISystemFunction;
+extern std::mutex  mutex_num_generated_tripcodes;
+extern std::mutex  mutex_process_tripcode_pair;
+extern std::mutex  mutex_current_state;
+extern std::mutex  mutex_ansi_system_function;
 extern unsigned int      numGeneratedTripcodesByCUDADevice;
 extern unsigned int      numGeneratedTripcodesByCUDADeviceInMillions;
 extern unsigned int      numGeneratedTripcodesByCPU;

@@ -46,16 +46,11 @@
 
 char *crypt(char *key, char *salt);
 
-static BOOL             wasCriticalSectionInitialized = FALSE;
-static CRITICAL_SECTION criticalSection;
+static std::mutex mutex_descrypt;
 
 BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-        if (!wasCriticalSectionInitialized) {
-                InitializeCriticalSection(&criticalSection);
-                wasCriticalSectionInitialized = TRUE;
-        }
-        EnterCriticalSection(&criticalSection);
+        mutex_descrypt.lock();
 
         if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
                 return FALSE;
@@ -83,18 +78,14 @@ BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
         fflush(stdout);
 #endif
 
-        LeaveCriticalSection(&criticalSection);
+        mutex_descrypt.unlock();
 
         return result;
 }
 
 void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-    if (!wasCriticalSectionInitialized) {
-            InitializeCriticalSection(&criticalSection);
-            wasCriticalSectionInitialized = TRUE;
-    }
-    EnterCriticalSection(&criticalSection);
+    mutex_descrypt.lock();
 
     char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
     BOOL fillRestWithZero = FALSE;
@@ -111,7 +102,7 @@ void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
     strncpy((char *)tripcode, crypt((char *)actualKey, (char *)(actualKey + 1)) + 3, 10);
 	tripcode[10] = '\0';
 
-    LeaveCriticalSection(&criticalSection);
+    mutex_descrypt.unlock();
 }
 
 

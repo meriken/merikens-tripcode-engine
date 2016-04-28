@@ -446,7 +446,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 {
 	cl_int         openCLError;
 	
-	EnterCriticalSection(&criticalSection_ANSISystemFunction);
+	mutex_ansi_system_function.lock();
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
@@ -511,7 +511,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
 
-	LeaveCriticalSection(&criticalSection_ANSISystemFunction);
+	mutex_ansi_system_function.unlock();
 }
 
 unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
