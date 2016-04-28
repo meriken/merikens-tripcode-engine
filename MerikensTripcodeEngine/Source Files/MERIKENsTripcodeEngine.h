@@ -56,6 +56,7 @@
 #include <ctype.h>
 
 // Standard C libraries
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -63,10 +64,15 @@
 #include <search.h>
 // #include <stdint.h>
 #include <stddef.h>
+*/
 
 // Standard C++ libraries
+#include <cstdlib>
 #include <atomic>
 #include <chrono>
+#ifndef __CUDACC__
+#include <thread>
+#endif
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 #include <nmmintrin.h>
@@ -148,20 +154,22 @@ extern int32_t CUDADeviceCount;
 extern int32_t searchDevice;
 
 // For multi-threading
+/*
 extern int32_t                                numCUDADeviceSearchThreads;
 extern struct CUDADeviceSearchThreadInfo *CUDADeviceSearchThreadInfoArray;
-extern HANDLE                            *CUDADeviceSearchThreadArray;
 extern int32_t                                numCPUSearchThreads;
 extern HANDLE                            *CPUSearchThreadArray;
 extern std::atomic_flag  num_generated_tripcodes_lock;
 extern std::atomic_flag  process_tripcode_pair_lock;
 extern std::atomic_flag  current_state_lock;
-extern std::atomic_flag  ansi_system_function_lock;
+*/
+extern std::atomic_flag  system_command_lock;
+/*
 extern uint32_t      numGeneratedTripcodesByCUDADevice;
 extern uint32_t      numGeneratedTripcodesByCUDADeviceInMillions;
 extern uint32_t      numGeneratedTripcodesByCPU;
 extern uint32_t      numGeneratedTripcodesByCPUInMillions;
-extern char              nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
+*/extern char              nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
 extern char              nameEventForTerminating[MAX_LEN_INPUT_LINE + 1];
 #define ACQUIRE_SPIN_LOCK(lock) while ((lock).test_and_set(std::memory_order_acquire))
 #define RELEASE_SPIN_LOCK(lock) (lock).clear(std::memory_order_release)
@@ -287,16 +295,16 @@ extern void Generate10CharTripcodes(TripcodeKeyPair *p, int32_t numTripcodes);
 // SEARCH THREADS                                                            //
 ///////////////////////////////////////////////////////////////////////////////
 
-extern unsigned WINAPI Thread_SearchForSHA1TripcodesOnCPU         (LPVOID threadParams);
-extern unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice  (LPVOID info);
-extern unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info);
+extern void Thread_SearchForSHA1TripcodesOnCPU();
+extern void Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info);
+extern void Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info);
 
-extern unsigned WINAPI Thread_SearchForDESTripcodesOnCPU                 (LPVOID threadParams);
-extern unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice          (LPVOID info);
-extern unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info);
-extern unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice        (LPVOID info);
+extern void Thread_SearchForDESTripcodesOnCPU();
+extern void Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info);
+extern void Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info);
+extern void Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info);
 
-extern void            Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
+extern void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
 
 extern void DES_CreateExpansionFunction(char *saltString, unsigned char *expansionFunction);
 extern const char          charToIndexTableForDES[0x100];

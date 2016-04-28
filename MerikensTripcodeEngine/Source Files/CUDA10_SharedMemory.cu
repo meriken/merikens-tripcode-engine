@@ -1601,7 +1601,7 @@ CUDA_DES_END_OF_SEAERCH_FUNCTION
 
 #define SET_BIT_FOR_KEY7(var, k) if (key7 & (0x1 << (k))) (var) |= 0x1 << tripcodeIndex
 
-unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
+void Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 {
 	cudaDeviceProp  CUDADeviceProperties;
 	uint32_t    numBlocksPerSM;
@@ -1634,7 +1634,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	if (CUDADeviceProperties.computeMode == cudaComputeModeProhibited) {
 		sprintf(status, "[disabled]");
 		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
-		return 0;
+		return;
 	}
 	int32_t numThreadsPerBlock = (CUDADeviceProperties.major == 3 && CUDADeviceProperties.minor == 7) ? 448 :
 		                     (CUDADeviceProperties.major == 2                                   ) ? 768 :
@@ -1863,6 +1863,4 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice(LPVOID info)
 	RELEASE_AND_SET_TO_NULL(CUDA_key7Array,          cudaFree);
 	RELEASE_AND_SET_TO_NULL(CUDA_keyFrom49To55Array, cudaFree);
 	RELEASE_AND_SET_TO_NULL(outputArray,             free);
-
-	return 0;
 }

@@ -446,7 +446,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 {
 	cl_int         openCLError;
 	
-	ACQUIRE_SPIN_LOCK(ansi_system_function_lock);
+	ACQUIRE_SPIN_LOCK(system_command_lock);
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
@@ -511,10 +511,10 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
 
-	RELEASE_SPIN_LOCK(ansi_system_function_lock);
+	RELEASE_SPIN_LOCK(system_command_lock);
 }
 
-unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
+void Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 {
 	cl_int         openCLError;
 	cl_device_id   deviceID = ((OpenCLDeviceSearchThreadInfo *)info)->openCLDeviceID;
@@ -525,7 +525,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 
 	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
 		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
-		return 0;
+		return;
 	}
 
 	// Random wait time between 0 and 10 seconds for increased stability.

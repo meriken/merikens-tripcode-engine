@@ -480,7 +480,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	};
 	cl_int         openCLError;
 
-	ACQUIRE_SPIN_LOCK(ansi_system_function_lock);
+	ACQUIRE_SPIN_LOCK(system_command_lock);
 
 	// Create an expansion function based on the salt.
 	unsigned char  salt[2];
@@ -613,10 +613,10 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		system(assemblerCommand);
 	}
 
-	RELEASE_SPIN_LOCK(ansi_system_function_lock);
+	RELEASE_SPIN_LOCK(system_command_lock);
 }
 
-unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
+void Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 {
 	cl_context       context;
 	cl_command_queue commandQueue;
@@ -639,7 +639,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 
 	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
 		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
-		return 0;
+		return;
 	}
 
 	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Starting a tripcode search...");

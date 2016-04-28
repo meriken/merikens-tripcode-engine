@@ -143,19 +143,19 @@ int32_t searchMode = SEARCH_MODE_NIL;
 // For multi-threading
 int32_t                                  numCUDADeviceSearchThreads        = 0;
 struct CUDADeviceSearchThreadInfo   *CUDADeviceSearchThreadInfoArray   = NULL;
-HANDLE                              *CUDADeviceSearchThreadArray       = NULL;
+std::thread                              **cuda_device_search_threads       = NULL;
 int32_t                                  numOpenCLDeviceSearchThreads      = 0;
 struct OpenCLDeviceSearchThreadInfo *openCLDeviceSearchThreadInfoArray = NULL;
-HANDLE                              *openCLDeviceSearchThreadArray     = NULL;
+std::thread                              **opencl_device_search_threads = NULL;
 int32_t                                  numCPUSearchThreads               = 0;
-HANDLE                              *CPUSearchThreadArray              = NULL;
+std::thread                              **cpu_search_threads = NULL;
 BOOL                                 openCLRunChildProcesses = FALSE;
 std::atomic_flag num_generated_tripcodes_lock                = ATOMIC_FLAG_INIT;
 std::atomic_flag process_tripcode_pair_lock                  = ATOMIC_FLAG_INIT;
 std::atomic_flag current_state_lock                          = ATOMIC_FLAG_INIT;
 std::atomic_flag cuda_device_search_thread_info_array_lock   = ATOMIC_FLAG_INIT;
 std::atomic_flag opencl_device_search_thread_info_array_lock = ATOMIC_FLAG_INIT;
-std::atomic_flag ansi_system_function_lock                   = ATOMIC_FLAG_INIT;
+std::atomic_flag system_command_lock                   = ATOMIC_FLAG_INIT;
 uint32_t     numGeneratedTripcodes_GPU;
 uint32_t     numGeneratedTripcodesByGPUInMillions;
 uint32_t     numGeneratedTripcodes_CPU;
@@ -560,17 +560,11 @@ void CheckSearchThreads()
 		///*
 		if (deltaTime > 60 * 1000) {
 			strcpy(info->status, "Restarting search thread...");
-			TerminateThread(CUDADeviceSearchThreadArray[index], 1);
-			uint32_t winThreadID;
-			CUDADeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
-																	    0,
-																	    (lenTripcode == 10) 
-																	        ? Thread_SearchForDESTripcodesOnCUDADevice
-																		    : Thread_SearchForSHA1TripcodesOnCUDADevice,
-																	    &(CUDADeviceSearchThreadInfoArray[index]),
-																	    0,
-																	    &winThreadID);
-			ERROR0((CUDADeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart a CUDA device search thread.");
+			delete cuda_device_search_threads[index];
+			cuda_device_search_threads[index] = new std::thread((lenTripcode == 10) 
+														          ? Thread_SearchForDESTripcodesOnCUDADevice
+															      : Thread_SearchForSHA1TripcodesOnCUDADevice,
+															    &(CUDADeviceSearchThreadInfoArray[index]));
 		}
 		//*/
 	}
@@ -588,7 +582,7 @@ void CheckSearchThreads()
 			ERROR0(!info->runChildProcess, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 
 			strcpy(info->status, "[process] Restarting search thread...");
-			TerminateThread(openCLDeviceSearchThreadArray[index], 1);
+			delete opencl_device_search_threads[index];
 			TerminateProcess(info->childProcess, 0);
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
@@ -596,15 +590,10 @@ void CheckSearchThreads()
 			++info->numRestarts;
 
 			uint32_t winThreadID;
-			openCLDeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
-																		  0,
-																		  (lenTripcode == 10) 
-																		      ? Thread_SearchForDESTripcodesOnOpenCLDevice
-																			  : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
-																		  &(openCLDeviceSearchThreadInfoArray[index]),
-																		  0,
-																		  &winThreadID);
-			ERROR0((openCLDeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart an OpenCL device search thread.");
+			opencl_device_search_threads[index] = new std::thread((lenTripcode == 10) 
+																	       ? Thread_SearchForDESTripcodesOnOpenCLDevice
+													                       : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
+																	   &(openCLDeviceSearchThreadInfoArray[index]));
 		}
 		//*/
 	}
@@ -1763,7 +1752,7 @@ void StartCUDADeviceSearchThreads()
 	
 	ASSERT(numCUDADeviceSearchThreads > 0);
 
-	ERROR0((CUDADeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0((cuda_device_search_threads = new (std::nothrow) std::thread *[numCUDADeviceSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	ERROR0((CUDADeviceSearchThreadInfoArray = (struct CUDADeviceSearchThreadInfo *)malloc(sizeof(struct CUDADeviceSearchThreadInfo) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	if (options.GPUIndex == GPU_INDEX_ALL) {
 		int32_t CUDADeviceIndex;
@@ -1790,33 +1779,18 @@ void StartCUDADeviceSearchThreads()
 
 	if (lenTripcode == 12) {
 		for (i = 0; i < numCUDADeviceSearchThreads; ++i) {
-			CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-			                                                        0,
-													                Thread_SearchForSHA1TripcodesOnCUDADevice,
-															        &(CUDADeviceSearchThreadInfoArray[i]),
-															        0,
-											                        &winThreadID);
-			ERROR0((CUDADeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
+			cuda_device_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForSHA1TripcodesOnCUDADevice, &(CUDADeviceSearchThreadInfoArray[i]));
+			ERROR0((cuda_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
 		}
 	} else {
 		ASSERT(lenTripcode == 10);
 		for (i = 0; i < numCUDADeviceSearchThreads; ++i) {
 			if (CUDADeviceSearchThreadInfoArray[i].properties.major >= 5) {
-				CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-																		0,
-																		Thread_SearchForDESTripcodesOnCUDADevice_Registers,
-																		&(CUDADeviceSearchThreadInfoArray[i]),
-																		0,
-																		&winThreadID);
+				cuda_device_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForDESTripcodesOnCUDADevice_Registers, &(CUDADeviceSearchThreadInfoArray[i]));
 			} else {
-				CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-																		0,
-																		Thread_SearchForDESTripcodesOnCUDADevice,
-																		&(CUDADeviceSearchThreadInfoArray[i]),
-																		0,
-																		&winThreadID);
+				cuda_device_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForDESTripcodesOnCUDADevice, &(CUDADeviceSearchThreadInfoArray[i]));
 			}
-			ERROR0((CUDADeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
+			ERROR0((cuda_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
 		}
 	}
 }
@@ -1829,7 +1803,7 @@ void StartOpenCLDeviceSearchThreads()
 	
 	ASSERT(numOpenCLDeviceSearchThreads > 0);
 
-	ERROR0((openCLDeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0((opencl_device_search_threads = new (std::nothrow) std::thread *[numOpenCLDeviceSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	ERROR0((openCLDeviceSearchThreadInfoArray = (struct OpenCLDeviceSearchThreadInfo *)malloc(sizeof(struct OpenCLDeviceSearchThreadInfo) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	if (options.GPUIndex == GPU_INDEX_ALL) {
 		int32_t openCLDeviceIDArrayIndex = 0;
@@ -1940,24 +1914,14 @@ void StartOpenCLDeviceSearchThreads()
 
 	if (lenTripcode == 12) {
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			openCLDeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-			                                                        0,
-													                Thread_SearchForSHA1TripcodesOnOpenCLDevice,
-															        &(openCLDeviceSearchThreadInfoArray[i]),
-															        0,
-											                        &winThreadID);
-			ERROR0((openCLDeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start an OpenCL device search thread.");
+			opencl_device_search_threads[i] = new std::thread(Thread_SearchForSHA1TripcodesOnOpenCLDevice, &(openCLDeviceSearchThreadInfoArray[i]));
+			ERROR0((opencl_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a OpenCL device search thread.");
 		}
 	} else {
 		ASSERT(lenTripcode == 10);
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			openCLDeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-			                                                        0,
-			                                                        Thread_SearchForDESTripcodesOnOpenCLDevice,
-															        &(openCLDeviceSearchThreadInfoArray[i]),
-															        0,
-														            &winThreadID);
-			ERROR0((openCLDeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start an OpenCL device search thread.");
+			opencl_device_search_threads[i] = new std::thread(Thread_SearchForDESTripcodesOnOpenCLDevice, &(openCLDeviceSearchThreadInfoArray[i]));
+			ERROR0((opencl_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a OpenCL device search thread.");
 		}
 	}
 }
@@ -1976,18 +1940,18 @@ void StartCPUSearchThreads()
 
 	uint32_t winThreadID;
 	
-	if (CPUSearchThreadArray)
-		free(CPUSearchThreadArray);
-	ERROR0((CPUSearchThreadArray = (HANDLE *)malloc(sizeof(HANDLE) * numCPUSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	if (cpu_search_threads)
+		delete [] cpu_search_threads;
+	ERROR0((cpu_search_threads = new (std::nothrow) std::thread *[numCPUSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	
 	for (int32_t i = 0; i < numCPUSearchThreads; ++i) {
 		if (lenTripcode == 12) {
-			CPUSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL, 0, Thread_SearchForSHA1TripcodesOnCPU, NULL, 0, &winThreadID);
+			cpu_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForSHA1TripcodesOnCPU);
 		} else {
 			ASSERT(lenTripcode == 10);
-			CPUSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL, 0, Thread_SearchForDESTripcodesOnCPU, NULL, 0, &winThreadID);
+			cpu_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForDESTripcodesOnCPU);
 		}
-		ERROR0((CPUSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CPU search thread.");
+		ERROR0((cpu_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CPU search thread.");
 	}
 }
 
@@ -2169,19 +2133,19 @@ int32_t main(int32_t argc, char **argv)
 		Sleep(100);
 		allThreadsHaveExited = TRUE;
 		for (int32_t i = 0; i < numCUDADeviceSearchThreads; ++i) {
-			if (WaitForSingleObject(CUDADeviceSearchThreadArray[i], 0) != WAIT_OBJECT_0) {
+			if (WaitForSingleObject(cuda_device_search_threads[i]->native_handle(), 0) != WAIT_OBJECT_0) {
 				allThreadsHaveExited = FALSE;
 				break;
 			}
 		}
 		for (int32_t i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			if (WaitForSingleObject(openCLDeviceSearchThreadArray[i], 0) != WAIT_OBJECT_0) {
+			if (WaitForSingleObject(opencl_device_search_threads[i]->native_handle(), 0) != WAIT_OBJECT_0) {
 				allThreadsHaveExited = FALSE;
 				break;
 			}
 		}
 		for (int32_t i = 0; i < numCPUSearchThreads; ++i) {
-			if (WaitForSingleObject(CPUSearchThreadArray[i], 0) != WAIT_OBJECT_0) {
+			if (WaitForSingleObject(cpu_search_threads[i]->native_handle(), 0) != WAIT_OBJECT_0) {
 				allThreadsHaveExited = FALSE;
 				break;
 			}

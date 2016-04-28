@@ -109,7 +109,7 @@ unsigned char charTableForSeed[256] = {
 
 extern void CPU_DES_MainLoop_AVX2();
 
-unsigned WINAPI Thread_SearchForDESTripcodesOnCPU(LPVOID threadParams)
+void Thread_SearchForDESTripcodesOnCPU()
 {
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 
@@ -118,5 +118,4 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCPU(LPVOID threadParams)
 	} else {
 		CPU_DES_MainLoop();
 	}
-	return 0;
 }

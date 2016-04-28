@@ -637,7 +637,7 @@ int32_t IsAVX2Supported()
     return the_4th_gen_features_available;
 }
 
-unsigned WINAPI Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
+void Thread_SearchForSHA1TripcodesOnCPU()
 {
 	BOOL useAVX2 = options.isAVX2Enabled && IsAVX2Supported();
 
@@ -651,5 +651,4 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
 			                                           : SearchForTripcodesWithOptimization();
 		AddToNumGeneratedTripcodesByCPU(numGeneratedTripcodes);
 	}
-	return 0;
 }

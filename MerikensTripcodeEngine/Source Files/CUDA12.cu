@@ -482,7 +482,7 @@ CUDA_SHA1_END_OF_SEAERCH_FUNCTION
 // CUDA SEARCH THREAD FOR 12 CHARACTER TRIPCODES                             //
 ///////////////////////////////////////////////////////////////////////////////
 
-unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
+void Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 {
 	cudaDeviceProp CUDADeviceProperties;
 	uint32_t         numBlocksPerSM;
@@ -509,7 +509,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	if (CUDADeviceProperties.computeMode == cudaComputeModeProhibited) {
 		sprintf(status, "[disabled]");
 		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
-		return 0;
+		return;
 	}
 
 	numBlocksPerSM = options.CUDANumBlocksPerSM;

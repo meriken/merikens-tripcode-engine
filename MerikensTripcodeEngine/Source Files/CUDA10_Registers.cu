@@ -126,7 +126,7 @@ CUDA_DES_DECLARE_KERNEL_LAUNCHER(15);
 
 #define SET_BIT_FOR_KEY7(var, k) if (key7 & (0x1 << (k))) (var) |= 0x1 << tripcodeIndex
 
-unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
+void Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 {
 	cudaDeviceProp  CUDADeviceProperties;
 	uint32_t    numBlocksPerSM;
@@ -170,7 +170,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	if (CUDADeviceProperties.computeMode == cudaComputeModeProhibited) {
 		sprintf(status, "[disabled]");
 		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
-		return 0;
+		return;
 	}
 
 	numBlocksPerSM = options.CUDANumBlocksPerSM;
@@ -404,6 +404,4 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	RELEASE_AND_SET_TO_NULL(cudaKeyVectorsFrom49To55, cudaFree);
 	RELEASE_AND_SET_TO_NULL(cudaKeyAndRandomBytes,    cudaFree);
 	CUDA_ERROR(cudaStreamDestroy(currentStream));
-
-	return 0;
 }
