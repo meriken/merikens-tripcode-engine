@@ -47,7 +47,7 @@
 #define USE_ASSEMBLY_FUNCTION
 
 #define VECTOR_SIZE 32
-typedef __declspec(align(VECTOR_SIZE)) struct { unsigned int elements[8]; } DES_Vector;
+typedef __declspec(align(VECTOR_SIZE)) struct { uint32_t elements[8]; } DES_Vector;
 #define VECTOR_ELEMENTS elements
 #define CPU_DES_MAIN_LOOP CPU_DES_MainLoop_AVX2
 

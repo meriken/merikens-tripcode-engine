@@ -111,9 +111,9 @@ void TestNewCode()
 #if TRUE
 
         unsigned char *p = (unsigned char *)TestASM;
-        int i;
+        int32_t i;
         void (*code)();
-        int functionSize;
+        int32_t functionSize;
 
         for (; strcmp((char *)p, "THIS_IS_THE_END_OF_THE_FUNCTION") != 0; ++p)
                 ;
@@ -136,7 +136,7 @@ void TestNewCode()
 #endif
 
 #if FALSE
-        for (int i = 16; i < 80; ++i) {
+        for (int32_t i = 16; i < 80; ++i) {
                 printf("W[%2d] = ROTL(1, W[%2d] ^ W[%2d] ^ W[%2d] ^ W[%2d]); ", i % 16, (i - 3) % 16, (i - 8) % 16, (i - 14) % 16, (i - 16) % 16); 
                 if      (16 <= i && i <= 19) printf("ROUND_16_TO_19(%2d); \\\n", i % 16);
                 else if (20 <= i && i <= 39) printf("ROUND_20_TO_39(%2d); \\\n", i % 16);

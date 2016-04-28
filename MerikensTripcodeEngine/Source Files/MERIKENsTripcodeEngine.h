@@ -103,7 +103,7 @@ extern char applicationPath     [MAX_LEN_FILE_PATH + 1];
 extern char applicationDirectory[MAX_LEN_FILE_PATH + 1];
 
 // Input and output files
-extern int   numPatternFiles;
+extern int32_t   numPatternFiles;
 extern char  patternFilePathArray[MAX_NUM_PATTERN_FILES][MAX_LEN_FILE_PATH + 1];
 extern char tripcodeFilePath[MAX_LEN_FILE_PATH + 1];
 extern FILE *tripcodeFile;
@@ -113,21 +113,21 @@ extern double       matchingProb,     numAverageTrialsForOneMatch;
 extern mpf_t        matchingProb_mpf, numAverageTrialsForOneMatch_mpf;
 extern double totalTime;
 extern double currentSpeed, currentSpeed_CUDADevice, currentSpeed_CPU, maximumSpeed;
-extern unsigned int numValidTripcodes,     numDiscardedTripcodes;
-extern unsigned int prevNumValidTripcodes, prevNumDiscardedTripcodes;
+extern uint32_t numValidTripcodes,     numDiscardedTripcodes;
+extern uint32_t prevNumValidTripcodes, prevNumDiscardedTripcodes;
 extern double     numGeneratedTripcodes;
 extern double prevNumGeneratedTripcodes;
-extern int prevLineCount;
+extern int32_t prevLineCount;
 
 // Search Parameters
-extern int searchMode;
-extern int lenTripcode;
-extern int lenTripcodeKey;
+extern int32_t searchMode;
+extern int32_t lenTripcode;
+extern int32_t lenTripcodeKey;
 
 // Character tables
-extern int           numFirstByte;
-extern int           numSecondByte;
-extern int           numOneByte;
+extern int32_t           numFirstByte;
+extern int32_t           numSecondByte;
+extern int32_t           numOneByte;
 extern unsigned char keyCharTable_OneByte             [SIZE_KEY_CHAR_TABLE];
 extern unsigned char keyCharTable_FirstByte           [SIZE_KEY_CHAR_TABLE];
 extern unsigned char keyCharTable_SecondByte          [SIZE_KEY_CHAR_TABLE];
@@ -143,30 +143,30 @@ extern unsigned char compactMediumChunkBitmap[];
 extern unsigned char compactSmallChunkBitmap[];
 
 // GPUs
-extern int CUDADeviceCount;
-extern int searchDevice;
+extern int32_t CUDADeviceCount;
+extern int32_t searchDevice;
 
 // For multi-threading
-extern int                                numCUDADeviceSearchThreads;
+extern int32_t                                numCUDADeviceSearchThreads;
 extern struct CUDADeviceSearchThreadInfo *CUDADeviceSearchThreadInfoArray;
 extern HANDLE                            *CUDADeviceSearchThreadArray;
-extern int                                numCPUSearchThreads;
+extern int32_t                                numCPUSearchThreads;
 extern HANDLE                            *CPUSearchThreadArray;
 extern std::mutex  mutex_num_generated_tripcodes;
 extern std::mutex  mutex_process_tripcode_pair;
 extern std::mutex  mutex_current_state;
 extern std::mutex  mutex_ansi_system_function;
-extern unsigned int      numGeneratedTripcodesByCUDADevice;
-extern unsigned int      numGeneratedTripcodesByCUDADeviceInMillions;
-extern unsigned int      numGeneratedTripcodesByCPU;
-extern unsigned int      numGeneratedTripcodesByCPUInMillions;
+extern uint32_t      numGeneratedTripcodesByCUDADevice;
+extern uint32_t      numGeneratedTripcodesByCUDADeviceInMillions;
+extern uint32_t      numGeneratedTripcodesByCPU;
+extern uint32_t      numGeneratedTripcodesByCPUInMillions;
 extern char              nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
 extern char              nameEventForTerminating[MAX_LEN_INPUT_LINE + 1];
 
 //
-extern void          AddToNumGeneratedTripcodesByCPU(unsigned int num);
-extern void          AddToNumGeneratedTripcodesByGPU(unsigned int num);
-extern void          SetCharactersInTripcodeKey(unsigned char *key, int n);
+extern void          AddToNumGeneratedTripcodesByCPU(uint32_t num);
+extern void          AddToNumGeneratedTripcodesByGPU(uint32_t num);
+extern void          SetCharactersInTripcodeKey(unsigned char *key, int32_t n);
 extern void          SetCharactersInTripcodeKeyForSHA1Tripcode(unsigned char *key);
 extern unsigned char RandomByte();
 extern BOOL          IsValidKey(unsigned char *key);
@@ -179,19 +179,19 @@ extern void SetErrorState();
 extern BOOL GetErrorState();
 extern void SetTerminationState();
 extern BOOL GetTerminationState();
-extern char *GetErrorMessage(int errorCode);
+extern char *GetErrorMessage(int32_t errorCode);
 
 //
 extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, char *status);
 extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status);
-extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, unsigned int numDiscardedTripcodes, HANDLE childProcess);
+extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, HANDLE childProcess);
 
 //
 extern void ShowCursor();
-extern void ResetCursorPos(int deltaY);
+extern void ResetCursorPos(int32_t deltaY);
 
 // Output
-extern double ProcessGPUOutput(unsigned char *key, GPUOutput *outputArray, unsigned int sizeOutputArray, BOOL newFormat);
+extern double ProcessGPUOutput(unsigned char *key, GPUOutput *outputArray, uint32_t sizeOutputArray, BOOL newFormat);
 extern void   ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key);
 extern void   ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char *key);
 
@@ -210,16 +210,16 @@ extern void ProcessPossibleMatch(unsigned char *tripcode, unsigned char *key);
 extern BOOL IsTripcodeChunkValid(unsigned char *tripcode);
 
 extern ExpandedPattern *expandedPatternArray;
-extern unsigned int     numExpandedPatterns;
-extern unsigned int     sizeExpandedPatternArray;
-extern int              minLenExpandedPattern;
-extern int              maxLenExpandedPattern;
-extern unsigned int    *tripcodeChunkArray;        
-extern unsigned int     numTripcodeChunk;
-extern unsigned int     sizeTripcodeChunkArray;
+extern uint32_t     numExpandedPatterns;
+extern uint32_t     sizeExpandedPatternArray;
+extern int32_t              minLenExpandedPattern;
+extern int32_t              maxLenExpandedPattern;
+extern uint32_t    *tripcodeChunkArray;        
+extern uint32_t     numTripcodeChunk;
+extern uint32_t     sizeTripcodeChunkArray;
 extern RegexPattern    *regexPatternArray;
-extern int              sizeRegexPatternArray;
-extern int              numRegexPattern;
+extern int32_t              sizeRegexPatternArray;
+extern int32_t              numRegexPattern;
 extern BOOL             searchForSpecialPatternsOnCPU;
 
 
@@ -236,8 +236,8 @@ extern void TestNewCode();
 // BITSLICED DES                                                             //
 ///////////////////////////////////////////////////////////////////////////////
 
-extern     void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase);
-extern     void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase);
+extern     void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int32_t keyScheduleIndexBase);
+extern     void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int32_t keyScheduleIndexBase);
 
 extern "C" void CPU_DES_SBoxes1_asm_x64(void *context, __int64 keyScheduleIndexBase);
 extern "C" void CPU_DES_SBoxes2_asm_x64(void *context, __int64 keyScheduleIndexBase);
@@ -276,7 +276,7 @@ extern BOOL VerifySHA1Tripcode (unsigned char *tripcode, unsigned char *key);
 extern BOOL VerifyDESTripcode  (unsigned char *tripcode, unsigned char *key);
 extern BOOL IsTripcodeDuplicate(unsigned char *tripcode);
 extern void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key);
-extern void Generate10CharTripcodes(TripcodeKeyPair *p, int numTripcodes);
+extern void Generate10CharTripcodes(TripcodeKeyPair *p, int32_t numTripcodes);
 
 
 
@@ -307,7 +307,7 @@ extern unsigned char charTableForKagami[256];
 // CPUID                                                                     //
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C" int  IsAVXSupported();
-extern "C" int  _myxgetbv(int ecx);
-extern     int  IsAVX2Supported();
+extern "C" int32_t  IsAVXSupported();
+extern "C" int32_t  _myxgetbv(int32_t ecx);
+extern     int32_t  IsAVX2Supported();
 extern     BOOL IsCPUBasedOnNehalemMicroarchitecture();

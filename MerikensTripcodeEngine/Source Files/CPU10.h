@@ -210,7 +210,7 @@ static void DES_RewriteCrypt25(DES_Context *context)
 {
 	// Rewrite the assembly function.
 #define SKIP 0x100
-	int rewriteTable[] = {
+	int32_t rewriteTable[] = {
 		0,    1,    2,    3,    4,    5,
 		6,    7,    8,    9,    10,   11,
 		SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
@@ -232,7 +232,7 @@ static void DES_RewriteCrypt25(DES_Context *context)
 	unsigned char instructionBytes[3];
 
 	// Rewrite "movdqa/vmovdqa/movaps xmm*, [rbx + 0xffffffff]" based on context->ExpansionFunction[].
-	for (int i = 0; rewriteTable[i] >= 0; ++i) {
+	for (int32_t i = 0; rewriteTable[i] >= 0; ++i) {
 		if (context->useAVX) {
 			// vmovdqa xmm*, [rbx + 0xffffffff]
 			for (; 
@@ -288,7 +288,7 @@ static void DES_RewriteCrypt25_x64_AVX2(DES_Context *context)
 {
 	// Rewrite the assembly function.
 #define SKIP 0x100
-	int rewriteTable[] = {
+	int32_t rewriteTable[] = {
 		0,    1,    2,    3,    4,    5,
 		6,    7,    8,    9,    10,   11,
 		24,   25,   26,   27,   28,   29,
@@ -299,7 +299,7 @@ static void DES_RewriteCrypt25_x64_AVX2(DES_Context *context)
 	unsigned char instructionBytes[3];
 
 	// Rewrite "vpxor xmm*/ymm*, [rbx + 0xffffffff]" based on context->ExpansionFunction[].
-	for (int i = 0; rewriteTable[i] >= 0; ++i) {
+	for (int32_t i = 0; rewriteTable[i] >= 0; ++i) {
 		/*
 			c5 f9 ef 83 ff ff ff ff 
 			c5 f1 ef 8b ff ff ff ff 
@@ -366,10 +366,10 @@ static void DES_RewriteCrypt25_x64_AVX2(DES_Context *context)
 	}
 }
 
-static void DES_SetSalt(DES_Context *context, int salt)
+static void DES_SetSalt(DES_Context *context, int32_t salt)
 {
-	int mask;
-	int src, dst;
+	int32_t mask;
+	int32_t src, dst;
 
 	mask = 1;
 	for (dst = 0; dst < 48; dst++) {
@@ -411,8 +411,8 @@ static void DES_SetSalt(DES_Context *context, int salt)
 
 static void DES_Crypt25_SSE2Intrinsics(DES_Context *context)
 {
-	int iterations, roundsAndSwapped; 
-	int keyScheduleIndexBase = 0;
+	int32_t iterations, roundsAndSwapped; 
+	int32_t keyScheduleIndexBase = 0;
 
 	roundsAndSwapped = 8;
 	iterations = 25;
@@ -448,12 +448,12 @@ next:
 static void DES_Crypt(DES_Context *context)
 {
 	if (!context->useAVX2) {
-		for (int i = 0; i < 0x300; ++i)
+		for (int32_t i = 0; i < 0x300; ++i)
 			context->expandedKeySchedule[i] = context->keys[keySchedule[i]];
 	}
 
-	for (int i = 0; i < NUM_DATA_BLOCKS; ++i) {
-		for (int j = 0; j < NUM_ELEMENTS_IN_VECTOR; ++j)
+	for (int32_t i = 0; i < NUM_DATA_BLOCKS; ++i) {
+		for (int32_t j = 0; j < NUM_ELEMENTS_IN_VECTOR; ++j)
 			context->dataBlocks[i].VECTOR_ELEMENTS[j] = 0;
 	}
 
@@ -482,7 +482,7 @@ static void DES_Crypt(DES_Context *context)
 
 #define GET_TRIPCODE_CHAR_LAST(r, t) DES_indexToCharTable[GET_TRIPCODE_CHAR_INDEX_LAST((r), (t))]
 
-static void DES_GetTripcodeChunks(DES_Context *context, int tripcodeIndex, unsigned int *tripcodeChunkArray, int searchMode)
+static void DES_GetTripcodeChunks(DES_Context *context, int32_t tripcodeIndex, uint32_t *tripcodeChunkArray, int32_t searchMode)
 {
 	// Perform the final permutation here.
 	if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
@@ -522,7 +522,7 @@ static void DES_GetTripcodeChunks(DES_Context *context, int tripcodeIndex, unsig
 	}
 }
 
-static unsigned char *DES_GetTripcode(DES_Context *context, int tripcodeIndex, unsigned char *tripcode)
+static unsigned char *DES_GetTripcode(DES_Context *context, int32_t tripcodeIndex, unsigned char *tripcode)
 {
 	// Perform the final permutation as necessary.
   	tripcode[0] = DES_indexToCharTable[GET_TRIPCODE_CHAR_INDEX(context->dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0)];
@@ -548,7 +548,7 @@ static unsigned char *DES_GetTripcode(DES_Context *context, int tripcodeIndex, u
 
 #define QUICK_SEARCH_FOR_TRIPCODE_CHUNK(p)                                                                      \
 	if (!found && !smallChunkBitmap[generatedTripcodeChunkArray[p] >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { \
-		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;                                            \
+		int32_t lower = 0, upper = numTripcodeChunk - 1, middle = lower;                                            \
 		while (lower <= upper) {                                                                                \
 			middle = (lower + upper) >> 1;                                                                      \
 			if (generatedTripcodeChunkArray[p] > tripcodeChunkArray[middle]) {                                  \
@@ -563,8 +563,8 @@ static unsigned char *DES_GetTripcode(DES_Context *context, int tripcodeIndex, u
 	}                                                                                                           \
 
 #define CLEAR_KEYS(charIndex)                                          \
-	for (int i = 0; i < 7; ++i) {                                      \
-		for (int j = 0; j < NUM_ELEMENTS_IN_VECTOR; ++j)               \
+	for (int32_t i = 0; i < 7; ++i) {                                      \
+		for (int32_t j = 0; j < NUM_ELEMENTS_IN_VECTOR; ++j)               \
 			context->keys[(charIndex) * 7 + i].VECTOR_ELEMENTS[j] = 0; \
 	}                                                                  \
 
@@ -574,18 +574,18 @@ static unsigned char *DES_GetTripcode(DES_Context *context, int tripcodeIndex, u
 
 #define SET_ALL_BITS_FOR_KEY(i, j, k)                         \
 	if (key[j] & (0x1 << (k))) {                              \
-		for (int l = 0; l < NUM_ELEMENTS_IN_VECTOR; ++l)      \
+		for (int32_t l = 0; l < NUM_ELEMENTS_IN_VECTOR; ++l)      \
 			context->keys[i].VECTOR_ELEMENTS[l] = 0xffffffff; \
 	}                                                         \
 
-static unsigned int SearchForTripcodes(DES_Context *context)
+static uint32_t SearchForTripcodes(DES_Context *context)
 {
 	unsigned char  tripcode[MAX_LEN_TRIPCODE + 1], key[MAX_LEN_TRIPCODE_KEY + 1];
-	unsigned int   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
-	unsigned int   numGeneratedTripcodes = 0;
-	unsigned int   indexKey4,     indexKey5;
+	uint32_t   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
+	uint32_t   numGeneratedTripcodes = 0;
+	uint32_t   indexKey4,     indexKey5;
 	unsigned char *tableForKey4, *tableForKey5, *tableForKey6, *tableForKey7;
-	unsigned int   tripcodeIndex;
+	uint32_t   tripcodeIndex;
 	unsigned char  randomByteKey6, randomByteKey7, randomByteKey8, randomByteKey9;
 
 	tripcode[lenTripcode] = '\0';
@@ -598,7 +598,7 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 		
 	do {
 		SetCharactersInTripcodeKey(key, 4);
-		for (int i = 4; i < lenTripcode; ++i)
+		for (int32_t i = 4; i < lenTripcode; ++i)
 			key[i] = 'A';
 	} while (!IsValidKey(key));
 
@@ -643,7 +643,7 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 	SET_ALL_BITS_FOR_KEY(27, 3, 6);
 
 	BOOL isSecondByte = FALSE;
-	for (int i = 0; i < 4; ++i) {
+	for (int32_t i = 0; i < 4; ++i) {
 		if (!isSecondByte) {
 			isSecondByte = IS_FIRST_BYTE_SJIS_FULL(key[i]);
 		} else {
@@ -688,7 +688,7 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 
 #if FALSE
 			for (tripcodeIndex = 0; tripcodeIndex < BITSLICE_DES_DEPTH; ++tripcodeIndex) {
-				key[6] = tableForKey6[(int)randomByteKey6 + (tripcodeIndex >> 5)];
+				key[6] = tableForKey6[(int32_t)randomByteKey6 + (tripcodeIndex >> 5)];
 				tableForKey7 = (!isKey6SecondByte && IS_FIRST_BYTE_SJIS_FULL(key[6])) ? (context->keyCharTable_SecondByte) : (context->keyCharTable_FirstByte);	
 				SET_BIT_FOR_KEY(42, 6, 0);
 				SET_BIT_FOR_KEY(43, 6, 1);
@@ -698,7 +698,7 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 				SET_BIT_FOR_KEY(47, 6, 5);
 				SET_BIT_FOR_KEY(48, 6, 6);
 
-				key[7] = tableForKey7[(int)randomByteKey7 + (tripcodeIndex & 0x1f)];
+				key[7] = tableForKey7[(int32_t)randomByteKey7 + (tripcodeIndex & 0x1f)];
 				SET_BIT_FOR_KEY(49, 7, 0);
 				SET_BIT_FOR_KEY(50, 7, 1);
 				SET_BIT_FOR_KEY(51, 7, 2);
@@ -708,8 +708,8 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 				SET_BIT_FOR_KEY(55, 7, 6);
 			}
 #else
-			for (int tripcodeIndexUpper = 0; tripcodeIndexUpper < (BITSLICE_DES_DEPTH >> 5); ++tripcodeIndexUpper) {
-				key[6] = tableForKey6[(int)randomByteKey6 + tripcodeIndexUpper];
+			for (int32_t tripcodeIndexUpper = 0; tripcodeIndexUpper < (BITSLICE_DES_DEPTH >> 5); ++tripcodeIndexUpper) {
+				key[6] = tableForKey6[(int32_t)randomByteKey6 + tripcodeIndexUpper];
 				tableForKey7 = (!isKey6SecondByte && IS_FIRST_BYTE_SJIS_FULL(key[6])) ? (context->keyCharTable_SecondByte) : (context->keyCharTable_FirstByte);	
 				if (key[6] & ((0x1 << 0))) context->keys[42].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
 				if (key[6] & ((0x1 << 1))) context->keys[43].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
@@ -720,8 +720,8 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 				if (key[6] & ((0x1 << 6))) context->keys[48].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
 
 #pragma unroll
-				for (int tripcodeIndexLower = 0; tripcodeIndexLower < 32; ++tripcodeIndexLower) {
-					key[7] = tableForKey7[(int)randomByteKey7 + tripcodeIndexLower];
+				for (int32_t tripcodeIndexLower = 0; tripcodeIndexLower < 32; ++tripcodeIndexLower) {
+					key[7] = tableForKey7[(int32_t)randomByteKey7 + tripcodeIndexLower];
 					if (key[7] & ((0x1 << 0))) context->keys[49].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
 					if (key[7] & ((0x1 << 1))) context->keys[50].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
 					if (key[7] & ((0x1 << 2))) context->keys[51].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
@@ -774,7 +774,7 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 				} else if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
 					generatedTripcodeChunkArray[0] = 0x00000000;
 
-					unsigned int tripcodeCharIndex = GET_TRIPCODE_CHAR_INDEX(context->dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0);
+					uint32_t tripcodeCharIndex = GET_TRIPCODE_CHAR_INDEX(context->dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0);
 					if (!context->tripcodeChunkBitmap[4][tripcodeCharIndex])
 						goto skip_final_permutation;
 					generatedTripcodeChunkArray[0] |= tripcodeCharIndex << (6 * 4);
@@ -804,7 +804,7 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 				} else if (searchMode == SEARCH_MODE_BACKWARD_MATCHING) {
 					generatedTripcodeChunkArray[0] = 0x00000000;
 
-					unsigned int tripcodeCharIndex = GET_TRIPCODE_CHAR_INDEX(context->dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 0);
+					uint32_t tripcodeCharIndex = GET_TRIPCODE_CHAR_INDEX(context->dataBlocks, tripcodeIndex, 51, 19, 59, 27, 34,  2, 0);
 					if (!context->tripcodeChunkBitmap[4][tripcodeCharIndex])
 						goto skip_final_permutation;
 					generatedTripcodeChunkArray[0] |= tripcodeCharIndex << (6 * 4);
@@ -834,7 +834,7 @@ static unsigned int SearchForTripcodes(DES_Context *context)
 				} else if (searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING) {
 					generatedTripcodeChunkArray[0] = 0x00000000;
 
-					unsigned int tripcodeCharIndex = GET_TRIPCODE_CHAR_INDEX(context->dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0);
+					uint32_t tripcodeCharIndex = GET_TRIPCODE_CHAR_INDEX(context->dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0);
 					if (!context->tripcodeChunkBitmap[4][tripcodeCharIndex])
 						goto second_part;
 					generatedTripcodeChunkArray[0] |= tripcodeCharIndex << (6 * 4);
@@ -893,20 +893,20 @@ second_part:
 
 				} else {
 					DES_GetTripcodeChunks(context, tripcodeIndex, generatedTripcodeChunkArray, searchMode);
-					int maxPos = (searchMode == SEARCH_MODE_FLEXIBLE || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)
+					int32_t maxPos = (searchMode == SEARCH_MODE_FLEXIBLE || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)
 						                ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN)
 						                : (0);
-					for (int pos = 0; !found && pos <= maxPos; ++pos)
+					for (int32_t pos = 0; !found && pos <= maxPos; ++pos)
 						QUICK_SEARCH_FOR_TRIPCODE_CHUNK(pos)
 				}
 
 skip_final_permutation:
 				// Construct a valid 10 character key if necessary.
 				if (found || searchForSpecialPatternsOnCPU) {
-					key[6] = tableForKey6[(int)randomByteKey6 + (tripcodeIndex >> 5)];
+					key[6] = tableForKey6[(int32_t)randomByteKey6 + (tripcodeIndex >> 5)];
 					BOOL isKey7SecondByte = !isKey6SecondByte && IS_FIRST_BYTE_SJIS_FULL(key[6]);
 					tableForKey7 = (isKey7SecondByte) ? (context->keyCharTable_SecondByte) : (context->keyCharTable_FirstByte);
-					key[7] = tableForKey7[(int)randomByteKey7 + (tripcodeIndex & 0x1f)];
+					key[7] = tableForKey7[(int32_t)randomByteKey7 + (tripcodeIndex & 0x1f)];
 					if (!isKey7SecondByte && IS_FIRST_BYTE_SJIS_FULL(key[7])) {
 						key[8] = keyCharTable_SecondByte [randomByteKey8];
 						key[9] = keyCharTable_OneByte[randomByteKey9];
@@ -1018,7 +1018,7 @@ void CPU_DES_MAIN_LOOP()
 {
 	DES_Context context;
 
-	for (int i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
+	for (int32_t i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
 		context.keyCharTable_FirstByte[i]  = keyCharTable_FirstByte[i];
 		context.keyCharTable_SecondByte[i] = keyCharTable_SecondByte[i];
 	}
@@ -1031,16 +1031,16 @@ void CPU_DES_MAIN_LOOP()
 	// Prepare a copy of DES_Crypt25_*() for thread-safe rewrites.
 	char *base = GetCrypt25Address(&context);
 	char *p;
-	int functionSize = 0;
+	int32_t functionSize = 0;
 	for (p = base; strcmp(p, "THIS_IS_THE_END_OF_THE_FUNCTION") != 0; ++p)
 		++functionSize;
 	context.crypt25 = (void (*)(void *))VirtualAllocEx(GetCurrentProcess(), 0, functionSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE );
 	memcpy(context.crypt25, base, functionSize);
 #endif
 
-	for (int i = 0; i < 0x40; ++i)
+	for (int32_t i = 0; i < 0x40; ++i)
 		context.tripcodeChunkBitmap[0][i] = context.tripcodeChunkBitmap[1][i] = context.tripcodeChunkBitmap[2][i] = context.tripcodeChunkBitmap[3][i] = context.tripcodeChunkBitmap[4][i] = 0; 
-	for (int i = 0; i < numTripcodeChunk; ++i) {
+	for (int32_t i = 0; i < numTripcodeChunk; ++i) {
 		context.tripcodeChunkBitmap[4][(tripcodeChunkArray[i] >> (6 * 4)) & 0x3f] = 0x1;
 		context.tripcodeChunkBitmap[3][(tripcodeChunkArray[i] >> (6 * 3)) & 0x3f] = 0x1;
 		context.tripcodeChunkBitmap[2][(tripcodeChunkArray[i] >> (6 * 2)) & 0x3f] = 0x1;
@@ -1052,7 +1052,7 @@ void CPU_DES_MAIN_LOOP()
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
 
-		unsigned int numGeneratedTripcodes = SearchForTripcodes(&context);
+		uint32_t numGeneratedTripcodes = SearchForTripcodes(&context);
 		AddToNumGeneratedTripcodesByCPU(numGeneratedTripcodes);
 	}
 }

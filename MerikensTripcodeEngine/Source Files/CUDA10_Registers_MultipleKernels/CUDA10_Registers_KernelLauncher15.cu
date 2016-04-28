@@ -562,19 +562,19 @@ void CUDA_DES_InitializeKernelLauncher15()
 }
 
 void CUDA_DES_LaunchKernel15(
-	unsigned int numBlocksPerGrid,
+	uint32_t numBlocksPerGrid,
 	cudaDeviceProp CUDADeviceProperties,
 	cudaStream_t currentStream,
 	unsigned char *cudaPassCountArray,
 	unsigned char *cudaTripcodeIndexArray,
-	unsigned int *cudaTripcodeChunkArray,
-	unsigned int numTripcodeChunk,
-	int intSalt,
+	uint32_t *cudaTripcodeChunkArray,
+	uint32_t numTripcodeChunk,
+	int32_t intSalt,
 	unsigned char *cudaKey0Array,
 	unsigned char *cudaKey7Array,
 	DES_Vector *cudaKeyVectorsFrom49To55,
 	unsigned char *cudaKeyAndRandomBytes,
-	int searchMode)
+	int32_t searchMode)
 {
 	dim3 dimGrid(numBlocksPerGrid);
 	dim3 dimBlock(CUDA_DES_NUM_THREADS_PER_BLOCK);

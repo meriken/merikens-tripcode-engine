@@ -91,7 +91,7 @@
 				    if (*p == '\\' || *p == '/')                                              \
 						file_name = p + 1;                                                    \
 				printf("\nERROR\n=====\n  CUDA Function Call Failed: %s [%d] (file '%s', line %d)\n  The video card may be low on resources.\n\a\n  Hit any key to exit.", \
-						cudaGetErrorString(_errorCode), (int)_errorCode, file_name, __LINE__); \
+						cudaGetErrorString(_errorCode), (int32_t)_errorCode, file_name, __LINE__); \
 				_getch();                                                                     \
 				ShowCursor();                                                                 \
 			}                                                                                 \

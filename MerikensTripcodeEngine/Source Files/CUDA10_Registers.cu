@@ -73,19 +73,19 @@
 #define CUDA_DES_DECLARE_KERNEL_LAUNCHER(n) \
 	extern void CUDA_DES_InitializeKernelLauncher##n();\
 	extern void CUDA_DES_LaunchKernel##n(\
-		unsigned int numBlocksPerGrid,\
+		uint32_t numBlocksPerGrid,\
 		cudaDeviceProp CUDADeviceProperties,\
 		cudaStream_t currentStream,\
 		unsigned char *cudaPassCountArray,\
 		unsigned char *cudaTripcodeIndexArray,\
-		unsigned int *cudaTripcodeChunkArray,\
-		unsigned int numTripcodeChunk,\
-		int intSalt,\
+		uint32_t *cudaTripcodeChunkArray,\
+		uint32_t numTripcodeChunk,\
+		int32_t intSalt,\
 		unsigned char *cudaKey0Array,\
 		unsigned char *cudaKey7Array,\
 		DES_Vector *cudaKeyVectorsFrom49To55,\
 		unsigned char *cudaKeyAndRandomBytes,\
-		int searchMode)\
+		int32_t searchMode)\
 
 #define CUDA_DES_CALL_KERNEL_LAUNCHER(n) \
 	CUDA_DES_LaunchKernel##n(\
@@ -129,13 +129,13 @@ CUDA_DES_DECLARE_KERNEL_LAUNCHER(15);
 unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 {
 	cudaDeviceProp  CUDADeviceProperties;
-	unsigned int    numBlocksPerSM;
-	unsigned int    numBlocksPerGrid;
+	uint32_t    numBlocksPerSM;
+	uint32_t    numBlocksPerGrid;
 	unsigned char  *passCountArray = NULL;
 	unsigned char  *cudaPassCountArray = NULL;
 	unsigned char  *tripcodeIndexArray = NULL;
 	unsigned char  *cudaTripcodeIndexArray = NULL;
-	unsigned int   *cudaTripcodeChunkArray = NULL;
+	uint32_t   *cudaTripcodeChunkArray = NULL;
 	unsigned char  *cudaKey0Array = NULL;
 	unsigned char  *cudaKey7Array = NULL;
 	unsigned char  *cudaKeyAndRandomBytes = NULL;
@@ -152,7 +152,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	unsigned char   prevKey7Array[CUDA_DES_BS_DEPTH * 2];
 	unsigned char   prevKeyAndRandomBytes[MAX_LEN_TRIPCODE + 1];
 
-	unsigned int    numThreadsPerGrid;
+	uint32_t    numThreadsPerGrid;
 	unsigned char   salt[3];
 	char            status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 	double          timeElapsed = 0;
@@ -177,7 +177,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	numBlocksPerGrid = numBlocksPerSM * CUDADeviceProperties.multiProcessorCount;
 	numThreadsPerGrid = CUDA_DES_NUM_THREADS_PER_BLOCK * numBlocksPerGrid;
 
-	CUDA_ERROR(cudaMalloc((void **)&cudaTripcodeChunkArray,   sizeof(unsigned int) * numTripcodeChunk)); 
+	CUDA_ERROR(cudaMalloc((void **)&cudaTripcodeChunkArray,   sizeof(uint32_t) * numTripcodeChunk)); 
 	CUDA_ERROR(cudaMalloc((void **)&cudaKey0Array,            sizeof(unsigned char) * CUDA_DES_MAX_PASS_COUNT)); 
 	CUDA_ERROR(cudaMalloc((void **)&cudaKey7Array,            sizeof(unsigned char) * CUDA_DES_BS_DEPTH * 2)); 
 	CUDA_ERROR(cudaMalloc((void **)&cudaKeyVectorsFrom49To55, sizeof(DES_Vector) * 7 * 2)); 
@@ -202,7 +202,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	CUDA_DES_InitializeKernelLauncher14();
 	CUDA_DES_InitializeKernelLauncher15();
 #endif
-	CUDA_ERROR(cudaMemcpy(cudaTripcodeChunkArray, tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk, cudaMemcpyHostToDevice));
+	CUDA_ERROR(cudaMemcpy(cudaTripcodeChunkArray, tripcodeChunkArray, sizeof(uint32_t) * numTripcodeChunk, cudaMemcpyHostToDevice));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_FirstByte,  keyCharTable_FirstByte,  SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByte, keyCharTable_SecondByte, SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaChunkBitmap,               chunkBitmap,               CHUNK_BITMAP_SIZE));
@@ -224,8 +224,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	CUDA_ERROR(cudaMalloc((void **)&cudaPrevTripcodeIndexArray,   sizeof(unsigned char) * numThreadsPerGrid));
 	while (!GetTerminationState()) {
 		// Choose the first 3 characters of the keyAndRandomBytes.
-		int intSalt;
-		for (int i = 3; i < lenTripcode; ++i)
+		int32_t intSalt;
+		for (int32_t i = 3; i < lenTripcode; ++i)
 			keyAndRandomBytes[i] = 'A';
 		do {
 			SetCharactersInTripcodeKey(keyAndRandomBytes, 3);
@@ -240,8 +240,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 
 		//
 		unsigned char randomByteForKey0 = RandomByte();
-		int j = 0;
-		for (int i = 0; i < CUDA_DES_MAX_PASS_COUNT; ++i) {
+		int32_t j = 0;
+		for (int32_t i = 0; i < CUDA_DES_MAX_PASS_COUNT; ++i) {
 			do {
 				keyAndRandomBytes[0] = keyCharTable_FirstByte[randomByteForKey0 + j++];
 			} while(!IsValidKey(keyAndRandomBytes));
@@ -249,12 +249,12 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 		}
 		
 		// Generate random bytes for the key to ensure its randomness.
-		for (int i = 3; i < lenTripcode; ++i)
+		for (int32_t i = 3; i < lenTripcode; ++i)
 			keyAndRandomBytes[i] = RandomByte();
 
 		//
 		DES_Vector  keyVectorsFrom49To55[7 * 2] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		for (int tripcodeIndex = 0; tripcodeIndex < CUDA_DES_BS_DEPTH; ++tripcodeIndex) {
+		for (int32_t tripcodeIndex = 0; tripcodeIndex < CUDA_DES_BS_DEPTH; ++tripcodeIndex) {
 			unsigned char key7 = key7Array[tripcodeIndex] = keyCharTable_FirstByte[keyAndRandomBytes[7] + tripcodeIndex];
 			SET_BIT_FOR_KEY7(keyVectorsFrom49To55[0], 0);
 			SET_BIT_FOR_KEY7(keyVectorsFrom49To55[1], 1);
@@ -323,9 +323,9 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 
 		// Process the output.
 		TripcodeKeyPair tripcodes[32];
-		int numTripcodes = 0;
+		int32_t numTripcodes = 0;
 		if (prevDataExists) {
-			for (int i = 0; i < numThreadsPerGrid; i++){
+			for (int32_t i = 0; i < numThreadsPerGrid; i++){
 				if (prevPassCountArray[i] < CUDA_DES_MAX_PASS_COUNT) {
 					unsigned char key[MAX_LEN_TRIPCODE_KEY + 1];
 					key[0] = prevKey0Array[prevPassCountArray[i]];
@@ -334,8 +334,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	
 					BOOL isSecondByte =    ( IS_FIRST_BYTE_SJIS_FULL(prevKey0Array[0])                                                       && IS_FIRST_BYTE_SJIS_FULL(prevKeyAndRandomBytes[2]))
 										|| (!IS_FIRST_BYTE_SJIS_FULL(prevKey0Array[0]) && !IS_FIRST_BYTE_SJIS_FULL(prevKeyAndRandomBytes[1]) && IS_FIRST_BYTE_SJIS_FULL(prevKeyAndRandomBytes[2]));
-					int threadIndex = i % CUDA_DES_NUM_THREADS_PER_BLOCK;
-					int blockIndex  = i / CUDA_DES_NUM_THREADS_PER_BLOCK;
+					int32_t threadIndex = i % CUDA_DES_NUM_THREADS_PER_BLOCK;
+					int32_t blockIndex  = i / CUDA_DES_NUM_THREADS_PER_BLOCK;
 					SET_KEY_CHAR(key[3], isSecondByte, keyCharTable_FirstByte, prevKeyAndRandomBytes[3] + (((threadIndex >> 6) &  7) | (((blockIndex  >> 12) & 7) << 3)));
 					SET_KEY_CHAR(key[4], isSecondByte, keyCharTable_FirstByte, prevKeyAndRandomBytes[4] + ( (blockIndex  >> 6) & 63));
 					SET_KEY_CHAR(key[5], isSecondByte, keyCharTable_FirstByte, prevKeyAndRandomBytes[5] + (  blockIndex        & 63));
@@ -348,7 +348,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 				}
 				if (numTripcodes > 0 && (numTripcodes >= sizeof(tripcodes) / sizeof(TripcodeKeyPair) || i >= numThreadsPerGrid - 1)) {
 					Generate10CharTripcodes(tripcodes, numTripcodes);
-					for (int j = 0; j < numTripcodes; j++){
+					for (int32_t j = 0; j < numTripcodes; j++){
 						ERROR0(!IsTripcodeChunkValid(tripcodes[j].tripcode.c), 
 							   ERROR_TRIPCODE_VERIFICATION_FAILED, 
 							   GetErrorMessage(ERROR_TRIPCODE_VERIFICATION_FAILED));
@@ -359,8 +359,8 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 			}
 		}
 		CUDA_ERROR(cudaStreamSynchronize(currentStream));
-		unsigned int numGeneratedTripcodesThisTime = 0;
-		for (int i = 0; i < numThreadsPerGrid; i++)
+		uint32_t numGeneratedTripcodesThisTime = 0;
+		for (int32_t i = 0; i < numThreadsPerGrid; i++)
 			numGeneratedTripcodesThisTime += CUDA_DES_BS_DEPTH * passCountArray[i];
 		AddToNumGeneratedTripcodesByGPU(numGeneratedTripcodesThisTime);
 		numGeneratedTripcodes += numGeneratedTripcodesThisTime;

@@ -33,12 +33,12 @@
 
 
 struct Tripcode {
-	// unsigned int length;
+	// uint32_t length;
 	unsigned char c[MAX_LEN_TRIPCODE];
 };
 
 struct TripcodeKey {
-	// unsigned int length;
+	// uint32_t length;
 	unsigned char c[MAX_LEN_TRIPCODE_KEY];
 };
 
@@ -60,36 +60,36 @@ struct RegexPattern {
 	BOOL            endsAtLastChar;
 	BOOL            wereVerticalBarsProcessed;
 	//
-	int             depth;
+	int32_t             depth;
 	unsigned char   expandedAtLowerDepth [MAX_NUM_DEPTHS_IN_REGEX_PATTERN - 1][MAX_LEN_TARGET_PATTERN + 1];
 	unsigned char   remainingAtLowerDepth[MAX_NUM_DEPTHS_IN_REGEX_PATTERN - 1][MAX_LEN_TARGET_PATTERN + 1];
 	//
-	int             numSubexpressions;
+	int32_t             numSubexpressions;
 	unsigned char   subexpressions[MAX_NUM_SUBEXPRESSIONS_IN_REGEX_PATTERN][MAX_LEN_TARGET_PATTERN + 1];
 	BOOL            wereSubexpressionsSet[MAX_NUM_SUBEXPRESSIONS_IN_REGEX_PATTERN];
-	int             subexpressionIndexAtLowerDepth[MAX_NUM_DEPTHS_IN_REGEX_PATTERN - 1];
+	int32_t             subexpressionIndexAtLowerDepth[MAX_NUM_DEPTHS_IN_REGEX_PATTERN - 1];
 	BOOL            expandSpecialCharactersInParentheses;
 };
 
 struct GPUOutput {
-	unsigned int  numGeneratedTripcodes;
+	uint32_t  numGeneratedTripcodes;
 	unsigned char numMatchingTripcodes;
 	TripcodeKeyPair pair;
 };
 
 struct Options {
-	int  GPUIndex;
-	int  CUDANumBlocksPerSM;
+	int32_t  GPUIndex;
+	int32_t  CUDANumBlocksPerSM;
 	BOOL beepWhenNewTripcodeIsFound;
 	BOOL outputInvalidTripcode;
 	BOOL warnSpeedDrop;
-	int  searchDevice;
+	int32_t  searchDevice;
 	BOOL testNewCode;
-	int  numCPUSearchThreads;
+	int32_t  numCPUSearchThreads;
 	BOOL redirection;
-	int  openCLNumWorkItemsPerCU;
-	int  openCLNumWorkItemsPerWG;
-	int  openCLNumThreads;
+	int32_t  openCLNumWorkItemsPerCU;
+	int32_t  openCLNumWorkItemsPerWG;
+	int32_t  openCLNumThreads;
 	BOOL useOneByteCharactersForKeys;
 	BOOL searchForHisekiOnCPU;
 	BOOL searchForKakuhiOnCPU;
@@ -103,15 +103,15 @@ struct Options {
 	BOOL maximizeKeySpace;
 	BOOL isAVX2Enabled;
 	BOOL openCLRunChildProcesses;
-	int  openCLNumProcesses;
+	int32_t  openCLNumProcesses;
 	BOOL checkTripcodes;
 	BOOL enableGCNAssembler;
 };
 
 struct CUDADeviceSearchThreadInfo {
-	int   CUDADeviceIndex;
-	// int          index;
-	int          subindex;
+	int32_t   CUDADeviceIndex;
+	// int32_t          index;
+	int32_t          subindex;
 	cudaDeviceProp  properties;
 	char  status[LEN_LINE_BUFFER_FOR_SCREEN];
 	std::mutex criticalSection;
@@ -121,16 +121,16 @@ struct CUDADeviceSearchThreadInfo {
 
 struct OpenCLDeviceSearchThreadInfo {
 	cl_device_id openCLDeviceID;
-	int          index;
-	int          subindex;
+	int32_t          index;
+	int32_t          subindex;
 	char         status[LEN_LINE_BUFFER_FOR_SCREEN];
 	//
-	int          deviceNo;
+	int32_t          deviceNo;
 	double       currentSpeed;
 	double       averageSpeed;
 	double       totalNumGeneratedTripcodes;
-	unsigned int numDiscardedTripcodes;
-	unsigned int numRestarts;
+	uint32_t numDiscardedTripcodes;
+	uint32_t numRestarts;
 	BOOL         runChildProcess;
 	HANDLE       childProcess;
 	DWORD        timeLastUpdated;

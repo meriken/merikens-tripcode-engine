@@ -73,27 +73,27 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 
 	// Initialize the table.
 	if (!wasMatchedTripcodeTableInitialized) {
-		for (int i = 0; i < SIZE_MATCHED_TRIPCODE_TABLE; ++i)
+		for (int32_t i = 0; i < SIZE_MATCHED_TRIPCODE_TABLE; ++i)
 			matchedTripcodeTable[i] = NULL;
 		wasMatchedTripcodeTableInitialized = TRUE;
 	}
 
 	// Create a hash value from the tripcode.
-	int hashValueUpper = 0;
-	for (int i = 0; i < lenTripcode; i += 2) {
-		int j;
+	int32_t hashValueUpper = 0;
+	for (int32_t i = 0; i < lenTripcode; i += 2) {
+		int32_t j;
 		for (j = 0; j < 63 && base64CharTable[j] != tripcode[i]; ++j)
 			;
 		hashValueUpper ^= j;
 	}
-	int hashValueLower = 0;
-	for (int i = 1; i < lenTripcode; i += 2) {
-		int j;
+	int32_t hashValueLower = 0;
+	for (int32_t i = 1; i < lenTripcode; i += 2) {
+		int32_t j;
 		for (j = 0; j < 63 && base64CharTable[j] != tripcode[i]; ++j)
 			;
 		hashValueLower ^= j;
 	}
-	int tableIndex = (hashValueUpper * 64 + hashValueLower) % SIZE_MATCHED_TRIPCODE_TABLE;
+	int32_t tableIndex = (hashValueUpper * 64 + hashValueLower) % SIZE_MATCHED_TRIPCODE_TABLE;
 	// printf("tableIndex = %d\n", tableIndex);
 
 	// Check to see if the tripcode is a duplicate.
