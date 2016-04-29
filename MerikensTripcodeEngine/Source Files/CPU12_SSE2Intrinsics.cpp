@@ -926,7 +926,7 @@ static uint32_t SearchForTripcodesWithoutOptimization()
 	return numGeneratedTripcodes;
 }
 
-unsigned WINAPI Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
+void Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
 {
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())

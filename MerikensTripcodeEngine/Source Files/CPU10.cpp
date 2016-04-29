@@ -111,8 +111,6 @@ extern void CPU_DES_MainLoop_AVX2();
 
 void Thread_SearchForDESTripcodesOnCPU()
 {
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
-
 	if (options.isAVX2Enabled && IsAVX2Supported()) {
 		CPU_DES_MainLoop_AVX2();
 	} else {

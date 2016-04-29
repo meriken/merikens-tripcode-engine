@@ -239,6 +239,8 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 
 void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
+	ASSERT(info->numRestarts == 0);
+
 	// This thread may be restarted. See CheckSearchThreads().
 	double       prevTotalNumGeneratedTripcodes = info->totalNumGeneratedTripcodes;
 	uint32_t prevNumDiscardedTripcodes      = info->numDiscardedTripcodes;
@@ -331,7 +333,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	MultiByteToWideChar(CP_ACP, 0, commandLine, -1, commandLineWC, MAX_LEN_COMMAND_LINE);
 	ERROR0(!CreateProcess(NULL, commandLineWC, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInfo), ERROR_CHILD_PROCESS, "CreateProcess");
 	hChildProcess = processInfo.hProcess;
-	UpdateOpenCLDeviceStatus_ChildProcess(((OpenCLDeviceSearchThreadInfo *)info), "[process] Started child process.", 0, 0, 0, 0, hChildProcess);
+	UpdateOpenCLDeviceStatus_ChildProcess(info, "[process] Started child process.", 0, 0, 0, 0, hChildProcess);
 
 	// Close pipe handles.
 	ERROR0(!CloseHandle(processInfo.hThread), ERROR_CHILD_PROCESS, "CloseHandle");
@@ -403,8 +405,8 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 						averageSpeed / 1000000,
 						numWorkItemsPerComputeUnit,
 						localWorkSize,
-						((OpenCLDeviceSearchThreadInfo *)info)->numRestarts);
-				UpdateOpenCLDeviceStatus_ChildProcess(((OpenCLDeviceSearchThreadInfo *)info), 
+						info->numRestarts);
+				UpdateOpenCLDeviceStatus_ChildProcess(info, 
 													  status, 
 													  currentSpeed, 
 													  averageSpeed, 
@@ -459,7 +461,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	int driverMajorVersion;
 	int driverMinorVersion;
 	char rest[LEN_LINE_BUFFER_FOR_SCREEN];
-	sscanf(driverVersion, "%d.%d%1023s", &driverMajorVersion, &driverMinorVersion, rest);
+	sscanf(driverVersion, "%d.%d%s", &driverMajorVersion, &driverMinorVersion, rest);
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	sprintf(assemblerCommand, 
@@ -514,17 +516,18 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	RELEASE_SPIN_LOCK(system_command_lock);
 }
 
-void Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
+void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
 	cl_int         openCLError;
-	cl_device_id   deviceID = ((OpenCLDeviceSearchThreadInfo *)info)->openCLDeviceID;
+	cl_device_id   deviceID = info->openCLDeviceID;
 	cl_uint        numComputeUnits;
 	char           status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 	char           buildOptions[MAX_LEN_COMMAND_LINE + 1] = ""; 
 	unsigned char  key[MAX_LEN_TRIPCODE + 1];
 
-	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
-		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
+
+	if (info->runChildProcess) {
+		Thread_RunChildProcessForOpenCLDevice(info);
 		return;
 	}
 
@@ -748,7 +751,7 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 
 		// Measure the current speed.
 		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
-		deltaTime = endingTime - startingTime;
+		deltaTime = (endingTime - startingTime) * 0.001;
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
 		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
@@ -762,7 +765,7 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 				globalWorkSize,
 				numWorkItemsPerComputeUnit,
 				localWorkSize);
-		UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), status);
+		UpdateOpenCLDeviceStatus(info, status);
 	}
  
     // Clean up.

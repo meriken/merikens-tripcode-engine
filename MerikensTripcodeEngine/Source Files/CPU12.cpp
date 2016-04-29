@@ -641,8 +641,6 @@ void Thread_SearchForSHA1TripcodesOnCPU()
 {
 	BOOL useAVX2 = options.isAVX2Enabled && IsAVX2Supported();
 
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
-
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);

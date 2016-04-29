@@ -985,6 +985,8 @@ void LoadTargetPatterns(BOOL displayProgress)
 	int32_t      lenTargetPattern;
 	int32_t      patternCount = 0;
 	
+	line[MAX_LEN_INPUT_LINE] = '\0';
+
 	if (displayProgress) {
 		printf("PATTERN(S)\n");
 		printf("==========\n");

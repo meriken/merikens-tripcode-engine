@@ -126,7 +126,7 @@ CUDA_DES_DECLARE_KERNEL_LAUNCHER(15);
 
 #define SET_BIT_FOR_KEY7(var, k) if (key7 & (0x1 << (k))) (var) |= 0x1 << tripcodeIndex
 
-void Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
+void Thread_SearchForDESTripcodesOnCUDADevice_Registers(CUDADeviceSearchThreadInfo *info)
 {
 	cudaDeviceProp  CUDADeviceProperties;
 	uint32_t    numBlocksPerSM;
@@ -165,11 +165,11 @@ void Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	keyAndRandomBytes[lenTripcode] = '\0';
 	salt[2] = '\0';
 	
-	CUDA_ERROR(cudaSetDevice(((CUDADeviceSearchThreadInfo *)info)->CUDADeviceIndex));
-	CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceProperties, ((CUDADeviceSearchThreadInfo *)info)->CUDADeviceIndex));
+	CUDA_ERROR(cudaSetDevice(info->CUDADeviceIndex));
+	CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceProperties, info->CUDADeviceIndex));
 	if (CUDADeviceProperties.computeMode == cudaComputeModeProhibited) {
 		sprintf(status, "[disabled]");
-		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
+		UpdateCUDADeviceStatus(info, status);
 		return;
 	}
 
@@ -183,7 +183,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	CUDA_ERROR(cudaMalloc((void **)&cudaKeyVectorsFrom49To55, sizeof(DES_Vector) * 7 * 2)); 
 	CUDA_ERROR(cudaMalloc((void **)&cudaKeyAndRandomBytes,    sizeof(unsigned char) * 8)); 
 	
-	ACQUIRE_SPIN_LOCK(((CUDADeviceSearchThreadInfo *)info)->spin_lock);
+	ACQUIRE_SPIN_LOCK(info->spin_lock);
 #ifdef CUDA_DES_ENABLE_MULTIPLE_KERNELS_MODE
 	CUDA_DES_InitializeKernelLauncher0();
 	CUDA_DES_InitializeKernelLauncher1();
@@ -207,7 +207,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByte, keyCharTable_SecondByte, SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaChunkBitmap,               chunkBitmap,               CHUNK_BITMAP_SIZE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaCompactMediumChunkBitmap,  compactMediumChunkBitmap,  COMPACT_MEDIUM_CHUNK_BITMAP_SIZE));
-	RELEASE_SPIN_LOCK(((CUDADeviceSearchThreadInfo *)info)->spin_lock);
+	RELEASE_SPIN_LOCK(info->spin_lock);
 		
 	startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 
@@ -387,7 +387,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice_Registers(LPVOID info)
 			    "%.1lfM TPS, %d blocks/SM",
 				speed / 1000000,
 				numBlocksPerSM);
-		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
+		UpdateCUDADeviceStatus(info, status);
 	}
 
 	RELEASE_AND_SET_TO_NULL(passCountArray,               free);

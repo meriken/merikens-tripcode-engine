@@ -1804,7 +1804,7 @@ void StartOpenCLDeviceSearchThreads()
 	ASSERT(numOpenCLDeviceSearchThreads > 0);
 
 	ERROR0((opencl_device_search_threads = new (std::nothrow) std::thread *[numOpenCLDeviceSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
-	ERROR0((openCLDeviceSearchThreadInfoArray = (struct OpenCLDeviceSearchThreadInfo *)malloc(sizeof(struct OpenCLDeviceSearchThreadInfo) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0((openCLDeviceSearchThreadInfoArray = new (std::nothrow) struct OpenCLDeviceSearchThreadInfo [numOpenCLDeviceSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	if (options.GPUIndex == GPU_INDEX_ALL) {
 		int32_t openCLDeviceIDArrayIndex = 0;
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
@@ -1877,7 +1877,8 @@ void StartOpenCLDeviceSearchThreads()
 		openCLDeviceSearchThreadInfoArray[0].currentSpeed               = 0;
 		openCLDeviceSearchThreadInfoArray[0].averageSpeed               = 0;
 		openCLDeviceSearchThreadInfoArray[0].totalNumGeneratedTripcodes = 0;
-		openCLDeviceSearchThreadInfoArray[0].numDiscardedTripcodes      = 0;
+		openCLDeviceSearchThreadInfoArray[0].numDiscardedTripcodes = 0;
+		openCLDeviceSearchThreadInfoArray[0].numRestarts = 0;
 		openCLDeviceSearchThreadInfoArray[0].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		if (!openCLRunChildProcesses) {
 			ASSERT(numOpenCLDeviceSearchThreads == options.openCLNumThreads);
@@ -1906,7 +1907,8 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].currentSpeed               = 0;
 				openCLDeviceSearchThreadInfoArray[j].averageSpeed               = 0;
 				openCLDeviceSearchThreadInfoArray[j].totalNumGeneratedTripcodes = 0;
-				openCLDeviceSearchThreadInfoArray[j].numDiscardedTripcodes      = 0;
+				openCLDeviceSearchThreadInfoArray[j].numDiscardedTripcodes = 0;
+				openCLDeviceSearchThreadInfoArray[j].numRestarts = 0;
 				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 			}	
 		}

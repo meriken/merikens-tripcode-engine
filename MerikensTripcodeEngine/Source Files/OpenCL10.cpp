@@ -523,7 +523,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	int driverMajorVersion;
 	int driverMinorVersion;
 	char rest[LEN_LINE_BUFFER_FOR_SCREEN];
-	sscanf(driverVersion, "%d.%d%1023s", &driverMajorVersion, &driverMinorVersion, rest);
+	sscanf(driverVersion, "%d.%d%s", &driverMajorVersion, &driverMinorVersion, rest);
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	if (dummyKernelBinaryFilePath) {
@@ -616,7 +616,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	RELEASE_SPIN_LOCK(system_command_lock);
 }
 
-void Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
+void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
 	cl_context       context;
 	cl_command_queue commandQueue;
@@ -630,19 +630,19 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	cl_mem openCL_chunkBitmap;
 	cl_mem openCL_partialKeyFrom3To6Array;
 	cl_int         openCLError;
-	cl_device_id   deviceID = ((OpenCLDeviceSearchThreadInfo *)info)->openCLDeviceID;
+	cl_device_id   deviceID = info->openCLDeviceID;
 	cl_uint        numComputeUnits;
 	char           status[LEN_LINE_BUFFER_FOR_SCREEN] = {'\0'};
 	char           buildOptions[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1] = {'\0'}; 
 	KeyInfo        keyInfo;
 	unsigned char  expansionFunction[96];
 
-	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
-		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
+	if (info->runChildProcess) {
+		Thread_RunChildProcessForOpenCLDevice(info);
 		return;
 	}
 
-	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Starting a tripcode search...");
+	UpdateOpenCLDeviceStatus(info, "[thread] Starting a tripcode search...");
 
 	// Random wait time between 0 and 10 seconds for increased stability.
 	Sleep((uint32_t)RandomByte() * 10000 / 256);
@@ -776,7 +776,7 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	while (!GetTerminationState()) {
 		// Build the kernel.
 		if (firstBuild || --execCounter < 0) {
-			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL program...");
+			UpdateOpenCLDeviceStatus(info, "[thread] Creating an OpenCL program...");
 
 			if (!firstBuild) {
 				OPENCL_ERROR(clReleaseKernel(kernel));
@@ -807,7 +807,7 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
 				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, binaryFilePath);
 			}
-			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL kernel...");
+			UpdateOpenCLDeviceStatus(info, "[thread] Creating an OpenCL kernel...");
 			kernel = clCreateKernel(program, "OpenCL_DES_PerformSearching", &openCLError);
 			// printf("clCreateKernel(): done\n");
    			OPENCL_ERROR(openCLError);
@@ -914,7 +914,7 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				globalWorkSize,
 				numWorkItemsPerComputeUnit,
 				localWorkSize);
-		UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), status);
+		UpdateOpenCLDeviceStatus(info, status);
 	}
  
     // Clean up.
