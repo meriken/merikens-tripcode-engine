@@ -560,7 +560,15 @@ void CheckSearchThreads()
 		///*
 		if (deltaTime > 60 * 1000) {
 			strcpy(info->status, "Restarting search thread...");
+			auto native_handle = cuda_device_search_threads[index]->native_handle();
+			cuda_device_search_threads[index]->detach();
 			delete cuda_device_search_threads[index];
+#ifdef _WINDOWS_
+			TerminateThread(native_handle, 0);
+#elif defined(PTHREAD)
+			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+			pthread_cancel(native_handle);
+#endif
 			cuda_device_search_threads[index] = new std::thread((lenTripcode == 10) 
 														          ? Thread_SearchForDESTripcodesOnCUDADevice
 															      : Thread_SearchForSHA1TripcodesOnCUDADevice,
@@ -582,7 +590,14 @@ void CheckSearchThreads()
 			ERROR0(!info->runChildProcess, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 
 			strcpy(info->status, "[process] Restarting search thread...");
+			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
+#ifdef _WINDOWS_
+			TerminateThread(native_handle, 0);
+#elif defined(PTHREAD)
+			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+			pthread_cancel(native_handle);
+#endif
 			TerminateProcess(info->childProcess, 0);
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
