@@ -150,12 +150,12 @@ std::thread                              **opencl_device_search_threads = NULL;
 int32_t                                  numCPUSearchThreads               = 0;
 std::thread                              **cpu_search_threads = NULL;
 BOOL                                 openCLRunChildProcesses = FALSE;
-std::atomic_flag num_generated_tripcodes_lock                = ATOMIC_FLAG_INIT;
-std::atomic_flag process_tripcode_pair_lock                  = ATOMIC_FLAG_INIT;
-std::atomic_flag current_state_lock                          = ATOMIC_FLAG_INIT;
-std::atomic_flag cuda_device_search_thread_info_array_lock   = ATOMIC_FLAG_INIT;
-std::atomic_flag opencl_device_search_thread_info_array_lock = ATOMIC_FLAG_INIT;
-std::atomic_flag system_command_lock                   = ATOMIC_FLAG_INIT;
+lightweight_recursive_mutex num_generated_tripcodes_mutex;
+lightweight_recursive_mutex process_tripcode_pair_mutex;
+lightweight_recursive_mutex current_state_mutex;
+lightweight_recursive_mutex cuda_device_search_thread_info_array_mutex;
+lightweight_recursive_mutex opencl_device_search_thread_info_array_mutex;
+std::mutex system_command_mutex;
 uint32_t     numGeneratedTripcodes_GPU;
 uint32_t     numGeneratedTripcodesByGPUInMillions;
 uint32_t     numGeneratedTripcodes_CPU;
@@ -518,24 +518,24 @@ void DisplayCopyrights()
 
 void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, char *status)
 {
-	ACQUIRE_SPIN_LOCK(cuda_device_search_thread_info_array_lock);
+	LOCK_MUTEX(cuda_device_search_thread_info_array_mutex);
 	strcpy(info->status, status);
 	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
-	RELEASE_SPIN_LOCK(cuda_device_search_thread_info_array_lock);
+	UNLOCK_MUTEX(cuda_device_search_thread_info_array_mutex);
 }
 
 void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status)
 {
-	ACQUIRE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	LOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 	ASSERT(!info->runChildProcess);
 	strcpy(info->status, status);
 	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
-	RELEASE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	UNLOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 }
 
 void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, HANDLE childProcess)
 {
-	ACQUIRE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	LOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 	ASSERT(info->runChildProcess);
 	strcpy(info->status, status);
 	info->currentSpeed = currentSpeed;
@@ -544,12 +544,12 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	info->numDiscardedTripcodes = numDiscardedTripcodes;
 	info->childProcess = childProcess;
 	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
-	RELEASE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	UNLOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 }
 
 void CheckSearchThreads()
 {
-	ACQUIRE_SPIN_LOCK(cuda_device_search_thread_info_array_lock);
+	LOCK_MUTEX(cuda_device_search_thread_info_array_mutex);
 	for (int32_t index = 0; index < numCUDADeviceSearchThreads; ++index) {
 		struct CUDADeviceSearchThreadInfo *info = &CUDADeviceSearchThreadInfoArray[index];
 		uint64_t  currentTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
@@ -568,9 +568,9 @@ void CheckSearchThreads()
 		}
 		//*/
 	}
-	RELEASE_SPIN_LOCK(cuda_device_search_thread_info_array_lock);
+	UNLOCK_MUTEX(cuda_device_search_thread_info_array_mutex);
 
-	ACQUIRE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	LOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 	for (int32_t index = 0; index < numOpenCLDeviceSearchThreads; ++index) {
 		struct OpenCLDeviceSearchThreadInfo *info = &openCLDeviceSearchThreadInfoArray[index];
 		uint64_t  currentTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
@@ -597,20 +597,20 @@ void CheckSearchThreads()
 		}
 		//*/
 	}
-	RELEASE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	UNLOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 }
 
 void KeepSearchThreadsAlive()
 {
-	ACQUIRE_SPIN_LOCK(cuda_device_search_thread_info_array_lock);
+	LOCK_MUTEX(cuda_device_search_thread_info_array_mutex);
 	for (int32_t index = 0; index < numCUDADeviceSearchThreads; ++index)
 		CUDADeviceSearchThreadInfoArray[index].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
-	RELEASE_SPIN_LOCK(cuda_device_search_thread_info_array_lock);
+	UNLOCK_MUTEX(cuda_device_search_thread_info_array_mutex);
 
-	ACQUIRE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	LOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 	for (int32_t index = 0; index < numOpenCLDeviceSearchThreads; ++index)
 		openCLDeviceSearchThreadInfoArray[index].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
-	RELEASE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	UNLOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 }
 
 void PrintStatus()
@@ -618,8 +618,8 @@ void PrintStatus()
 	if (GetErrorState() || GetTerminationState())
 		return;
 
-	ACQUIRE_SPIN_LOCK(current_state_lock);
-	ACQUIRE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
+	LOCK_MUTEX(current_state_mutex);
+	LOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
 
 	char msg[MAX_NUM_LINES_STATUS_MSG][LEN_LINE_BUFFER_FOR_SCREEN];
 	int32_t lineCount = 0;
@@ -659,14 +659,14 @@ void PrintStatus()
 				(searchDevice == SEARCH_DEVICE_CPU) ? "." : ":");
 	}
 	if (searchDevice != SEARCH_DEVICE_CPU && CUDADeviceSearchThreadInfoArray) {
-		ACQUIRE_SPIN_LOCK(cuda_device_search_thread_info_array_lock);
+		LOCK_MUTEX(cuda_device_search_thread_info_array_mutex);
 		if (numCUDADeviceSearchThreads == 1) {
 			sprintf(NEXT_LINE, "      CUDA0:     %s", CUDADeviceSearchThreadInfoArray[0].status);
 		} else {
 			for (int32_t i = 0; i < numCUDADeviceSearchThreads; ++i)
 				sprintf(NEXT_LINE, "      CUDA%d-%d:     %s", CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex, CUDADeviceSearchThreadInfoArray[i].subindex, CUDADeviceSearchThreadInfoArray[i].status);
 		}
-		RELEASE_SPIN_LOCK(cuda_device_search_thread_info_array_lock);
+		UNLOCK_MUTEX(cuda_device_search_thread_info_array_mutex);
 	}
 	if (searchDevice != SEARCH_DEVICE_CPU && openCLDeviceSearchThreadInfoArray) {
 		if (numOpenCLDeviceSearchThreads == 1) {
@@ -835,8 +835,8 @@ void PrintStatus()
 		fflush(stdout);
 	}
 	
-	RELEASE_SPIN_LOCK(opencl_device_search_thread_info_array_lock);
-	RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(opencl_device_search_thread_info_array_mutex);
+	UNLOCK_MUTEX(current_state_mutex);
 #undef NEXT_LINE
 }
 
@@ -1382,8 +1382,8 @@ void ObtainOptions(int32_t argCount, char **arguments)
 
 void ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key)
 {
-	// ACQUIRE_SPIN_LOCK(current_state_lock);
-	ACQUIRE_SPIN_LOCK(process_tripcode_pair_lock);
+	LOCK_MUTEX(current_state_mutex);
+	LOCK_MUTEX(process_tripcode_pair_mutex);
 
 	ASSERT(lenTripcode    == 10 || lenTripcode    == 12);
 	ASSERT(lenTripcodeKey == 10 || lenTripcodeKey == 12);
@@ -1456,14 +1456,14 @@ void ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key)
 	if (!options.redirection && options.beepWhenNewTripcodeIsFound)
 		printf("\a");
 	
-	RELEASE_SPIN_LOCK(process_tripcode_pair_lock);
-	// RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(process_tripcode_pair_mutex);
+	UNLOCK_MUTEX(current_state_mutex);
 }
 
 void ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char *key)
 {
-	// ACQUIRE_SPIN_LOCK(current_state_lock);
-	ACQUIRE_SPIN_LOCK(process_tripcode_pair_lock);
+	LOCK_MUTEX(current_state_mutex);
+	LOCK_MUTEX(process_tripcode_pair_mutex);
 
 	if (options.outputInvalidTripcode && !options.redirection && !GetTerminationState()) {
 #ifdef ENGLISH_VERSION
@@ -1515,8 +1515,8 @@ void ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char *key)
 	}
 	++numDiscardedTripcodes;
 
-	RELEASE_SPIN_LOCK(process_tripcode_pair_lock);
-	// RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(process_tripcode_pair_mutex);
+	UNLOCK_MUTEX(current_state_mutex);
 }
 
 void OpenTripcodeFile()
@@ -1527,98 +1527,98 @@ void OpenTripcodeFile()
 
 void AddToNumGeneratedTripcodesByCPU(uint32_t num)
 {
-	ACQUIRE_SPIN_LOCK(num_generated_tripcodes_lock);
+	LOCK_MUTEX(num_generated_tripcodes_mutex);
 	numGeneratedTripcodes_CPU += num;
 	if (numGeneratedTripcodes_CPU >= 1000000) {
 		numGeneratedTripcodesByCPUInMillions += numGeneratedTripcodes_CPU / 1000000;
 		numGeneratedTripcodes_CPU           %= 1000000;
 	}
-	RELEASE_SPIN_LOCK(num_generated_tripcodes_lock);
+	UNLOCK_MUTEX(num_generated_tripcodes_mutex);
 }
 
 void AddToNumGeneratedTripcodesByGPU(uint32_t num)
 {
-	ACQUIRE_SPIN_LOCK(num_generated_tripcodes_lock);
+	LOCK_MUTEX(num_generated_tripcodes_mutex);
 	numGeneratedTripcodes_GPU += num;
 	if (numGeneratedTripcodes_GPU >= 1000000) {
 		numGeneratedTripcodesByGPUInMillions += numGeneratedTripcodes_GPU / 1000000;
 		numGeneratedTripcodes_GPU           %= 1000000;
 	}
-	RELEASE_SPIN_LOCK(num_generated_tripcodes_lock);
+	UNLOCK_MUTEX(num_generated_tripcodes_mutex);
 }
 
 double GetNumGeneratedTripcodesByCPU()
 {
-	ACQUIRE_SPIN_LOCK(num_generated_tripcodes_lock);
+	LOCK_MUTEX(num_generated_tripcodes_mutex);
 
 	double ret =   (double)numGeneratedTripcodesByCPUInMillions * 1000000
 	             +         numGeneratedTripcodes_CPU;
 	numGeneratedTripcodesByCPUInMillions = 0;
 	numGeneratedTripcodes_CPU           = 0;
 
-	RELEASE_SPIN_LOCK(num_generated_tripcodes_lock);
+	UNLOCK_MUTEX(num_generated_tripcodes_mutex);
 	
 	return ret;
 }
 
 double GetNumGeneratedTripcodesByGPU()
 {
-	ACQUIRE_SPIN_LOCK(num_generated_tripcodes_lock);
+	LOCK_MUTEX(num_generated_tripcodes_mutex);
 
 	double ret =   (double)numGeneratedTripcodesByGPUInMillions * 1000000
 	             +         numGeneratedTripcodes_GPU;
 	numGeneratedTripcodesByGPUInMillions = 0;
 	numGeneratedTripcodes_GPU           = 0;
 
-	RELEASE_SPIN_LOCK(num_generated_tripcodes_lock);
+	UNLOCK_MUTEX(num_generated_tripcodes_mutex);
 	
 	return ret;
 }
 
 void SetPauseState(BOOL newPauseState)
 {
-	ACQUIRE_SPIN_LOCK(current_state_lock);
+	LOCK_MUTEX(current_state_mutex);
 	isSearchPaused = newPauseState;
-	RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(current_state_mutex);
 }
 
 BOOL GetPauseState()
 {
 	BOOL ret;
-	ACQUIRE_SPIN_LOCK(current_state_lock);
+	LOCK_MUTEX(current_state_mutex);
 	ret = isSearchPaused;
-	RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(current_state_mutex);
 	return ret;
 }
 
 void SetErrorState()
 {
-	ACQUIRE_SPIN_LOCK(current_state_lock);
+	LOCK_MUTEX(current_state_mutex);
 	wasSearchAbortedWithError = TRUE;
-	RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(current_state_mutex);
 }
 
 BOOL GetErrorState()
 {
 	BOOL ret;
-	ACQUIRE_SPIN_LOCK(current_state_lock);
+	LOCK_MUTEX(current_state_mutex);
 	ret = wasSearchAbortedWithError;
-	RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(current_state_mutex);
 	return ret;
 }
 
 void SetTerminationState()
 {
-	ACQUIRE_SPIN_LOCK(current_state_lock);
+	LOCK_MUTEX(current_state_mutex);
 	wasSearchTerminated = TRUE;
-	RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(current_state_mutex);
 }
 
 BOOL GetTerminationState()
 {
 	BOOL ret;
 
-	ACQUIRE_SPIN_LOCK(current_state_lock);
+	LOCK_MUTEX(current_state_mutex);
 
 	// Prepare for termination.
 	if (options.redirection && nameEventForTerminatingWC[0] != 0x0 && eventForTerminating == NULL) {
@@ -1632,14 +1632,14 @@ BOOL GetTerminationState()
 
 	ret = wasSearchTerminated;
 
-	RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(current_state_mutex);
 
 	return ret;
 }
 
 double UpdateCurrentStatus(uint64_t startingTime)
 {
-	ACQUIRE_SPIN_LOCK(current_state_lock);
+	LOCK_MUTEX(current_state_mutex);
 	
 	double numGeneratedTripcodes_GPU = GetNumGeneratedTripcodesByGPU();
 	double numGeneratedTripcodes_CPU = GetNumGeneratedTripcodesByCPU();
@@ -1661,7 +1661,7 @@ double UpdateCurrentStatus(uint64_t startingTime)
 	prevNumValidTripcodes     = numValidTripcodes;
 	prevNumDiscardedTripcodes = numDiscardedTripcodes;
 
-	RELEASE_SPIN_LOCK(current_state_lock);
+	UNLOCK_MUTEX(current_state_mutex);
 
 	return deltaTime;
 }

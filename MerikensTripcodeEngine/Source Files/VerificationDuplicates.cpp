@@ -46,8 +46,7 @@
 
 char *crypt(char *key, char *salt);
 
-static BOOL             wasCriticalSectionInitialized = FALSE;
-static std::atomic_flag spin_lock = ATOMIC_FLAG_INIT;
+static lightweight_recursive_mutex mutex;
 
 typedef struct TripcodeLinkedList {
 	struct TripcodeLinkedList *next;
@@ -69,7 +68,7 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 {
 	BOOL result = FALSE;
 
-	ACQUIRE_SPIN_LOCK(spin_lock);
+	LOCK_MUTEX(mutex);
 
 	// Initialize the table.
 	if (!wasMatchedTripcodeTableInitialized) {
@@ -116,6 +115,6 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 	matchedTripcodeTable[tableIndex] = newNode;
 
 exit:
-	RELEASE_SPIN_LOCK(spin_lock);
+	UNLOCK_MUTEX(mutex);
 	return result;
 }

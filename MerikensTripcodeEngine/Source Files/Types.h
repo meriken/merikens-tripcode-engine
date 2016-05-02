@@ -114,11 +114,9 @@ struct CUDADeviceSearchThreadInfo {
 	int32_t          subindex;
 	cudaDeviceProp  properties;
 	char  status[LEN_LINE_BUFFER_FOR_SCREEN];
-	std::atomic_flag spin_lock;
+	std::mutex mutex;
 	//
 	uint64_t timeLastUpdated;
-
-	CUDADeviceSearchThreadInfo() { spin_lock.clear(); }
 };
 
 struct OpenCLDeviceSearchThreadInfo {
@@ -138,3 +136,79 @@ struct OpenCLDeviceSearchThreadInfo {
 	uint64_t        timeLastUpdated;
 };
 
+#ifndef __CUDACC__
+#ifdef _WINDOWS_
+//#if 0
+
+class lightweight_recursive_mutex {
+	CRITICAL_SECTION critical_section;
+
+public:
+	lightweight_recursive_mutex()
+	{
+		InitializeCriticalSection(&critical_section);
+	}
+
+	~lightweight_recursive_mutex()
+	{
+		DeleteCriticalSection(&critical_section);
+	}
+
+	void lock()
+	{
+		EnterCriticalSection(&critical_section);
+	}
+
+	void unlock()
+	{
+		LeaveCriticalSection(&critical_section);
+	}
+};
+
+#else
+
+class lightweight_recursive_mutex {
+	std::atomic_flag flag;
+	std::thread::id current_thread;
+	int counter;
+
+public:
+	lightweight_recursive_mutex() : counter(0), current_thread(std::thread::id())
+	{
+		flag.clear();
+	}
+
+	void lock()
+	{
+		auto my_id = std::this_thread::get_id();
+		while (true) {
+			while (flag.test_and_set(std::memory_order_acquire))
+				;
+			if (current_thread == my_id || current_thread == std::thread::id()) {
+				++counter;
+				current_thread = my_id;
+				flag.clear(std::memory_order_release);
+				return;
+			}
+			flag.clear(std::memory_order_release);
+		}
+	}
+
+	void unlock()
+	{
+		auto my_id = std::this_thread::get_id();
+		while (true) {
+			while (flag.test_and_set(std::memory_order_acquire))
+				;
+			if (current_thread == my_id) {
+				if (--counter <= 0)
+					current_thread = std::thread::id();;
+				flag.clear(std::memory_order_release);
+				return;
+			}
+			flag.clear(std::memory_order_release);
+		}
+	}
+};
+#endif
+#endif

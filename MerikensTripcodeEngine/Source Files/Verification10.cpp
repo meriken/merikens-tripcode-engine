@@ -46,11 +46,11 @@
 
 char *crypt(char *key, char *salt);
 
-static std::atomic_flag descrypt_lock = ATOMIC_FLAG_INIT;
+static lightweight_recursive_mutex descrypt_mutex;
 
 BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-        ACQUIRE_SPIN_LOCK(descrypt_lock);
+        LOCK_MUTEX(descrypt_mutex);
 
         if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
                 return FALSE;
@@ -78,14 +78,14 @@ BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
         fflush(stdout);
 #endif
 
-        RELEASE_SPIN_LOCK(descrypt_lock);
+        UNLOCK_MUTEX(descrypt_mutex);
 
         return result;
 }
 
 void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-    ACQUIRE_SPIN_LOCK(descrypt_lock);
+    LOCK_MUTEX(descrypt_mutex);
 
     char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
     BOOL fillRestWithZero = FALSE;
@@ -102,7 +102,7 @@ void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
     strncpy((char *)tripcode, crypt((char *)actualKey, (char *)(actualKey + 1)) + 3, 10);
 	tripcode[10] = '\0';
 
-    RELEASE_SPIN_LOCK(descrypt_lock);
+    UNLOCK_MUTEX(descrypt_mutex);
 }
 
 

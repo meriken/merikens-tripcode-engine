@@ -62,6 +62,7 @@
 #ifndef __CUDACC__
 #include <thread>
 #endif
+#include <mutex>
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 #include <nmmintrin.h>
@@ -143,11 +144,11 @@ extern int32_t CUDADeviceCount;
 extern int32_t searchDevice;
 
 // For multi-threading
-extern std::atomic_flag  system_command_lock;
+extern std::mutex system_command_mutex;
 extern char              nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
 extern char              nameEventForTerminating[MAX_LEN_INPUT_LINE + 1];
-#define ACQUIRE_SPIN_LOCK(lock) while ((lock).test_and_set(std::memory_order_acquire))
-#define RELEASE_SPIN_LOCK(lock) (lock).clear(std::memory_order_release)
+#define LOCK_MUTEX(mutex) (mutex).lock()
+#define UNLOCK_MUTEX(mutex) (mutex).unlock()
 
 //
 extern void          AddToNumGeneratedTripcodesByCPU(uint32_t num);

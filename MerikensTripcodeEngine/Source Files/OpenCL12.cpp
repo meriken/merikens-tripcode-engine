@@ -346,7 +346,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	// 						(LPVOID)hInputWrite,0,&ThreadId);
 	// if (hThread == NULL) DisplayError("CreateThread");
 
-	CHAR  lpBuffer[LEN_LINE_BUFFER_FOR_SCREEN];
+	CHAR  lpBuffer[65536];
 	DWORD nBytesRead;
 	uint32_t nCharsWritten;
 
@@ -356,7 +356,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		// We restart the child process in CheckSearchThreads() instead.
 		// ERROR0(WaitForSingleObject(hChildProcess, 0) != WAIT_TIMEOUT, ERROR_CHILD_PROCESS, "A child process terminated unexpectedly.");
 
-		if (!ReadFile(hOutputRead, lpBuffer, sizeof(lpBuffer), &nBytesRead, NULL) || !nBytesRead) {
+		if (!ReadFile(hOutputRead, lpBuffer, sizeof(lpBuffer) - 1, &nBytesRead, NULL) || !nBytesRead) {
 			if (GetLastError() == ERROR_BROKEN_PIPE)
 				break;
 			else
@@ -448,7 +448,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 {
 	cl_int         openCLError;
 	
-	ACQUIRE_SPIN_LOCK(system_command_lock);
+	LOCK_MUTEX(system_command_mutex);
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
@@ -513,7 +513,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
 
-	RELEASE_SPIN_LOCK(system_command_lock);
+	UNLOCK_MUTEX(system_command_mutex);
 }
 
 void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
