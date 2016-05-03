@@ -239,8 +239,6 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 
 void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
-	ASSERT(info->numRestarts == 0);
-
 	// This thread may be restarted. See CheckSearchThreads().
 	double       prevTotalNumGeneratedTripcodes = info->totalNumGeneratedTripcodes;
 	uint32_t prevNumDiscardedTripcodes      = info->numDiscardedTripcodes;
@@ -448,7 +446,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 {
 	cl_int         openCLError;
 	
-	LOCK_MUTEX(system_command_mutex);
+	system_command_spinlock.lock();
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
@@ -513,7 +511,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
 
-	UNLOCK_MUTEX(system_command_mutex);
+	system_command_spinlock.unlock();
 }
 
 void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)

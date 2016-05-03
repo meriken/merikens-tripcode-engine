@@ -37,6 +37,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "MerikensTripcodeEngine.h"
+#include <boost/multiprecision/cpp_dec_float.hpp>
 
 
 
@@ -869,7 +870,7 @@ void ExpandRegexPattern(unsigned char *regexPattern, BOOL displayProgress)
 	
 	if (displayProgress) {
 		printf("  Expanding a regex pattern...");
-		ResetCursorPos(0);
+		reset_cursor_pos(0);
 	}
 
 	while (numRegexPattern > 0 && !GetTerminationState()) {
@@ -881,7 +882,7 @@ void ExpandRegexPattern(unsigned char *regexPattern, BOOL displayProgress)
 			    (int32_t)((int32_t)numProcessedStates / 1000000),
 			    (int32_t)((int32_t)numExpandedPatterns / 1000000));
 			printf("  %-77s", msg);
-			ResetCursorPos(0);
+			reset_cursor_pos(0);
 			loopCount = 0;
 		}
 	}
@@ -895,7 +896,7 @@ void ExpandRegexPattern(unsigned char *regexPattern, BOOL displayProgress)
 
 	if (displayProgress) {
 		printf("%-79s", "");
-		ResetCursorPos(0);
+		reset_cursor_pos(0);
 	}
 
 #if FALSE
@@ -1089,7 +1090,7 @@ void LoadTargetPatterns(BOOL displayProgress)
 
 	if (displayProgress) {
 		printf("  Resolving collisions in the array of expanded patterns...                    ");
-		ResetCursorPos(0);
+		reset_cursor_pos(0);
 	} else if (options.redirection) {
 		printf("[patterns]\n");
 		fflush(stdout);
@@ -1168,7 +1169,7 @@ void LoadTargetPatterns(BOOL displayProgress)
 	// Expand special characters that are used to create tripcode chunks.
 	if (displayProgress) {
 		printf("  Expanding special characters in the array of expanded patterns...            ");
-		ResetCursorPos(0);
+		reset_cursor_pos(0);
 	}
 	for (int32_t i = 0; i < numExpandedPatterns; ++i) {
 		if (   searchMode == SEARCH_MODE_FORWARD_MATCHING
@@ -1192,7 +1193,7 @@ void LoadTargetPatterns(BOOL displayProgress)
 	if (displayProgress) {
 		//      01234567890123456789012345678901234567890123456789012345678901234567890123456789
 		printf("  Removing redundant expanded patterns...                                      ");
-		ResetCursorPos(0);
+		reset_cursor_pos(0);
 	}
 	dirty = FALSE;
 	do {
@@ -1217,7 +1218,7 @@ void LoadTargetPatterns(BOOL displayProgress)
 		if (displayProgress && dirty) {
 			//      01234567890123456789012345678901234567890123456789012345678901234567890123456789
 			printf("  Removing redundant expanded patterns... (%d expanded patterns)", numExpandedPatterns);
-			ResetCursorPos(0);
+			reset_cursor_pos(0);
 		}
 	} while(dirty);
 
@@ -1225,7 +1226,7 @@ void LoadTargetPatterns(BOOL displayProgress)
 	if (displayProgress) {
 		//      01234567890123456789012345678901234567890123456789012345678901234567890123456789
 		printf("  Creating tripcode chunks and marking key bitmaps...                          ");
-		ResetCursorPos(0);
+		reset_cursor_pos(0);
 	}
 	uint32_t tripcodeChunk;
 	memset(chunkBitmap,       0x01, CHUNK_BITMAP_SIZE);
@@ -1268,15 +1269,11 @@ void LoadTargetPatterns(BOOL displayProgress)
 	if (displayProgress) {
 		//      01234567890123456789012345678901234567890123456789012345678901234567890123456789
 		printf("  Calculating the matching probability...                                      ");
-		ResetCursorPos(0);
+		reset_cursor_pos(0);
 	}
-	mpf_t p_mpf, q_mpf;
-	mpf_set_default_prec(128);
-	mpf_init(p_mpf);
-	mpf_init(q_mpf);
-	mpf_init  (matchingProb_mpf);
-	mpf_set_ui(matchingProb_mpf, 0);
-	mpf_init(numAverageTrialsForOneMatch_mpf);
+#define SIZE_PROBABILITY_ARRAY 72
+	boost::multiprecision::number<boost::multiprecision::cpp_dec_float<128>> matchingProb_mpf, numAverageTrialsForOneMatch_mpf, p_mpf, q_mpf, probArray[SIZE_PROBABILITY_ARRAY];
+	matchingProb_mpf = 0;
 	minLenExpandedPattern = lenTripcode;
 	maxLenExpandedPattern = 0; 
 	for (int32_t i = 0; i < numExpandedPatterns; ++i) {
@@ -1285,62 +1282,51 @@ void LoadTargetPatterns(BOOL displayProgress)
 			minLenExpandedPattern = len;
 		if (len > maxLenExpandedPattern)
 			maxLenExpandedPattern = len;
-		mpf_set_ui(p_mpf, 1);
+		p_mpf = 1;
 		for (int32_t j = 0; j < len; ++j) {
 			if (lenTripcode == 10 && j == len - 1 && expandedPatternArray[i].pos + len == lenTripcode) {
 				// The following are the only characters that may appear at the end of 10 character tripcodes:
 				//     .26AEIMQUYcgkosw
-				mpf_set_d(q_mpf,
-					     (expandedPatternArray[i].c[j] == SPECIAL_CHAR_ALL  ) ? (16.0 / 16.0) :
+				q_mpf =  (expandedPatternArray[i].c[j] == SPECIAL_CHAR_ALL  ) ? (16.0 / 16.0) :
 						 (expandedPatternArray[i].c[j] == SPECIAL_CHAR_DIGIT) ? ( 2.0 / 16.0) :
 						 (expandedPatternArray[i].c[j] == SPECIAL_CHAR_UPPER) ? ( 7.0 / 16.0) :
 						 (expandedPatternArray[i].c[j] == SPECIAL_CHAR_LOWER) ? ( 6.0 / 16.0) :
-				                                                                ( 1.0 / 16.0)  );
+				                                                                ( 1.0 / 16.0);
 			} else {
-				mpf_set_d(q_mpf,
-					     (expandedPatternArray[i].c[j] == SPECIAL_CHAR_ALL  ) ? (64.0 / 64.0) :
+				q_mpf =  (expandedPatternArray[i].c[j] == SPECIAL_CHAR_ALL  ) ? (64.0 / 64.0) :
 						 (expandedPatternArray[i].c[j] == SPECIAL_CHAR_DIGIT) ? (10.0 / 64.0) :
 						 (expandedPatternArray[i].c[j] == SPECIAL_CHAR_UPPER) ? (26.0 / 64.0) :
 						 (expandedPatternArray[i].c[j] == SPECIAL_CHAR_LOWER) ? (26.0 / 64.0) :
-				                                                                ( 1.0 / 64.0)  );
+				                                                                ( 1.0 / 64.0);
 			}
-			mpf_mul(p_mpf, p_mpf, q_mpf);
+			p_mpf *= q_mpf;
 		}
-		mpf_add(matchingProb_mpf, matchingProb_mpf, p_mpf);
+		matchingProb_mpf += p_mpf;
 	}
-	matchingProb = mpf_get_d(matchingProb_mpf);
+	matchingProb = (double)matchingProb_mpf;
 	//
-#define SIZE_PROBABILITY_ARRAY 72
-	mpf_t probArray[SIZE_PROBABILITY_ARRAY];
 	int32_t   actualSizeProbArray = SIZE_PROBABILITY_ARRAY;
-	for (int32_t i = 0; i < SIZE_PROBABILITY_ARRAY; ++i)
-		mpf_init(probArray[i]);
-	mpf_set_ui(probArray[0], 1);
-	mpf_sub   (probArray[0], probArray[0], matchingProb_mpf);
+	probArray[0] = 1;
+	probArray[0] -= matchingProb_mpf;
 	for (int32_t i = 1; i < SIZE_PROBABILITY_ARRAY; ++i) {
-		mpf_mul(probArray[i], probArray[i - 1], probArray[i - 1]);
-		if (mpf_cmp_d(probArray[i], 0.5L) < 0) {
+		probArray[i] = probArray[i - 1] * probArray[i - 1];
+		if (probArray[i] < 0.5) {
 			actualSizeProbArray = i;
 			break;
 		}
 	}
-	mpf_set_ui(numAverageTrialsForOneMatch_mpf, 0);
-	mpf_set_d (p_mpf, 1.0L);
+	numAverageTrialsForOneMatch_mpf = 0;
+	p_mpf = 1;
 	for (int32_t i = actualSizeProbArray - 1; i >= 0; --i) {
-		mpf_mul(q_mpf, p_mpf, probArray[i]);
-		while (mpf_cmp_d(q_mpf, 0.5L) > 0) {
-			mpf_set(p_mpf, q_mpf);
-			mpf_set_d(q_mpf, pow(2.0L, i));
-			mpf_add(numAverageTrialsForOneMatch_mpf, numAverageTrialsForOneMatch_mpf, q_mpf);
-			mpf_mul(q_mpf, p_mpf, probArray[i]);
+		q_mpf = p_mpf * probArray[i];
+		while (q_mpf > 0.5) {
+			p_mpf = q_mpf;
+			q_mpf = pow(2.0L, i);
+			numAverageTrialsForOneMatch_mpf += q_mpf;
+			q_mpf = p_mpf * probArray[i];
 		}
 	}
-	numAverageTrialsForOneMatch = mpf_get_d(numAverageTrialsForOneMatch_mpf);
-	//
-	for (int32_t i = 0; i < SIZE_PROBABILITY_ARRAY; ++i)
-		mpf_clear(probArray[i]);
-	mpf_clear(p_mpf);
-	mpf_clear(q_mpf);
+	numAverageTrialsForOneMatch = (double)(numAverageTrialsForOneMatch_mpf);
 
 #ifdef DEBUG_DISPLAY_NUM_COLLISIONS
 	if (numCollisions) {
@@ -1353,7 +1339,7 @@ void LoadTargetPatterns(BOOL displayProgress)
 	if (displayProgress) {
 		//      01234567890123456789012345678901234567890123456789012345678901234567890123456789
 		printf("                                                                               ");
-		ResetCursorPos(0);
+		reset_cursor_pos(0);
 		printf("\n");
 	}
 }

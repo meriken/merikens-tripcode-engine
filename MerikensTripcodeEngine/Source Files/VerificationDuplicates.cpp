@@ -44,9 +44,7 @@
 // VARIABLES                                                                 //
 ///////////////////////////////////////////////////////////////////////////////
 
-char *crypt(char *key, char *salt);
-
-static lightweight_recursive_mutex mutex;
+static spinlock duplicates_spinlock;
 
 typedef struct TripcodeLinkedList {
 	struct TripcodeLinkedList *next;
@@ -68,7 +66,7 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 {
 	BOOL result = FALSE;
 
-	LOCK_MUTEX(mutex);
+	duplicates_spinlock.lock();
 
 	// Initialize the table.
 	if (!wasMatchedTripcodeTableInitialized) {
@@ -115,6 +113,6 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 	matchedTripcodeTable[tableIndex] = newNode;
 
 exit:
-	UNLOCK_MUTEX(mutex);
+	duplicates_spinlock.unlock();
 	return result;
 }

@@ -45,10 +45,10 @@
 			printf("[error],%d\n", (code));                      \
 			fflush(stdout);                                       \
 		} else {                                                  \
-			ResetCursorPos(prevLineCount);                        \
+			reset_cursor_pos(prevLineCount);                        \
 			printf("\nERROR\n=====\n  %s\n\a\n  Hit any key to exit.", (msg));                \
 			_getch();                                            \
-			ShowCursor();                                         \
+			show_cursor();                                         \
 		}                                                         \
 		ExitProcess(1);                                           \
 	}                                                             \
@@ -63,13 +63,13 @@
 			fflush(stdout);                                       \
 		} else {                                          \
 			char line[256];                               \
-			ResetCursorPos(prevLineCount);                        \
+			reset_cursor_pos(prevLineCount);                        \
 			strcpy(line, "\nERROR\n=====\n  ");           \
 			strcat(line, (msg));                          \
 			strcat(line, "\n\a\n  Hit any key to exit.");                          \
 			printf(line, (arg1));                         \
 			_getch();                                    \
-			ShowCursor();                                 \
+			show_cursor();                                 \
 		}                                                 \
 		ExitProcess(1);                                   \
 	}                                                     \
@@ -85,7 +85,7 @@
 				printf("[error],%d\n", ERROR_CUDA);                                           \
 				fflush(stdout);                                                               \
 			} else {                                                                          \
-				ResetCursorPos(prevLineCount);                                                \
+				reset_cursor_pos(prevLineCount);                                                \
 				char *p = __FILE__, *file_name = p;                                           \
 				for (; *p; ++p)                                                               \
 				    if (*p == '\\' || *p == '/')                                              \
@@ -93,7 +93,7 @@
 				printf("\nERROR\n=====\n  CUDA Function Call Failed: %s [%d] (file '%s', line %d)\n  The video card may be low on resources.\n\a\n  Hit any key to exit.", \
 						cudaGetErrorString(_errorCode), (int32_t)_errorCode, file_name, __LINE__); \
 				_getch();                                                                     \
-				ShowCursor();                                                                 \
+				show_cursor();                                                                 \
 			}                                                                                 \
 			ExitProcess(1);                                                                   \
 		}                                                                                     \
@@ -110,7 +110,7 @@
 				printf("[error],%d\n", ERROR_OPENCL);                                              \
 				fflush(stdout);                                                                    \
 			} else {                                                                               \
-				ResetCursorPos(prevLineCount);                                                     \
+				reset_cursor_pos(prevLineCount);                                                     \
 				char *p = __FILE__, *file_name = p;                                           \
 				for (; *p; ++p)                                                               \
 				    if (*p == '\\' || *p == '/')                                              \
@@ -118,7 +118,7 @@
 				printf("\nERROR\n=====\n  OpenCL Function Call Failed: %s (file '%s', line %d)\n\a\n  Hit any key to exit.", \
 						ConvertOpenCLErrorCodeToString(_errorCode), file_name, __LINE__);          \
 				_getch();                                                                          \
-				ShowCursor();                                                                      \
+				show_cursor();                                                                      \
 			}                                                                                      \
 			ExitProcess(1);                                                                        \
 		}                                                                                          \
@@ -133,10 +133,10 @@
 			printf("[error],%d\n", ERROR_ASSERTION);                                              \
 			fflush(stdout);                                                                    \
 		} else {                                                                                        \
-			ResetCursorPos(prevLineCount);                        \
+			reset_cursor_pos(prevLineCount);                        \
 			printf("\nERROR\n=====\n  Assertion Failed: file %s, line %d\n\a\n  Hit any key to exit.", __FILE__, __LINE__); \
 			_getch();                                                                                  \
-			ShowCursor();                                                                               \
+			show_cursor();                                                                               \
 		}                                                                                               \
 		ExitProcess(1);                                                                                 \
 	}                                                                                                   \

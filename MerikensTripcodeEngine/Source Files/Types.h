@@ -60,26 +60,26 @@ struct RegexPattern {
 	BOOL            endsAtLastChar;
 	BOOL            wereVerticalBarsProcessed;
 	//
-	int32_t             depth;
+	int32_t         depth;
 	unsigned char   expandedAtLowerDepth [MAX_NUM_DEPTHS_IN_REGEX_PATTERN - 1][MAX_LEN_TARGET_PATTERN + 1];
 	unsigned char   remainingAtLowerDepth[MAX_NUM_DEPTHS_IN_REGEX_PATTERN - 1][MAX_LEN_TARGET_PATTERN + 1];
 	//
-	int32_t             numSubexpressions;
+	int32_t         numSubexpressions;
 	unsigned char   subexpressions[MAX_NUM_SUBEXPRESSIONS_IN_REGEX_PATTERN][MAX_LEN_TARGET_PATTERN + 1];
 	BOOL            wereSubexpressionsSet[MAX_NUM_SUBEXPRESSIONS_IN_REGEX_PATTERN];
-	int32_t             subexpressionIndexAtLowerDepth[MAX_NUM_DEPTHS_IN_REGEX_PATTERN - 1];
+	int32_t         subexpressionIndexAtLowerDepth[MAX_NUM_DEPTHS_IN_REGEX_PATTERN - 1];
 	BOOL            expandSpecialCharactersInParentheses;
 };
 
 struct GPUOutput {
-	uint32_t  numGeneratedTripcodes;
-	unsigned char numMatchingTripcodes;
+	uint32_t        numGeneratedTripcodes;
+	unsigned char   numMatchingTripcodes;
 	TripcodeKeyPair pair;
 };
 
 struct Options {
-	int32_t  GPUIndex;
-	int32_t  CUDANumBlocksPerSM;
+	int32_t GPUIndex;
+	int32_t CUDANumBlocksPerSM;
 	BOOL beepWhenNewTripcodeIsFound;
 	BOOL outputInvalidTripcode;
 	BOOL warnSpeedDrop;
@@ -87,9 +87,9 @@ struct Options {
 	BOOL testNewCode;
 	int32_t  numCPUSearchThreads;
 	BOOL redirection;
-	int32_t  openCLNumWorkItemsPerCU;
-	int32_t  openCLNumWorkItemsPerWG;
-	int32_t  openCLNumThreads;
+	int32_t openCLNumWorkItemsPerCU;
+	int32_t openCLNumWorkItemsPerWG;
+	int32_t openCLNumThreads;
 	BOOL useOneByteCharactersForKeys;
 	BOOL searchForHisekiOnCPU;
 	BOOL searchForKakuhiOnCPU;
@@ -109,106 +109,51 @@ struct Options {
 };
 
 struct CUDADeviceSearchThreadInfo {
-	int32_t   CUDADeviceIndex;
-	// int32_t          index;
-	int32_t          subindex;
-	cudaDeviceProp  properties;
-	char  status[LEN_LINE_BUFFER_FOR_SCREEN];
-	std::mutex mutex;
-	//
-	uint64_t timeLastUpdated;
+	int32_t        CUDADeviceIndex;
+	int32_t        subindex;
+	cudaDeviceProp properties;
+	char           status[LEN_LINE_BUFFER_FOR_SCREEN];
+	std::mutex     mutex;
+	uint64_t       timeLastUpdated;
 };
 
 struct OpenCLDeviceSearchThreadInfo {
 	cl_device_id openCLDeviceID;
-	int32_t          index;
-	int32_t          subindex;
+	int32_t      index;
+	int32_t      subindex;
 	char         status[LEN_LINE_BUFFER_FOR_SCREEN];
-	//
-	int32_t          deviceNo;
+	int32_t      deviceNo;
 	double       currentSpeed;
 	double       averageSpeed;
 	double       totalNumGeneratedTripcodes;
-	uint32_t numDiscardedTripcodes;
-	uint32_t numRestarts;
+	uint32_t     numDiscardedTripcodes;
+	uint32_t     numRestarts;
 	BOOL         runChildProcess;
 	HANDLE       childProcess;
-	uint64_t        timeLastUpdated;
+	uint64_t     timeLastUpdated;
 };
 
 #ifndef __CUDACC__
-#ifdef _WINDOWS_
-//#if 0
 
-class lightweight_recursive_mutex {
-	CRITICAL_SECTION critical_section;
-
-public:
-	lightweight_recursive_mutex()
-	{
-		InitializeCriticalSection(&critical_section);
-	}
-
-	~lightweight_recursive_mutex()
-	{
-		DeleteCriticalSection(&critical_section);
-	}
-
-	void lock()
-	{
-		EnterCriticalSection(&critical_section);
-	}
-
-	void unlock()
-	{
-		LeaveCriticalSection(&critical_section);
-	}
-};
-
-#else
-
-class lightweight_recursive_mutex {
+class spinlock {
 	std::atomic_flag flag;
-	std::thread::id current_thread;
-	int counter;
 
 public:
-	lightweight_recursive_mutex() : counter(0), current_thread(std::thread::id())
+	spinlock()
 	{
 		flag.clear();
 	}
 
 	void lock()
 	{
-		auto my_id = std::this_thread::get_id();
-		while (true) {
-			while (flag.test_and_set(std::memory_order_acquire))
-				;
-			if (current_thread == my_id || current_thread == std::thread::id()) {
-				++counter;
-				current_thread = my_id;
-				flag.clear(std::memory_order_release);
-				return;
-			}
-			flag.clear(std::memory_order_release);
-		}
+		while (flag.test_and_set(std::memory_order_acquire))
+			std::this_thread::yield();
 	}
 
 	void unlock()
 	{
-		auto my_id = std::this_thread::get_id();
-		while (true) {
-			while (flag.test_and_set(std::memory_order_acquire))
-				;
-			if (current_thread == my_id) {
-				if (--counter <= 0)
-					current_thread = std::thread::id();;
-				flag.clear(std::memory_order_release);
-				return;
-			}
-			flag.clear(std::memory_order_release);
-		}
+		flag.clear(std::memory_order_release);
 	}
 };
-#endif
+
 #endif

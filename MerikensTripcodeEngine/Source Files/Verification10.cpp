@@ -46,11 +46,11 @@
 
 char *crypt(char *key, char *salt);
 
-static lightweight_recursive_mutex descrypt_mutex;
+static spinlock descrypt_spinlock;
 
 BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-        LOCK_MUTEX(descrypt_mutex);
+        descrypt_spinlock.lock();
 
         if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
                 return FALSE;
@@ -78,14 +78,14 @@ BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
         fflush(stdout);
 #endif
 
-        UNLOCK_MUTEX(descrypt_mutex);
+        descrypt_spinlock.unlock();
 
         return result;
 }
 
 void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-    LOCK_MUTEX(descrypt_mutex);
+    descrypt_spinlock.lock();
 
     char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
     BOOL fillRestWithZero = FALSE;
@@ -102,7 +102,7 @@ void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
     strncpy((char *)tripcode, crypt((char *)actualKey, (char *)(actualKey + 1)) + 3, 10);
 	tripcode[10] = '\0';
 
-    UNLOCK_MUTEX(descrypt_mutex);
+    descrypt_spinlock.unlock();
 }
 
 

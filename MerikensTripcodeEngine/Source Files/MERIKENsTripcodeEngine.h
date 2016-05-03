@@ -57,6 +57,7 @@
 
 // Standard C++ libraries
 #include <cstdlib>
+#include <iostream>
 #include <atomic>
 #include <chrono>
 #ifndef __CUDACC__
@@ -78,7 +79,7 @@
 #include <CL/cl.h>
 
 // For MPIR
-#include "mpir.h"
+// #include "mpir.h"
 
 //
 #include "Constants.h"
@@ -106,7 +107,6 @@ extern FILE *tripcodeFile;
 
 // Current and previous status
 extern double       matchingProb,     numAverageTrialsForOneMatch;
-extern mpf_t        matchingProb_mpf, numAverageTrialsForOneMatch_mpf;
 extern double totalTime;
 extern double currentSpeed, currentSpeed_CUDADevice, currentSpeed_CPU, maximumSpeed;
 extern uint32_t numValidTripcodes,     numDiscardedTripcodes;
@@ -144,11 +144,11 @@ extern int32_t CUDADeviceCount;
 extern int32_t searchDevice;
 
 // For multi-threading
-extern std::mutex system_command_mutex;
-extern char              nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
-extern char              nameEventForTerminating[MAX_LEN_INPUT_LINE + 1];
-#define LOCK_MUTEX(mutex) (mutex).lock()
-#define UNLOCK_MUTEX(mutex) (mutex).unlock()
+#ifndef __CUDACC__
+extern spinlock system_command_spinlock;
+#endif
+extern char     nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
+extern char     nameEventForTerminating[MAX_LEN_INPUT_LINE + 1];
 
 //
 extern void          AddToNumGeneratedTripcodesByCPU(uint32_t num);
@@ -174,8 +174,8 @@ extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, 
 extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, HANDLE childProcess);
 
 //
-extern void ShowCursor();
-extern void ResetCursorPos(int32_t deltaY);
+extern void show_cursor();
+extern void reset_cursor_pos(int n);
 
 // Output
 extern double ProcessGPUOutput(unsigned char *key, GPUOutput *outputArray, uint32_t sizeOutputArray, BOOL newFormat);

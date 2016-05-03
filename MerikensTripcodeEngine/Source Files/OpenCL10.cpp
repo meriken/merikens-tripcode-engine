@@ -480,7 +480,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	};
 	cl_int         openCLError;
 
-	LOCK_MUTEX(system_command_mutex);
+	system_command_spinlock.lock();
 
 	// Create an expansion function based on the salt.
 	unsigned char  salt[2];
@@ -613,7 +613,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		system(assemblerCommand);
 	}
 
-	UNLOCK_MUTEX(system_command_mutex);
+	system_command_spinlock.unlock();
 }
 
 void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
