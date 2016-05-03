@@ -1,7 +1,7 @@
 ﻿Meriken's Tripcode Engine
 =========================
 
-"Meriken's Tripcode Engine" is a Windows application designed to generate custom/vanity tripcodes at maximum speed. 
+*I am currently working on a cross-platform version of this application.* "Meriken's Tripcode Engine" is a Windows application designed to generate custom/vanity tripcodes at maximum speed. 
 It is arguably the fastest and most powerful program of its kind. It makes effecitive use of available computing power of CPUs and GPUs, 
 and the user can specify flexible regex patterns for tripcodes. It features highly optimized, extensively parallelized 
 implementations of bitslice DES and SHA-1 for OpenCL, AMD GCN, NVIDIA CUDA, and Intel SSE2/AVX/AVX2.
@@ -39,12 +39,12 @@ I am also working on the English version of my tripcode search service and would
 
 You need the following tools to build Meriken's Tripcode Engine.
 
-* Visual Studio 2010 Professional
+* Visual Studio 2013 Community
 * CUDA Toolkit 7.5
 * AMD APP SDK 3.0
 * YASM 1.2.0
 
-This program uses Multiple Precision Integers and Rationals (MPIR). Make sure to copy MPIR header and library files into appropriate Visual Studio folders.
+This program uses Boost 1.60.0 and Boost Process. Make sure to copy Boost files into appropriate Visual Studio folders.
 
 See `MerikensTripcodeEngine.h` for various build options. Don't forget to define `ENGLISH_VERSION` if you want to build an English version for 4chan.
 
@@ -52,19 +52,11 @@ See `MerikensTripcodeEngine.h` for various build options. Don't forget to define
 
 You need the following software installed in order to run the application:
 
-* [Microsoft Visual C++ 2010 Redistributable Package (x86)][1]
-* [Microsoft Visual C++ 2010 Redistributable Package (x64)][2]
-  (if you are using a 64bit operating system)
-* [Visual C++ Redistributable for Visual Studio 2015][3]
-  (if you are using an AMD graphics card) 
 * [AMD Radeon Desktop Video Card Driver][4]
   (if you are using an AMD graphics card)
 * [NVIDIA Display Driver Version 352.78 or later][5]
   (if you are using an NVIDIA graphics card)
 
-[1]: https://www.microsoft.com/en-us/download/details.aspx?id=5555
-[2]: https://www.microsoft.com/en-us/download/details.aspx?id=14632
-[3]: https://www.microsoft.com/en-us/download/details.aspx?id=48145
 [4]: http://support.amd.com/en-us/download
 [5]: http://www.nvidia.com/Download/index.aspx?lang=en-us
 
