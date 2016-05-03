@@ -155,6 +155,7 @@ spinlock current_state_spinlock;
 spinlock cuda_device_search_thread_info_array_spinlock;
 spinlock opencl_device_search_thread_info_array_spinlock;
 spinlock system_command_spinlock;
+spinlock boost_process_spinlock;
 uint32_t     numGeneratedTripcodes_GPU;
 uint32_t     numGeneratedTripcodesByGPUInMillions;
 uint32_t     numGeneratedTripcodes_CPU;

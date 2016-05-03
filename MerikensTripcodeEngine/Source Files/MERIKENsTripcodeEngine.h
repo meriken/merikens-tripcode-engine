@@ -149,6 +149,7 @@ extern int32_t searchDevice;
 // For multi-threading
 #ifndef __CUDACC__
 extern spinlock system_command_spinlock;
+extern spinlock boost_process_spinlock;
 #endif
 extern char     nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
 extern char     nameEventForTerminating[MAX_LEN_INPUT_LINE + 1];

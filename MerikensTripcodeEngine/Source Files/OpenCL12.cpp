@@ -261,6 +261,8 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		strcpy(childProcessPath + applicationPathLen - 13, ".exe"); // For 32-bit OpenCL binaries
 	}
 
+	boost_process_spinlock.lock();
+
 #ifdef _WINDOWS_
 	std::vector<std::wstring> args;
 	typedef std::codecvt_byname<wchar_t, char, std::mbstate_t> converter_type;
@@ -322,14 +324,18 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	boost::iostreams::file_descriptor_source source(pipe.source, boost::iostreams::close_handle);
 	boost::iostreams::stream<boost::iostreams::file_descriptor_source> input_stream(source);
 
+	boost_process_spinlock.unlock();
+
 	while(!GetTerminationState())
 	{
+		boost_process_spinlock.lock();
 		std::string line;
 		if (!std::getline(input_stream, line))
 			break;
 		char line_buffer[65536];
 		strncpy(line_buffer, line.data(), sizeof(line_buffer) - 1);
 		line_buffer[sizeof(line_buffer) - 1] = '\0';
+		boost_process_spinlock.unlock();
 
 		if (strncmp(line_buffer, "[tripcode],", strlen("[tripcode],")) == 0) {
 			unsigned char tripcode[MAX_LEN_TRIPCODE + 1];
