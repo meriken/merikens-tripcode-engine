@@ -614,17 +614,17 @@ void CheckSearchThreads()
 			auto native_handle = opencl_device_search_threads[index]->native_handle();
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
+			if (info->child_process)
+				boost::process::terminate(*(info->child_process));
+			info->child_process = NULL;
 #ifdef _WINDOWS_
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
 			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 			pthread_cancel(native_handle);
 #endif
-			if (info->child_process)
-				boost::process::terminate(*(info->child_process));
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
-			info->child_process = NULL;
 			++info->numRestarts;
 
 			uint32_t winThreadID;
