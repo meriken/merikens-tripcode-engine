@@ -1,7 +1,7 @@
 ﻿Meriken's Tripcode Engine
 =========================
 
-**I am currently working on a cross-platform version of this application.** 
+**I am currently working on a cross-platform version of this application. Donations are greatly appreciated.** 
 
 "Meriken's Tripcode Engine" is a Windows application designed to generate custom/vanity tripcodes at maximum speed. 
 It is arguably the fastest and most powerful program of its kind. It makes effecitive use of available computing power of CPUs and GPUs, 
