@@ -129,7 +129,7 @@ struct OpenCLDeviceSearchThreadInfo {
 	uint32_t     numDiscardedTripcodes;
 	uint32_t     numRestarts;
 	BOOL         runChildProcess;
-	HANDLE       childProcess;
+	boost::process::child *child_process;
 	uint64_t     timeLastUpdated;
 };
 

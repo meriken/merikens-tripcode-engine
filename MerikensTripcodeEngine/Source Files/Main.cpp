@@ -554,7 +554,7 @@ void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *s
 	opencl_device_search_thread_info_array_spinlock.unlock();
 }
 
-void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, HANDLE childProcess)
+void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, boost::process::child *child_process)
 {
 	opencl_device_search_thread_info_array_spinlock.lock();
 	ASSERT(info->runChildProcess);
@@ -563,7 +563,7 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	info->averageSpeed = averageSpeed;
 	info->totalNumGeneratedTripcodes = totalNumGeneratedTripcodes;
 	info->numDiscardedTripcodes = numDiscardedTripcodes;
-	info->childProcess = childProcess;
+	info->child_process = child_process;
 	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 	opencl_device_search_thread_info_array_spinlock.unlock();
 }
@@ -620,10 +620,11 @@ void CheckSearchThreads()
 			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 			pthread_cancel(native_handle);
 #endif
-			TerminateProcess(info->childProcess, 0);
+			if (info->child_process)
+				boost::process::terminate(*(info->child_process));
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
-			info->childProcess = NULL;
+			info->child_process = NULL;
 			++info->numRestarts;
 
 			uint32_t winThreadID;
@@ -1851,7 +1852,7 @@ void StartOpenCLDeviceSearchThreads()
 			openCLDeviceSearchThreadInfoArray[i].subindex        = -1;
 			openCLDeviceSearchThreadInfoArray[i].status[0]       = '\0';
 			openCLDeviceSearchThreadInfoArray[i].runChildProcess = openCLRunChildProcesses;
-			openCLDeviceSearchThreadInfoArray[i].childProcess = NULL;
+			openCLDeviceSearchThreadInfoArray[i].child_process = NULL;
 			//
 			openCLDeviceSearchThreadInfoArray[i].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 			openCLDeviceSearchThreadInfoArray[i].currentSpeed               = 0;
@@ -1871,7 +1872,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
 					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = FALSE;
-					openCLDeviceSearchThreadInfoArray[i].childProcess = NULL;
+					openCLDeviceSearchThreadInfoArray[i].child_process = NULL;
 					openCLDeviceSearchThreadInfoArray[i].numRestarts = 0;
 					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 				}
@@ -1886,7 +1887,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
 					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = TRUE;
-					openCLDeviceSearchThreadInfoArray[i].childProcess = NULL;
+					openCLDeviceSearchThreadInfoArray[i].child_process = NULL;
 					//
 					openCLDeviceSearchThreadInfoArray[i].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 					openCLDeviceSearchThreadInfoArray[i].currentSpeed               = 0;
@@ -1908,7 +1909,7 @@ void StartOpenCLDeviceSearchThreads()
 		openCLDeviceSearchThreadInfoArray[0].subindex        = -1;
 		openCLDeviceSearchThreadInfoArray[0].status[0]       = '\0';
 		openCLDeviceSearchThreadInfoArray[0].runChildProcess = openCLRunChildProcesses;
-		openCLDeviceSearchThreadInfoArray[0].childProcess = NULL;
+		openCLDeviceSearchThreadInfoArray[0].child_process = NULL;
 		//
 		openCLDeviceSearchThreadInfoArray[0].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 		openCLDeviceSearchThreadInfoArray[0].currentSpeed               = 0;
@@ -1926,7 +1927,7 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].subindex        = j;
 				openCLDeviceSearchThreadInfoArray[j].status[0]       = '\0';
 				openCLDeviceSearchThreadInfoArray[j].runChildProcess = FALSE;
-				openCLDeviceSearchThreadInfoArray[j].childProcess = NULL;
+				openCLDeviceSearchThreadInfoArray[j].child_process = NULL;
 				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 			}
 		} else {
@@ -1938,7 +1939,7 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].subindex       = j;
 				openCLDeviceSearchThreadInfoArray[j].status[0]      = '\0';
 				openCLDeviceSearchThreadInfoArray[j].runChildProcess = TRUE;
-				openCLDeviceSearchThreadInfoArray[j].childProcess = NULL;
+				openCLDeviceSearchThreadInfoArray[j].child_process = NULL;
 				//
 				openCLDeviceSearchThreadInfoArray[j].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 				openCLDeviceSearchThreadInfoArray[j].currentSpeed               = 0;
@@ -1953,13 +1954,17 @@ void StartOpenCLDeviceSearchThreads()
 
 	if (lenTripcode == 12) {
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			opencl_device_search_threads[i] = new std::thread(Thread_SearchForSHA1TripcodesOnOpenCLDevice, &(openCLDeviceSearchThreadInfoArray[i]));
+			opencl_device_search_threads[i] = new std::thread(
+				openCLDeviceSearchThreadInfoArray[i].runChildProcess ? Thread_RunChildProcessForOpenCLDevice : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
+				&(openCLDeviceSearchThreadInfoArray[i]));
 			ERROR0((opencl_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a OpenCL device search thread.");
 		}
 	} else {
 		ASSERT(lenTripcode == 10);
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			opencl_device_search_threads[i] = new std::thread(Thread_SearchForDESTripcodesOnOpenCLDevice, &(openCLDeviceSearchThreadInfoArray[i]));
+			opencl_device_search_threads[i] = new std::thread(
+				openCLDeviceSearchThreadInfoArray[i].runChildProcess ? Thread_RunChildProcessForOpenCLDevice : Thread_SearchForDESTripcodesOnOpenCLDevice,
+				&(openCLDeviceSearchThreadInfoArray[i]));
 			ERROR0((opencl_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a OpenCL device search thread.");
 		}
 	}

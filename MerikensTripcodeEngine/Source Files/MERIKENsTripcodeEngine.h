@@ -65,6 +65,9 @@
 #endif
 #include <mutex>
 
+// Boost
+#include <boost/process.hpp> // Boost.Process 0.5
+
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 #include <nmmintrin.h>
 #include <smmintrin.h>
@@ -171,7 +174,7 @@ extern char *GetErrorMessage(int32_t errorCode);
 //
 extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, char *status);
 extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status);
-extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, HANDLE childProcess);
+extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, boost::process::child *child_process);
 
 //
 extern void show_cursor();

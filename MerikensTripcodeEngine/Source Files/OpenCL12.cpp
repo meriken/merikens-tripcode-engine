@@ -42,6 +42,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "MerikensTripcodeEngine.h"
+#include <locale>
+#include <codecvt>
+#include <boost/iostreams/stream.hpp>
+#include <boost/locale.hpp>
 
 
 
@@ -240,10 +244,9 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
 	// This thread may be restarted. See CheckSearchThreads().
-	double       prevTotalNumGeneratedTripcodes = info->totalNumGeneratedTripcodes;
+	double   prevTotalNumGeneratedTripcodes = info->totalNumGeneratedTripcodes;
 	uint32_t prevNumDiscardedTripcodes      = info->numDiscardedTripcodes;
-	
-	char   status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
+	UpdateOpenCLDeviceStatus_ChildProcess(info, "[process] Launching a child process...",  0, 0, prevTotalNumGeneratedTripcodes, prevNumDiscardedTripcodes, NULL);
 
 	size_t  numWorkItemsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_COMPUTE_UNIT;
 	size_t  localWorkSize = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_WORK_GROUP;
@@ -257,132 +260,96 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	} else if (strcmp(childProcessPath + applicationPathLen - 13, "64_NVIDIA.exe") == 0) {
 		strcpy(childProcessPath + applicationPathLen - 13, ".exe"); // For 32-bit OpenCL binaries
 	}
-	char commandLine[MAX_LEN_COMMAND_LINE + 1];
-	sprintf(commandLine,
-	        "\"%s\" --output-for-redirection --disable-tripcode-checks -l %d -g -d %d -y %d -z %d -a %d -b 1",
-			childProcessPath,
-			lenTripcode,
-			info->deviceNo,
-			numWorkItemsPerComputeUnit,
-			localWorkSize,
-			options.openCLNumThreads);
+
+#ifdef _WINDOWS_
+	std::vector<std::wstring> args;
+	typedef std::codecvt_byname<wchar_t, char, std::mbstate_t> converter_type;
+	std::wstring_convert<converter_type> converter(new converter_type("cp" + std::to_string(GetACP())));
+#define CONVERT_FROM_BYTES(s) converter.from_bytes(s)
+#else
+	std::vector<std::string> args;
+#define CONVERT_FROM_BYTES(s) (s)
+#endif
+	args.push_back(CONVERT_FROM_BYTES(childProcessPath));
+	args.push_back(CONVERT_FROM_BYTES("--output-for-redirection"));
+	args.push_back(CONVERT_FROM_BYTES("--disable-tripcode-checks"));
+	args.push_back(CONVERT_FROM_BYTES("-l"));
+	args.push_back(CONVERT_FROM_BYTES(std::to_string(lenTripcode)));
+	args.push_back(CONVERT_FROM_BYTES("-g"));
+	args.push_back(CONVERT_FROM_BYTES("-d" ));
+	args.push_back(CONVERT_FROM_BYTES(std::to_string(info->deviceNo)));
+	args.push_back(CONVERT_FROM_BYTES("-y"));
+	args.push_back(CONVERT_FROM_BYTES(std::to_string(numWorkItemsPerComputeUnit)));
+	args.push_back(CONVERT_FROM_BYTES("-z"));
+	args.push_back(CONVERT_FROM_BYTES(std::to_string(localWorkSize)));
+	args.push_back(CONVERT_FROM_BYTES("-a"));
+	args.push_back(CONVERT_FROM_BYTES(std::to_string(options.openCLNumThreads)));
+	args.push_back(CONVERT_FROM_BYTES("-b"));
+	args.push_back(CONVERT_FROM_BYTES("1"));
 	for (int32_t patternFileIndex = 0; patternFileIndex < numPatternFiles; ++patternFileIndex) {
-		strcat(commandLine, " -f ");
-		strcat(commandLine, patternFilePathArray[patternFileIndex]);
+		args.push_back(CONVERT_FROM_BYTES("-f"));
+		args.push_back(CONVERT_FROM_BYTES(std::string(patternFilePathArray[patternFileIndex])));
 	}
-	if (options.useOpenCLForCUDADevices) {
-		strcat(commandLine, " --use-opencl-for-cuda-devices");
-	}
-	if (!options.enableGCNAssembler) {
-		strcat(commandLine, " --disable-gcn-assembler");
-	}
+	if (options.useOpenCLForCUDADevices)
+		args.push_back(CONVERT_FROM_BYTES("--use-opencl-for-cuda-devices"));
+	if (!options.enableGCNAssembler)
+		args.push_back(CONVERT_FROM_BYTES("--disable-gcn-assembler"));
 	if (options.useOnlyASCIICharactersForKeys) {
-		strcat(commandLine, " --use-ascii-characters-for-keys");
+		args.push_back(CONVERT_FROM_BYTES("--use-ascii-characters-for-keys"));
 	} else if (options.useOneByteCharactersForKeys) {
-		strcat(commandLine, " --use-one-byte-characters-for-keys");
+		args.push_back(CONVERT_FROM_BYTES("--use-one-byte-characters-for-keys"));
 	} else if (options.maximizeKeySpace) {
-		strcat(commandLine, " --maximize-key-space");
+		args.push_back(CONVERT_FROM_BYTES("--maximize-key-space"));
 	} else {
-		strcat(commandLine, " --use-one-and-two-byte-characters-for-keys");
+		args.push_back(CONVERT_FROM_BYTES("--use-one-and-two-byte-characters-for-keys"));
 	}
 	if (strlen(nameMutexForPausing) > 0) {
-		strcat(commandLine, " -e ");
-		strcat(commandLine, nameMutexForPausing);
+		args.push_back(CONVERT_FROM_BYTES("-e"));
+		args.push_back(CONVERT_FROM_BYTES(std::string(nameMutexForPausing)));
 	}
 	if (strlen(nameEventForTerminating) > 0) {
-		strcat(commandLine, " -E ");
-		strcat(commandLine, nameEventForTerminating);
+		args.push_back(CONVERT_FROM_BYTES("-E"));
+		args.push_back(CONVERT_FROM_BYTES(std::string(nameEventForTerminating)));
 	}
-	// printf("commandLine: %s\n", commandLine);
 
-	HANDLE hChildProcess = NULL;
-	HANDLE hStdIn = NULL; // Handle to parents std input.
-	BOOL   bRunThread = TRUE;
-   
-	HANDLE hOutputReadTmp,hOutputRead,hOutputWrite;
-	HANDLE hInputWriteTmp,hInputRead,hInputWrite;
-	HANDLE hErrorWrite;
-	HANDLE hThread;
-	uint32_t  ThreadId;
-	SECURITY_ATTRIBUTES securityAttributes;
-
-	securityAttributes.nLength= sizeof(SECURITY_ATTRIBUTES);
-	securityAttributes.lpSecurityDescriptor = NULL;
-	securityAttributes.bInheritHandle = TRUE;
-	ERROR0(!CreatePipe(&hOutputReadTmp, &hOutputWrite,   &securityAttributes, 0), ERROR_CHILD_PROCESS, "CreatePipe");
-	ERROR0(!CreatePipe(&hInputRead,     &hInputWriteTmp, &securityAttributes, 0), ERROR_CHILD_PROCESS, "CreatePipe");
-	ERROR0(!DuplicateHandle(GetCurrentProcess(), hOutputWrite,   GetCurrentProcess(), &hErrorWrite, 0, TRUE,  DUPLICATE_SAME_ACCESS), ERROR_CHILD_PROCESS, "DuplicateHandle");
-	ERROR0(!DuplicateHandle(GetCurrentProcess(), hOutputReadTmp, GetCurrentProcess(), &hOutputRead, 0, FALSE, DUPLICATE_SAME_ACCESS), ERROR_CHILD_PROCESS, "DupliateHandle");
-	ERROR0(!DuplicateHandle(GetCurrentProcess(), hInputWriteTmp, GetCurrentProcess(), &hInputWrite, 0, FALSE, DUPLICATE_SAME_ACCESS), ERROR_CHILD_PROCESS, "DupliateHandle");
-	ERROR0(!CloseHandle(hOutputReadTmp), ERROR_CHILD_PROCESS, "CloseHandle");
-	ERROR0(!CloseHandle(hInputWriteTmp), ERROR_CHILD_PROCESS, "CloseHandle");
-	ERROR0((hStdIn = GetStdHandle(STD_INPUT_HANDLE)) == INVALID_HANDLE_VALUE, ERROR_CHILD_PROCESS, "GetStdHandle");
-
-	PROCESS_INFORMATION processInfo;
-	STARTUPINFO startupInfo;
-	ZeroMemory(&startupInfo, sizeof(STARTUPINFO));
-	startupInfo.cb         = sizeof(STARTUPINFO);
-	startupInfo.dwFlags    = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-	startupInfo.hStdOutput = hOutputWrite;
-	startupInfo.hStdInput  = hInputRead;
-	startupInfo.hStdError  = hErrorWrite;
-	startupInfo.wShowWindow =  /* SW_SHOW */ SW_HIDE;
-	WCHAR commandLineWC[MAX_LEN_COMMAND_LINE + 1];
-	MultiByteToWideChar(CP_ACP, 0, commandLine, -1, commandLineWC, MAX_LEN_COMMAND_LINE);
-	ERROR0(!CreateProcess(NULL, commandLineWC, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInfo), ERROR_CHILD_PROCESS, "CreateProcess");
-	hChildProcess = processInfo.hProcess;
-	UpdateOpenCLDeviceStatus_ChildProcess(info, "[process] Started child process.", 0, 0, 0, 0, hChildProcess);
-
-	// Close pipe handles.
-	ERROR0(!CloseHandle(processInfo.hThread), ERROR_CHILD_PROCESS, "CloseHandle");
-	ERROR0(!CloseHandle(hOutputWrite       ), ERROR_CHILD_PROCESS, "CloseHandle");
-	ERROR0(!CloseHandle(hInputRead         ), ERROR_CHILD_PROCESS, "CloseHandle");
-	ERROR0(!CloseHandle(hErrorWrite        ), ERROR_CHILD_PROCESS, "CloseHandle");
-
-	// Launch the thread that gets the input and sends it to the child.
-	// hThread = CreateThread(NULL,0,GetAndSendInputThread,
-	// 						(LPVOID)hInputWrite,0,&ThreadId);
-	// if (hThread == NULL) DisplayError("CreateThread");
-
-	CHAR  lpBuffer[65536];
-	DWORD nBytesRead;
-	uint32_t nCharsWritten;
+	boost::process::pipe pipe = boost::process::create_pipe();
+	boost::iostreams::file_descriptor_sink sink(pipe.sink, boost::iostreams::close_handle);
+	boost::process::child child_process = boost::process::execute(
+		boost::process::initializers::set_args(args),
+		boost::process::initializers::bind_stdout(sink),
+		boost::process::initializers::start_in_dir(applicationDirectory),
+		boost::process::initializers::inherit_env());
+	boost::iostreams::file_descriptor_source source(pipe.source, boost::iostreams::close_handle);
+	boost::iostreams::stream<boost::iostreams::file_descriptor_source> input_stream(source);
 
 	while(!GetTerminationState())
 	{
-		// This line does not work well.
-		// We restart the child process in CheckSearchThreads() instead.
-		// ERROR0(WaitForSingleObject(hChildProcess, 0) != WAIT_TIMEOUT, ERROR_CHILD_PROCESS, "A child process terminated unexpectedly.");
+		std::string line;
+		if (!std::getline(input_stream, line))
+			break;
+		char line_buffer[65536];
+		strncpy(line_buffer, line.data(), sizeof(line_buffer) - 1);
+		line_buffer[sizeof(line_buffer) - 1] = '\0';
 
-		if (!ReadFile(hOutputRead, lpBuffer, sizeof(lpBuffer) - 1, &nBytesRead, NULL) || !nBytesRead) {
-			if (GetLastError() == ERROR_BROKEN_PIPE)
-				break;
-			else
-				ERROR0(TRUE, ERROR_CHILD_PROCESS, "ReadFile");
-		}
-		lpBuffer[nBytesRead] = '\0';
-		// printf("%s", lpBuffer);
-		// ERROR0(!WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE), lpBuffer, nBytesRead, &nCharsWritten,NULL), ERROR_CHILD_PROCESS, "WriteConsole");
-
-		if (strncmp(lpBuffer, "[tripcode],", strlen("[tripcode],")) == 0) {
+		if (strncmp(line_buffer, "[tripcode],", strlen("[tripcode],")) == 0) {
 			unsigned char tripcode[MAX_LEN_TRIPCODE + 1];
 			unsigned char key     [MAX_LEN_TRIPCODE_KEY + 1];
 			int32_t i, j;
-			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode                         ] == ',');
-			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode + 1                     ] == '#');
-			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode + 1 + 1 + lenTripcodeKey] == ',');
+			ASSERT(line_buffer[10 + 1 + 2 + lenTripcode                         ] == ',');
+			ASSERT(line_buffer[10 + 1 + 2 + lenTripcode + 1                     ] == '#');
+			ASSERT(line_buffer[10 + 1 + 2 + lenTripcode + 1 + 1 + lenTripcodeKey] == ',');
 			for (i = 0, j = 10 + 1 + 2; i < lenTripcode; ++i, ++j)
-				tripcode[i] = lpBuffer[j];
+				tripcode[i] = line_buffer[j];
 			for (i = 0, j = 10 + 1 + 2 + lenTripcodeKey + 1 + 1; i < lenTripcodeKey; ++i, ++j)
-				key[i] = lpBuffer[j];
+				key[i] = line_buffer[j];
 			tripcode[lenTripcode] = '\0';
 			key     [lenTripcodeKey] = '\0';
 			ProcessPossibleMatch(tripcode, key);
-		} else if (strncmp(lpBuffer, "[status],", strlen("[status],")) == 0) {
+		} else if (strncmp(line_buffer, "[status],", strlen("[status],")) == 0) {
 			double       currentSpeed, averageSpeed, totalNumGeneratedTripcodes;
 			uint32_t numDiscardedTripcodes;
 			char *delimiter = ",";
-			char *currentToken = strtok(lpBuffer, delimiter);                                                                                           //     "[status]"
+			char *currentToken = strtok(line_buffer, delimiter);                                                                                           //     "[status]"
 			BOOL isGood = (currentToken != NULL);
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          //     totalTime,
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%lf", &currentSpeed);       // 	   currentSpeed,
@@ -398,6 +365,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   averageSpeed_CPU);
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%u",  &numDiscardedTripcodes);      // 	   numDiscardedTripcodes
 			if (isGood) {
+				char status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 				sprintf(status,
 						"[process] %.1lfM TPS, %d WI/CU, %d WI/WG, Restarts: %u",
 						averageSpeed / 1000000,
@@ -410,12 +378,12 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 													  averageSpeed, 
 													  prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes, 
 													  prevNumDiscardedTripcodes      + numDiscardedTripcodes, 
-													  hChildProcess);
+													  &child_process);
 			}
-		} else if (strncmp(lpBuffer, "[error],", strlen("[error],")) == 0) {
+		} else if (strncmp(line_buffer, "[error],", strlen("[error],")) == 0) {
 			int32_t   errorCode;
 			char *delimiter = ",";
-			char *currentToken = strtok(lpBuffer, delimiter); // "[error]"
+			char *currentToken = strtok(line_buffer, delimiter); // "[error]"
 			BOOL isGood = (currentToken != NULL);
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%d", &errorCode);
 			errorCode = (isGood) ? (errorCode) : (ERROR_UNKNOWN);
@@ -424,22 +392,6 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 			}
 		}
 	}
-
-	// Force the read on the input to return by closing the stdin handle.
-	// ERROR0(!CloseHandle(hStdIn), ERROR_CHILD_PROCESS, "CloseHandle");
-	CloseHandle(hStdIn);
-
-	// Tell the thread to exit and wait for thread to die.
-	// bRunThread = FALSE;
-	// if (WaitForSingleObject(hThread,INFINITE) == WAIT_FAILED)
-	//	DisplayError("WaitForSingleObject");
-
-	// ERROR0(!CloseHandle(hOutputRead), ERROR_CHILD_PROCESS, "CloseHandle");
-	// ERROR0(!CloseHandle(hInputWrite), ERROR_CHILD_PROCESS, "CloseHandle");
-	CloseHandle(hOutputRead);
-	CloseHandle(hInputWrite);
-
-	// TO DO: Wait for child processes to exit.
 }
 
 static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion)
@@ -522,12 +474,6 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *i
 	char           status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 	char           buildOptions[MAX_LEN_COMMAND_LINE + 1] = ""; 
 	unsigned char  key[MAX_LEN_TRIPCODE + 1];
-
-
-	if (info->runChildProcess) {
-		Thread_RunChildProcessForOpenCLDevice(info);
-		return;
-	}
 
 	// Random wait time between 0 and 10 seconds for increased stability.
 	Sleep((uint32_t)RandomByte() * 10000 / 256);
