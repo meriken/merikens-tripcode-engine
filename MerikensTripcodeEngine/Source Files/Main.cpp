@@ -614,8 +614,8 @@ void CheckSearchThreads()
 			auto native_handle = opencl_device_search_threads[index]->native_handle();
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
-			if (info->child_process)
-				boost::process::terminate(*(info->child_process));
+			//if (info->child_process)
+			//	boost::process::terminate(*(info->child_process));
 			info->child_process = NULL;
 #ifdef _WINDOWS_
 			TerminateThread(native_handle, 0);
