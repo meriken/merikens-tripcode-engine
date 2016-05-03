@@ -88,7 +88,7 @@ __declspec(align(16)) __m128i K3 = _mm_set1_epi32(0xca62c1d6);
 // CPU SEARCH THREAD FOR 12 CHARACTER TRIPCODES                              //
 ///////////////////////////////////////////////////////////////////////////////
 
-inline void ConvertRaw12CharTripcodeIntoDisplayFormat(unsigned int *rawTripcodeArray, unsigned char *tripcode)
+inline void ConvertRaw12CharTripcodeIntoDisplayFormat(uint32_t *rawTripcodeArray, unsigned char *tripcode)
 {
 	tripcode[0]  = base64CharTable[ rawTripcodeArray[0] >> 26                                    ];
 	tripcode[1]  = base64CharTable[(rawTripcodeArray[0] >> 20                            ) & 0x3f];
@@ -105,7 +105,7 @@ inline void ConvertRaw12CharTripcodeIntoDisplayFormat(unsigned int *rawTripcodeA
 }
 
 #define LOOK_FOR_POSSIBLE_MATCH                                                                                                                             \
-	for (int wordIndex = 0; wordIndex < 4; ++wordIndex) {                                                                                                   \
+	for (int32_t wordIndex = 0; wordIndex < 4; ++wordIndex) {                                                                                                   \
 		BOOL found = FALSE;                                                                                                                                 \
 		                                                                                                                                                    \
 		key[0] = ((key[0] & 0xfc) | wordIndex);                                                                                                             \
@@ -139,10 +139,10 @@ inline void ConvertRaw12CharTripcodeIntoDisplayFormat(unsigned int *rawTripcodeA
 			BINARY_SEARCH_FOR_TRIPCODE_CHUNK(0)                                                                                                             \
 			BINARY_SEARCH_FOR_TRIPCODE_CHUNK(1)                                                                                                             \
 		} else {                                                                                                                                            \
-			int maxPos = (searchMode == SEARCH_MODE_FLEXIBLE || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)                                    \
+			int32_t maxPos = (searchMode == SEARCH_MODE_FLEXIBLE || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)                                    \
 						        ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN)                                                                                  \
 						        : (0);                                                                                                                      \
-			for (int pos = 0; pos <= maxPos; ++pos)                                                                                                         \
+			for (int32_t pos = 0; pos <= maxPos; ++pos)                                                                                                         \
 				BINARY_SEARCH_FOR_TRIPCODE_CHUNK(pos)                                                                                                       \
 		}                                                                                                                                                   \
 		                                                                                                                                                    \
@@ -242,7 +242,7 @@ inline void ConvertRaw12CharTripcodeIntoDisplayFormat(unsigned int *rawTripcodeA
 
 #define BINARY_SEARCH_FOR_TRIPCODE_CHUNK(p)                                                                     \
 	if (!found && !smallChunkBitmap[generatedTripcodeChunkArray[p] >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) { \
-		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;                                            \
+		int32_t lower = 0, upper = numTripcodeChunk - 1, middle = lower;                                            \
 		while (lower <= upper) {                                                                                \
 			middle = (lower + upper) >> 1;                                                                      \
 			if (generatedTripcodeChunkArray[p] > tripcodeChunkArray[middle]) {                                  \
@@ -300,13 +300,13 @@ inline void ConvertRaw12CharTripcodeIntoDisplayFormat(unsigned int *rawTripcodeA
 			A = tmp;                                                                                       \
 		}                                                                                                  \
 
-static unsigned int SearchForTripcodesWithMaximumOptimization()
+static uint32_t SearchForTripcodesWithMaximumOptimization()
 {
 	unsigned char  tripcode[MAX_LEN_TRIPCODE + 1], key[MAX_LEN_TRIPCODE_KEY + 1];
-	unsigned int   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
-	unsigned int   numGeneratedTripcodes = 0;
-	int            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);
-	unsigned int   rawTripcodeArray[4][3];
+	uint32_t   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
+	uint32_t   numGeneratedTripcodes = 0;
+	int32_t            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);
+	uint32_t   rawTripcodeArray[4][3];
 	
  	tripcode[lenTripcode]    = '\0';
 	key     [lenTripcodeKey] = '\0';
@@ -338,16 +338,16 @@ static unsigned int SearchForTripcodesWithMaximumOptimization()
 	PW[14] = _mm_set1_epi32(0);
 	PW[15] = _mm_set1_epi32(12 * 8);
 	PW[16] = ROTL(1, _mm_xor_si128(_mm_xor_si128(PW[16 - 3], PW[16 - 8]), PW[16 - 14]));
-	for (int t = 17; t < 80; ++t)
+	for (int32_t t = 17; t < 80; ++t)
 		PW[t] = ROTL(1, _mm_xor_si128(_mm_xor_si128(_mm_xor_si128(PW[(t) - 3], PW[(t) - 8]), PW[(t) - 14]), PW[(t) - 16]));
 
-	for (int indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
+	for (int32_t indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
 		key[1] = keyCharTable_SecondByteAndOneByte[indexKey1];
 
-		for (int indexKey2 = 0; indexKey2 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey2) {
+		for (int32_t indexKey2 = 0; indexKey2 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey2) {
 			key[2] = keyCharTable_FirstByte[indexKey2];
 
-			for (int indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
+			for (int32_t indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
 				key[3] = keyCharTable_SecondByteAndOneByte[indexKey3];
 				
 				__declspec(align(16)) __m128i A = H0;
@@ -556,12 +556,12 @@ static unsigned int SearchForTripcodesWithMaximumOptimization()
 			A = tmp;                                                                                       \
 		}                                                                                                  \
 
-static unsigned int SearchForTripcodesWithOptimization()
+static uint32_t SearchForTripcodesWithOptimization()
 {
 	unsigned char  tripcode[MAX_LEN_TRIPCODE + 1], key[MAX_LEN_TRIPCODE_KEY + 1];
-	unsigned int   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
-	unsigned int   numGeneratedTripcodes = 0;
-	unsigned int   rawTripcodeArray[4][3];
+	uint32_t   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
+	uint32_t   numGeneratedTripcodes = 0;
+	uint32_t   rawTripcodeArray[4][3];
 	
  	tripcode[lenTripcode] = '\0';
 	key     [lenTripcodeKey] = '\0';
@@ -593,16 +593,16 @@ static unsigned int SearchForTripcodesWithOptimization()
 	PW[14] = _mm_set1_epi32(0);
 	PW[15] = _mm_set1_epi32(12 * 8);
 	PW[16] = ROTL(1, _mm_xor_si128(_mm_xor_si128(PW[16 - 3], PW[16 - 8]), PW[16 - 14]));
-	for (int t = 17; t < 80; ++t)
+	for (int32_t t = 17; t < 80; ++t)
 		PW[t] = ROTL(1, _mm_xor_si128(_mm_xor_si128(_mm_xor_si128(PW[(t) - 3], PW[(t) - 8]), PW[(t) - 14]), PW[(t) - 16]));
 
-	for (int indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
+	for (int32_t indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
 		key[1] = keyCharTable_SecondByteAndOneByte[indexKey1];
 
-		for (int indexKey2 = 0; indexKey2 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey2) {
+		for (int32_t indexKey2 = 0; indexKey2 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey2) {
 			key[2] = keyCharTable_FirstByte[indexKey2];
 
-			for (int indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
+			for (int32_t indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
 				key[3] = keyCharTable_SecondByteAndOneByte[indexKey3];
 				
 				__declspec(align(16)) __m128i A = H0;
@@ -821,13 +821,13 @@ static unsigned int SearchForTripcodesWithOptimization()
 			A = tmp;                                                                                       \
 		}                                                                                                  \
 
-static unsigned int SearchForTripcodesWithoutOptimization()
+static uint32_t SearchForTripcodesWithoutOptimization()
 {
 	unsigned char  tripcode[MAX_LEN_TRIPCODE + 1], key[MAX_LEN_TRIPCODE_KEY + 1];
-	unsigned int   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
-	unsigned int   numGeneratedTripcodes = 0;
-	int            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);
-	unsigned int   rawTripcodeArray[4][3];
+	uint32_t   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
+	uint32_t   numGeneratedTripcodes = 0;
+	int32_t            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);
+	uint32_t   rawTripcodeArray[4][3];
 	
  	tripcode[lenTripcode]    = '\0';
 	key     [lenTripcodeKey] = '\0';
@@ -841,13 +841,13 @@ static unsigned int SearchForTripcodesWithoutOptimization()
 		break;
 	}
 
-	for (int indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
+	for (int32_t indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
 		key[1] = keyCharTable_SecondByteAndOneByte[indexKey1];
 
-		for (int indexKey2 = 0; indexKey2 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey2) {
+		for (int32_t indexKey2 = 0; indexKey2 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey2) {
 			key[2] = keyCharTable_FirstByte[indexKey2];
 
-			for (int indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
+			for (int32_t indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
 				key[3] = keyCharTable_SecondByteAndOneByte[indexKey3];
 				
 				__declspec(align(16)) __m128i A = H0;
@@ -926,13 +926,13 @@ static unsigned int SearchForTripcodesWithoutOptimization()
 	return numGeneratedTripcodes;
 }
 
-unsigned WINAPI Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
+void Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
 {
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
 
-		unsigned int numGeneratedTripcodes;
+		uint32_t numGeneratedTripcodes;
 		numGeneratedTripcodes = (options.SHA1OptimizationForCPU == 0) ? SearchForTripcodesWithoutOptimization() :
 		                        (options.SHA1OptimizationForCPU == 1) ? SearchForTripcodesWithOptimization() :
 		                                                                SearchForTripcodesWithMaximumOptimization();

@@ -45,18 +45,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 Options options = {
-	DEFAULT_OPTION_GPU_INDEX,                       // int  GPUIndex;
-	DEFAULT_OPTION_CUDA_NUM_BLOCKS_PER_SM,          // int  numBlocksPerSM;
+	DEFAULT_OPTION_GPU_INDEX,                       // int32_t  GPUIndex;
+	DEFAULT_OPTION_CUDA_NUM_BLOCKS_PER_SM,          // int32_t  numBlocksPerSM;
 	DEFAULT_OPTION_BEEP_WHEN_NEW_TRIPCODE_IS_FOUND, // BOOL beepWhenNewTripcodeIsFound;
 	DEFAULT_OPTION_OUTPUT_INVALID_TRIPCODE,         // BOOL outputInvalidTripcode;
 	DEFAULT_OPTION_WARN_SPEED_DROP,                 // BOOL warnSpeedDrop;
-	DEFAULT_OPTION_SEARCH_DEVICE,                   // int  searchDevice;
+	DEFAULT_OPTION_SEARCH_DEVICE,                   // int32_t  searchDevice;
 	DEFAULT_OPTION_TEST_NEW_CODE,                   // BOOL testNewCode;
-	DEFAULT_OPTION_NUM_CPU_SEARCH_THREADS,          // int  numCPUSearchThreads;
+	DEFAULT_OPTION_NUM_CPU_SEARCH_THREADS,          // int32_t  numCPUSearchThreads;
 	DEFAULT_OPTION_REDIRECTION,                     // BOOL redirection;
-	DEFAULT_OPTION_OPENCL_NUM_NUM_WORK_ITEMS_PER_CU, // int  openCLNumWorkItemsPerCU;
-	DEFAULT_OPTION_OPENCL_NUM_WORK_ITEMS_PER_WG,     // int  openCLNumWorkItemsPerWG;
-	DEFAULT_OPTION_OPENCL_NUM_THREADS_PER_AMD_GPU,   // int  openCLNumThreads;
+	DEFAULT_OPTION_OPENCL_NUM_NUM_WORK_ITEMS_PER_CU, // int32_t  openCLNumWorkItemsPerCU;
+	DEFAULT_OPTION_OPENCL_NUM_WORK_ITEMS_PER_WG,     // int32_t  openCLNumWorkItemsPerWG;
+	DEFAULT_OPTION_OPENCL_NUM_THREADS_PER_AMD_GPU,   // int32_t  openCLNumThreads;
 	DEFAULT_OPTION_USE_ONE_BYTE_CHARACTERS_FOR_KEYS, // BOOL useOneByteCharactersForKeys;
 	DEFAULT_OPTION_SEARCH_FOR_HISEKI_ON_CPU,
 	DEFAULT_OPTION_SEARCH_FOR_KAKUHI_ON_CPU,
@@ -70,21 +70,21 @@ Options options = {
 	DEFAULT_OPTION_MAXIMIZE_KEY_SPACE,
 	DEFAULT_OPTION_IS_AVX2_ENABLED,
 	DEFAULT_OPTION_OPENCL_RUN_CHILD_PROCESSES_FOR_MULTIPLE_DEVICES, // BOOL openCLRunChildProcesses;
-	DEFAULT_OPTION_OPENCL_NUM_PROCESSES_PER_AMD_GPU, // int  openCLNumProcesses;
+	DEFAULT_OPTION_OPENCL_NUM_PROCESSES_PER_AMD_GPU, // int32_t  openCLNumProcesses;
 	DEFAULT_OPTION_CHECK_TRIPCODES,                  // BOOL checkTripcodes;
 	DEFAULT_OPTION_ENABLE_GCN_ASSEMBLER,             // BOOL enableGCNAssembler;
 };
 
 // Search Parameters
-int  lenTripcode    = 10;
-int  lenTripcodeKey = 10;
+int32_t  lenTripcode    = 10;
+int32_t  lenTripcodeKey = 10;
 
 // Application path
 char applicationPath     [MAX_LEN_FILE_PATH + 1];
 char applicationDirectory[MAX_LEN_FILE_PATH + 1];
 
 // Input and output files
-int   numPatternFiles = 0;
+int32_t   numPatternFiles = 0;
 char  patternFilePathArray[MAX_NUM_PATTERN_FILES][MAX_LEN_FILE_PATH + 1];
 char  tripcodeFilePath    [MAX_LEN_FILE_PATH + 1];
 FILE *tripcodeFile = NULL;
@@ -96,15 +96,15 @@ char         nameEventForTerminating  [MAX_LEN_INPUT_LINE + 1] =  "";
 static WCHAR nameEventForTerminatingWC[MAX_LEN_INPUT_LINE + 1] = L"";
 
 // GPUs
-int           CUDADeviceCount   = 0;
-int           openCLDeviceCount = 0;
+int32_t           CUDADeviceCount   = 0;
+int32_t           openCLDeviceCount = 0;
 cl_device_id *openCLDeviceIDArray = NULL;
-int           searchDevice = SEARCH_DEVICE_NIL;
+int32_t           searchDevice = SEARCH_DEVICE_NIL;
 
 // Character tables
-int numFirstByte  = 0;
-int numSecondByte = 0;
-int numOneByte    = 0;
+int32_t numFirstByte  = 0;
+int32_t numSecondByte = 0;
+int32_t numOneByte    = 0;
 unsigned char keyCharTable_OneByte             [SIZE_KEY_CHAR_TABLE];
 unsigned char keyCharTable_FirstByte           [SIZE_KEY_CHAR_TABLE];
 unsigned char keyCharTable_SecondByte          [SIZE_KEY_CHAR_TABLE];
@@ -118,11 +118,10 @@ char base64CharTable[64] = {
 
 // Current and previous status
 double       matchingProb,     numAverageTrialsForOneMatch;
-mpf_t        matchingProb_mpf, numAverageTrialsForOneMatch_mpf;
 double       totalTime = 0;
 double       currentSpeed_thisProcess = 0, currentSpeed_thisProcess_GPU = 0, currentSpeed = 0, currentSpeed_GPU = 0, currentSpeed_CPU = 0, maximumSpeed = 0;
-unsigned int     numValidTripcodes = 0,     numDiscardedTripcodes = 0;
-unsigned int prevNumValidTripcodes = 0, prevNumDiscardedTripcodes = 0;
+uint32_t     numValidTripcodes = 0,     numDiscardedTripcodes = 0;
+uint32_t prevNumValidTripcodes = 0, prevNumDiscardedTripcodes = 0;
 double           totalNumGeneratedTripcodes = 0;
 double           totalNumGeneratedTripcodes_GPU = 0;
 double           totalNumGeneratedTripcodes_CPU = 0;
@@ -133,33 +132,33 @@ BOOL         isSearchPaused      = FALSE;
 BOOL         wasSearchTerminated = FALSE;
 BOOL         wasSearchAbortedWithError = FALSE;
 HANDLE       eventForTerminating = NULL;
-int prevLineCount = 0;
+int32_t prevLineCount = 0;
 
 
 
 // Search mode
-int searchMode = SEARCH_MODE_NIL;
+int32_t searchMode = SEARCH_MODE_NIL;
 
 // For multi-threading
-int                                  numCUDADeviceSearchThreads        = 0;
+int32_t                                  numCUDADeviceSearchThreads        = 0;
 struct CUDADeviceSearchThreadInfo   *CUDADeviceSearchThreadInfoArray   = NULL;
-HANDLE                              *CUDADeviceSearchThreadArray       = NULL;
-int                                  numOpenCLDeviceSearchThreads      = 0;
+std::thread                              **cuda_device_search_threads       = NULL;
+int32_t                                  numOpenCLDeviceSearchThreads      = 0;
 struct OpenCLDeviceSearchThreadInfo *openCLDeviceSearchThreadInfoArray = NULL;
-HANDLE                              *openCLDeviceSearchThreadArray     = NULL;
-int                                  numCPUSearchThreads               = 0;
-HANDLE                              *CPUSearchThreadArray              = NULL;
+std::thread                              **opencl_device_search_threads = NULL;
+int32_t                                  numCPUSearchThreads               = 0;
+std::thread                              **cpu_search_threads = NULL;
 BOOL                                 openCLRunChildProcesses = FALSE;
-CRITICAL_SECTION criticalSection_numGeneratedTripcodes;
-CRITICAL_SECTION criticalSection_ProcessTripcodePair;
-CRITICAL_SECTION criticalSection_currentState;
-CRITICAL_SECTION criticalSection_CUDADeviceSearchThreadInfoArray;
-CRITICAL_SECTION criticalSection_openCLDeviceSearchThreadInfoArray;
-CRITICAL_SECTION criticalSection_ANSISystemFunction;
-unsigned int     numGeneratedTripcodes_GPU;
-unsigned int     numGeneratedTripcodesByGPUInMillions;
-unsigned int     numGeneratedTripcodes_CPU;
-unsigned int     numGeneratedTripcodesByCPUInMillions;
+spinlock num_generated_tripcodes_spinlock;
+spinlock process_tripcode_pair_spinlock;
+spinlock current_state_spinlock;
+spinlock cuda_device_search_thread_info_array_spinlock;
+spinlock opencl_device_search_thread_info_array_spinlock;
+spinlock system_command_spinlock;
+uint32_t     numGeneratedTripcodes_GPU;
+uint32_t     numGeneratedTripcodesByGPUInMillions;
+uint32_t     numGeneratedTripcodes_CPU;
+uint32_t     numGeneratedTripcodesByCPUInMillions;
 
 
 
@@ -167,7 +166,7 @@ unsigned int     numGeneratedTripcodesByCPUInMillions;
 // FUNCTIONS                                                                 //
 ///////////////////////////////////////////////////////////////////////////////
 
-char *GetErrorMessage(int errorCode)
+char *GetErrorMessage(int32_t errorCode)
 {
 	switch (errorCode) {
     case ERROR_INVALID_TARGET_PATTERN: 
@@ -224,7 +223,7 @@ char *GetErrorMessage(int errorCode)
 
 unsigned char RandomByte()
 {
-	unsigned int randomValue;
+	uint32_t randomValue;
 
 	rand_s(&randomValue);
 	return (unsigned char)(randomValue & 0x000000ff);
@@ -251,36 +250,58 @@ void PrintUsage()
 	exit(-1);
 }
 
-void HideCursor()
+void reset_cursor_pos(int n)
 {
-	CONSOLE_CURSOR_INFO info;
-	
-	info.bVisible = false;
-	info.dwSize = 100;
-	SetConsoleCursorInfo((HWND)GetStdHandle(STD_OUTPUT_HANDLE), &info); 
+#ifdef _WINDOWS_
+	CONSOLE_SCREEN_BUFFER_INFO scrnBufInfo;
+	COORD                      cursorPos;
+	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &scrnBufInfo))
+		return;
+	cursorPos.X = 0;
+	cursorPos.Y = (scrnBufInfo.dwCursorPosition.Y + n) >= 0
+		? (scrnBufInfo.dwCursorPosition.Y + n)
+		: 0;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursorPos);
+#else
+	if (n >= 0) {
+		std::cout << "\033[" << n << "B";
+	} else {
+		std::cout << "\033[" << -n << "A";
+	}
+#endif
 }
 
-void ShowCursor()
+#ifdef _WINDOWS_
+
+void hide_cursor()
 {
 	CONSOLE_CURSOR_INFO info;
-	
+
+	info.bVisible = false;
+	info.dwSize = 100;
+	SetConsoleCursorInfo((HWND)GetStdHandle(STD_OUTPUT_HANDLE), &info);
+}
+
+void show_cursor()
+{
+	CONSOLE_CURSOR_INFO info;
+
 	info.bVisible = true;
 	info.dwSize = 100;
 	SetConsoleCursorInfo((HWND)GetStdHandle(STD_OUTPUT_HANDLE), &info); 
 }
 
-void ResetCursorPos(int deltaY)
+#else
+
+void hide_cursor()
 {
-    CONSOLE_SCREEN_BUFFER_INFO scrnBufInfo;
-    COORD                      cursorPos;
-	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &scrnBufInfo))
-		return;
-    cursorPos.X = 0;
-	cursorPos.Y = (scrnBufInfo.dwCursorPosition.Y + deltaY) >= 0
-	                  ? (scrnBufInfo.dwCursorPosition.Y + deltaY)
-	                  : 0;
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursorPos);
 }
+
+void show_cursor()
+{
+}
+
+#endif
 
 void CreateKey8AndKey9(unsigned char *key)
 {
@@ -290,7 +311,7 @@ void CreateKey8AndKey9(unsigned char *key)
 		key[9] = keyCharTable_OneByte[RandomByte()];
 	} else {
 		BOOL isSecondByte = FALSE;
-		for (int i = 0; i < 8; ++i) {
+		for (int32_t i = 0; i < 8; ++i) {
 			if (!isSecondByte) {
 				isSecondByte = IS_FIRST_BYTE_SJIS_FULL(key[i]);
 			} else {
@@ -309,7 +330,7 @@ void CreateKey8AndKey9(unsigned char *key)
 	}
 }
 
-double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, unsigned int sizeOutputArray, BOOL newFormat)
+double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, uint32_t sizeOutputArray, BOOL newFormat)
 {
 	unsigned char  tripcode[MAX_LEN_TRIPCODE     + 1];
 	unsigned char  key     [MAX_LEN_TRIPCODE_KEY + 1];
@@ -318,7 +339,7 @@ double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, unsig
 	tripcode[lenTripcode   ] = '\0';
 	key     [lenTripcodeKey] = '\0';
 	memcpy(key, partialKey, lenTripcodeKey);
-	for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
+	for (uint32_t indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
 		GPUOutput *output = &outputArray[indexOutput];
 		AddToNumGeneratedTripcodesByGPU(output->numGeneratedTripcodes);
 		numGeneratedTripcodesInThisOutput += output->numGeneratedTripcodes;
@@ -347,7 +368,7 @@ double ProcessGPUOutput(unsigned char *partialKey, GPUOutput *outputArray, unsig
 
 BOOL IsValidKey(unsigned char *key)
 {
-	int i;
+	int32_t i;
 	BOOL isSecondByteSJIS = FALSE;
 	char results[13] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 	
@@ -389,7 +410,7 @@ BOOL IsValidKey(unsigned char *key)
 void CreateCharacterTables(void)
 {
 	unsigned char keyChar;
-	int i;
+	int32_t i;
 
 #if FALSE
 	for (i = 0; i < 64; ++i)
@@ -407,9 +428,9 @@ void CreateCharacterTables(void)
 			keyChar = RandomByte();
 		} while (!IS_ASCII_KEY_CHAR(keyChar));
 		for (i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
-			keyChar = ((int)keyChar + 1) & 0xff;
+			keyChar = ((int32_t)keyChar + 1) & 0xff;
 			while (!IS_ASCII_KEY_CHAR(keyChar))
-				keyChar = ((int)keyChar + 1) & 0xff;
+				keyChar = ((int32_t)keyChar + 1) & 0xff;
 			keyCharTable_OneByte[i] = keyChar;
 		}
 	} else {
@@ -417,9 +438,9 @@ void CreateCharacterTables(void)
 			keyChar = RandomByte();
 		} while (!IS_ONE_BYTE_KEY_CHAR(keyChar));
 		for (i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
-			keyChar = ((int)keyChar + 1) & 0xff;
+			keyChar = ((int32_t)keyChar + 1) & 0xff;
 			while (!IS_ONE_BYTE_KEY_CHAR(keyChar))
-				keyChar = ((int)keyChar + 1) & 0xff;
+				keyChar = ((int32_t)keyChar + 1) & 0xff;
 			keyCharTable_OneByte[i] = keyChar;
 		}
 	}
@@ -431,7 +452,7 @@ void CreateCharacterTables(void)
 			keyCharTable_SecondByte[i]           = keyCharTable_OneByte[i];
 			keyCharTable_SecondByteAndOneByte[i] = keyCharTable_OneByte[i];
 		}
-		for (int i = 0; i < 256; ++i) {
+		for (int32_t i = 0; i < 256; ++i) {
 			if (IS_ASCII_KEY_CHAR(i)) {
 				++numFirstByte;
 				++numSecondByte;
@@ -444,7 +465,7 @@ void CreateCharacterTables(void)
 			keyCharTable_SecondByte          [i] = keyCharTable_OneByte[i];
 			keyCharTable_SecondByteAndOneByte[i] = keyCharTable_OneByte[i];
 		}
-		for (int i = 0; i < 256; ++i) {
+		for (int32_t i = 0; i < 256; ++i) {
 			if (IS_ONE_BYTE_KEY_CHAR(i)) {
 				++numFirstByte;
 				++numSecondByte;
@@ -459,7 +480,7 @@ void CreateCharacterTables(void)
 		for (i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
 			keyCharTable_FirstByte[i] = keyChar;
 			do {
-				keyChar = ((int)keyChar + 1) & 0xff;
+				keyChar = ((int32_t)keyChar + 1) & 0xff;
 			} while (!(IS_ONE_BYTE_KEY_CHAR(keyChar) || IsFirstByteSJIS(keyChar)));
 		}
 
@@ -470,7 +491,7 @@ void CreateCharacterTables(void)
 		for (i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
 			keyCharTable_SecondByte[i] = keyChar;
 			do {
-				keyChar = ((int)keyChar + 1) & 0xff;
+				keyChar = ((int32_t)keyChar + 1) & 0xff;
 			} while (!IS_SECOND_BYTE_SJIS(keyChar));
 		}
 
@@ -481,12 +502,12 @@ void CreateCharacterTables(void)
 		for (i = 0; i < SIZE_KEY_CHAR_TABLE; ++i) {
 			keyCharTable_SecondByteAndOneByte[i] = keyChar;
 			do {
-				keyChar = ((int)keyChar + 1) & 0xff;
+				keyChar = ((int32_t)keyChar + 1) & 0xff;
 			} while (!(IS_SECOND_BYTE_SJIS(keyChar) && IS_ONE_BYTE_KEY_CHAR(keyChar)));
 		}
 
 		// Count characters in each table.
-		for (int i = 0; i < 256; ++i) {
+		for (int32_t i = 0; i < 256; ++i) {
 			if (IS_ONE_BYTE_KEY_CHAR(i) || IsFirstByteSJIS(i) ) ++numFirstByte;
 			if (                           IS_SECOND_BYTE_SJIS(i)) ++numSecondByte;
 			if (IS_ONE_BYTE_KEY_CHAR(i)                          ) ++numOneByte;
@@ -518,24 +539,24 @@ void DisplayCopyrights()
 
 void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, char *status)
 {
-	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+	cuda_device_search_thread_info_array_spinlock.lock();
 	strcpy(info->status, status);
-	info->timeLastUpdated = timeGetTime();
-	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	cuda_device_search_thread_info_array_spinlock.unlock();
 }
 
 void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status)
 {
-	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	opencl_device_search_thread_info_array_spinlock.lock();
 	ASSERT(!info->runChildProcess);
 	strcpy(info->status, status);
-	info->timeLastUpdated = timeGetTime();
-	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	opencl_device_search_thread_info_array_spinlock.unlock();
 }
 
-void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, unsigned int numDiscardedTripcodes, HANDLE childProcess)
+void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, HANDLE childProcess)
 {
-	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	opencl_device_search_thread_info_array_spinlock.lock();
 	ASSERT(info->runChildProcess);
 	strcpy(info->status, status);
 	info->currentSpeed = currentSpeed;
@@ -543,48 +564,46 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	info->totalNumGeneratedTripcodes = totalNumGeneratedTripcodes;
 	info->numDiscardedTripcodes = numDiscardedTripcodes;
 	info->childProcess = childProcess;
-	info->timeLastUpdated = timeGetTime();
-	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	opencl_device_search_thread_info_array_spinlock.unlock();
 }
 
 void CheckSearchThreads()
 {
-	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
-	for (int index = 0; index < numCUDADeviceSearchThreads; ++index) {
+	cuda_device_search_thread_info_array_spinlock.lock();
+	for (int32_t index = 0; index < numCUDADeviceSearchThreads; ++index) {
 		struct CUDADeviceSearchThreadInfo *info = &CUDADeviceSearchThreadInfoArray[index];
-		DWORD  currentTime = timeGetTime();
-		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
-			                   ? (currentTime - info->timeLastUpdated)
-							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
+		uint64_t  currentTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		uint64_t  deltaTime = currentTime - info->timeLastUpdated;
 		// if (deltaTime > 60 * 1000)
 		//	strcpy(info->status, "Search thread became unresponsive.");
 		//ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 		///*
 		if (deltaTime > 60 * 1000) {
 			strcpy(info->status, "Restarting search thread...");
-			TerminateThread(CUDADeviceSearchThreadArray[index], 1);
-			unsigned int winThreadID;
-			CUDADeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
-																	    0,
-																	    (lenTripcode == 10) 
-																	        ? Thread_SearchForDESTripcodesOnCUDADevice
-																		    : Thread_SearchForSHA1TripcodesOnCUDADevice,
-																	    &(CUDADeviceSearchThreadInfoArray[index]),
-																	    0,
-																	    &winThreadID);
-			ERROR0((CUDADeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart a CUDA device search thread.");
+			auto native_handle = cuda_device_search_threads[index]->native_handle();
+			cuda_device_search_threads[index]->detach();
+			delete cuda_device_search_threads[index];
+#ifdef _WINDOWS_
+			TerminateThread(native_handle, 0);
+#elif defined(_POSIX_THREADS)
+			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+			pthread_cancel(native_handle);
+#endif
+			cuda_device_search_threads[index] = new std::thread((lenTripcode == 10) 
+														          ? Thread_SearchForDESTripcodesOnCUDADevice
+															      : Thread_SearchForSHA1TripcodesOnCUDADevice,
+															    &(CUDADeviceSearchThreadInfoArray[index]));
 		}
 		//*/
 	}
-	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+	cuda_device_search_thread_info_array_spinlock.unlock();
 
-	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
-	for (int index = 0; index < numOpenCLDeviceSearchThreads; ++index) {
+	opencl_device_search_thread_info_array_spinlock.lock();
+	for (int32_t index = 0; index < numOpenCLDeviceSearchThreads; ++index) {
 		struct OpenCLDeviceSearchThreadInfo *info = &openCLDeviceSearchThreadInfoArray[index];
-		DWORD  currentTime = timeGetTime();
-		DWORD  deltaTime = (currentTime >= info->timeLastUpdated) 
-			                   ? (currentTime - info->timeLastUpdated)
-							   : (currentTime + (0xffffffffU - info->timeLastUpdated));
+		uint64_t  currentTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		uint64_t  deltaTime = currentTime - info->timeLastUpdated;
 		//ERROR0(deltaTime > 1 * 60 * 1000, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 		///*
 		if (deltaTime > 60 * 1000) {
@@ -592,40 +611,43 @@ void CheckSearchThreads()
 			ERROR0(!info->runChildProcess, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 
 			strcpy(info->status, "[process] Restarting search thread...");
-			TerminateThread(openCLDeviceSearchThreadArray[index], 1);
+			auto native_handle = opencl_device_search_threads[index]->native_handle();
+			opencl_device_search_threads[index]->detach();
+			delete opencl_device_search_threads[index];
+#ifdef _WINDOWS_
+			TerminateThread(native_handle, 0);
+#elif defined(_POSIX_THREADS)
+			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+			pthread_cancel(native_handle);
+#endif
 			TerminateProcess(info->childProcess, 0);
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
 			info->childProcess = NULL;
 			++info->numRestarts;
 
-			unsigned int winThreadID;
-			openCLDeviceSearchThreadArray[index] = (HANDLE)_beginthreadex(NULL,
-																		  0,
-																		  (lenTripcode == 10) 
-																		      ? Thread_SearchForDESTripcodesOnOpenCLDevice
-																			  : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
-																		  &(openCLDeviceSearchThreadInfoArray[index]),
-																		  0,
-																		  &winThreadID);
-			ERROR0((openCLDeviceSearchThreadArray[index] == NULL), ERROR_SEARCH_THREAD, "Failed to restart an OpenCL device search thread.");
+			uint32_t winThreadID;
+			opencl_device_search_threads[index] = new std::thread((lenTripcode == 10) 
+																	       ? Thread_SearchForDESTripcodesOnOpenCLDevice
+													                       : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
+																	   &(openCLDeviceSearchThreadInfoArray[index]));
 		}
 		//*/
 	}
-	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	opencl_device_search_thread_info_array_spinlock.unlock();
 }
 
 void KeepSearchThreadsAlive()
 {
-	EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
-	for (int index = 0; index < numCUDADeviceSearchThreads; ++index)
-		CUDADeviceSearchThreadInfoArray[index].timeLastUpdated = timeGetTime();
-	LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+	cuda_device_search_thread_info_array_spinlock.lock();
+	for (int32_t index = 0; index < numCUDADeviceSearchThreads; ++index)
+		CUDADeviceSearchThreadInfoArray[index].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	cuda_device_search_thread_info_array_spinlock.unlock();
 
-	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
-	for (int index = 0; index < numOpenCLDeviceSearchThreads; ++index)
-		openCLDeviceSearchThreadInfoArray[index].timeLastUpdated = timeGetTime();
-	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	opencl_device_search_thread_info_array_spinlock.lock();
+	for (int32_t index = 0; index < numOpenCLDeviceSearchThreads; ++index)
+		openCLDeviceSearchThreadInfoArray[index].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	opencl_device_search_thread_info_array_spinlock.unlock();
 }
 
 void PrintStatus()
@@ -633,11 +655,10 @@ void PrintStatus()
 	if (GetErrorState() || GetTerminationState())
 		return;
 
-	EnterCriticalSection(&criticalSection_currentState);
-	EnterCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
+	current_state_spinlock.lock();
 
 	char msg[MAX_NUM_LINES_STATUS_MSG][LEN_LINE_BUFFER_FOR_SCREEN];
-	int lineCount = 0;
+	int32_t lineCount = 0;
 
 #define NEXT_LINE &(msg[lineCount++][0])
 
@@ -674,20 +695,21 @@ void PrintStatus()
 				(searchDevice == SEARCH_DEVICE_CPU) ? "." : ":");
 	}
 	if (searchDevice != SEARCH_DEVICE_CPU && CUDADeviceSearchThreadInfoArray) {
-		EnterCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+		cuda_device_search_thread_info_array_spinlock.lock();
 		if (numCUDADeviceSearchThreads == 1) {
 			sprintf(NEXT_LINE, "      CUDA0:     %s", CUDADeviceSearchThreadInfoArray[0].status);
 		} else {
-			for (int i = 0; i < numCUDADeviceSearchThreads; ++i)
+			for (int32_t i = 0; i < numCUDADeviceSearchThreads; ++i)
 				sprintf(NEXT_LINE, "      CUDA%d-%d:     %s", CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex, CUDADeviceSearchThreadInfoArray[i].subindex, CUDADeviceSearchThreadInfoArray[i].status);
 		}
-		LeaveCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
+		cuda_device_search_thread_info_array_spinlock.unlock();
 	}
 	if (searchDevice != SEARCH_DEVICE_CPU && openCLDeviceSearchThreadInfoArray) {
+		opencl_device_search_thread_info_array_spinlock.lock();
 		if (numOpenCLDeviceSearchThreads == 1) {
 			sprintf(NEXT_LINE, "      OpenCL0:   %s", openCLDeviceSearchThreadInfoArray[0].status);
 		} else {
-			for (int i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
+			for (int32_t i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
 				if (openCLDeviceSearchThreadInfoArray[i].subindex < 0) {
 					sprintf(NEXT_LINE, "      OpenCL%d:   %s",  openCLDeviceSearchThreadInfoArray[i].index, openCLDeviceSearchThreadInfoArray[i].status);
 				} else {
@@ -695,6 +717,7 @@ void PrintStatus()
 				}
 			}
 		}
+		opencl_device_search_thread_info_array_spinlock.unlock();
 	}
 #if FALSE
 	if (CUDADeviceSearchThreadInfoArray && IsCUDADeviceOptimizationInProgress())
@@ -704,10 +727,11 @@ void PrintStatus()
 	double currentSpeed_childProcesses = 0;
 	double averageSpeed_childProcesses = 0;
 	double totalNumGeneratedTripcodes_childProcesses = 0;
-	unsigned int numDiscardedTripcodes_childProcesses = 0;
+	uint32_t numDiscardedTripcodes_childProcesses = 0;
 	// printf("numOpenCLDeviceSearchThreads = %d\n", numOpenCLDeviceSearchThreads);
 	if (openCLDeviceSearchThreadInfoArray && openCLRunChildProcesses) {
-		for (int i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
+		opencl_device_search_thread_info_array_spinlock.lock();
+		for (int32_t i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
 			// printf("deviceNo = %d\n", openCLDeviceSearchThreadInfoArray[i].deviceNo);
 			if (!(openCLDeviceSearchThreadInfoArray[i].runChildProcess))
 				continue;
@@ -716,6 +740,7 @@ void PrintStatus()
 			totalNumGeneratedTripcodes_childProcesses += openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes;
 			numDiscardedTripcodes_childProcesses      += openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes;
 		}
+		opencl_device_search_thread_info_array_spinlock.unlock();
 	}
 
 	double averageSpeed;
@@ -728,11 +753,11 @@ void PrintStatus()
 			                            ? ((double)(prevNumDiscardedTripcodes) / (prevNumValidTripcodes + prevNumDiscardedTripcodes))
 										: 0;
 	if (totalTime > 0) {
-		unsigned int remainingSeconds = (unsigned int)totalTime;
-		unsigned int totalTimeDays    = remainingSeconds / (24 * 60 * 60); remainingSeconds -= totalTimeDays    * 24 * 60 * 60;
-		unsigned int totalTimeHours   = remainingSeconds / (     60 * 60); remainingSeconds -= totalTimeHours        * 60 * 60;
-		unsigned int totalTimeMinutes = remainingSeconds / (          60); remainingSeconds -= totalTimeMinutes           * 60;
-		unsigned int totalTimeSeconds = remainingSeconds;
+		uint32_t remainingSeconds = (uint32_t)totalTime;
+		uint32_t totalTimeDays    = remainingSeconds / (24 * 60 * 60); remainingSeconds -= totalTimeDays    * 24 * 60 * 60;
+		uint32_t totalTimeHours   = remainingSeconds / (     60 * 60); remainingSeconds -= totalTimeHours        * 60 * 60;
+		uint32_t totalTimeMinutes = remainingSeconds / (          60); remainingSeconds -= totalTimeMinutes           * 60;
+		uint32_t totalTimeSeconds = remainingSeconds;
 		
 		sprintf(NEXT_LINE, "");
 		sprintf(NEXT_LINE, "  %.3lfT tripcodes were generated in %dd %dh %dm %02ds at:",
@@ -810,9 +835,9 @@ void PrintStatus()
 	}
 	
 	if (!options.redirection) {
-		for (int i = 0; i < lineCount; ++i)
+		for (int32_t i = 0; i < lineCount; ++i)
 			printf("%-79s\n", &(msg[i][0]));
-		ResetCursorPos(-lineCount);
+		reset_cursor_pos(-lineCount);
 		prevLineCount = lineCount;
 	} else {
 		if (totalTime > 0 && !searchForSpecialPatternsOnCPU) {
@@ -823,8 +848,8 @@ void PrintStatus()
 				   currentSpeed_CPU,
 				   averageSpeed,
 				   timeForOneMatch,
-				   ((int)(matchingProbDiff * 100) > 0) ? "+" : "", // All I want to do here is to avoid "-0%" and "+0%".
-				    (int)(matchingProbDiff * 100),
+				   ((int32_t)(matchingProbDiff * 100) > 0) ? "+" : "", // All I want to do here is to avoid "-0%" and "+0%".
+				    (int32_t)(matchingProbDiff * 100),
 				   prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses,
 				   prevNumValidTripcodes,
 				   FALSE,
@@ -850,8 +875,7 @@ void PrintStatus()
 		fflush(stdout);
 	}
 	
-	LeaveCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.unlock();
 #undef NEXT_LINE
 }
 
@@ -873,20 +897,13 @@ BOOL WINAPI ControlHandler(_In_  DWORD dwCtrlType)
 
 void InitProcess()
 {
-	HideCursor();
-
-	InitializeCriticalSection(&criticalSection_ProcessTripcodePair);
-	InitializeCriticalSection(&criticalSection_currentState);
-	InitializeCriticalSection(&criticalSection_numGeneratedTripcodes);
-	InitializeCriticalSection(&criticalSection_CUDADeviceSearchThreadInfoArray);
-	InitializeCriticalSection(&criticalSection_openCLDeviceSearchThreadInfoArray);
-	InitializeCriticalSection(&criticalSection_ANSISystemFunction);
+	hide_cursor();
 	SetConsoleCtrlHandler(ControlHandler, true);
 }
 
 void ListCUDADevices()
 {
-	int i;
+	int32_t i;
 	cudaDeviceProp CUDADeviceProperties;
 	
 	cudaGetDeviceCount(&CUDADeviceCount);
@@ -915,9 +932,9 @@ void CountOpenCLDevices()
     errorCode = clGetPlatformIDs(numPlatforms, platforms, NULL);
     OPENCL_ERROR(errorCode);
 
-	int openCLDeviceIDArrayIndex = 0;
-	for (int pass = 0; pass <= 1; ++pass) {
-		for (int platformIndex = 0; platformIndex < numPlatforms; ++platformIndex) {
+	int32_t openCLDeviceIDArrayIndex = 0;
+	for (int32_t pass = 0; pass <= 1; ++pass) {
+		for (int32_t platformIndex = 0; platformIndex < numPlatforms; ++platformIndex) {
 			// Skip CUDA devices.
 			char platformVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 			errorCode = clGetPlatformInfo(platforms[platformIndex], CL_PLATFORM_VENDOR, sizeof(platformVendor), platformVendor, NULL);
@@ -940,7 +957,7 @@ void CountOpenCLDevices()
 			errorCode = clGetDeviceIDs(platforms[platformIndex], CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_ACCELERATOR, deviceCount, devices, &deviceCount);
 			if (errorCode != CL_DEVICE_NOT_FOUND) {
 				OPENCL_ERROR(errorCode);
-				for(int deviceIndex = 0; deviceIndex < deviceCount; ++deviceIndex) {
+				for(int32_t deviceIndex = 0; deviceIndex < deviceCount; ++deviceIndex) {
 					if (pass == 0) {
 						++openCLDeviceCount;
 					} else {
@@ -970,7 +987,7 @@ void ListOpenCLDevices()
 
 	CountOpenCLDevices();
 
-	for(int deviceIndex = 0; deviceIndex < openCLDeviceCount; ++deviceIndex) {  
+	for(int32_t deviceIndex = 0; deviceIndex < openCLDeviceCount; ++deviceIndex) {  
 		OPENCL_ERROR(clGetDeviceInfo(openCLDeviceIDArray[deviceIndex], CL_DEVICE_VENDOR,            sizeof(deviceVendor),    &deviceVendor,    NULL));
 		OPENCL_ERROR(clGetDeviceInfo(openCLDeviceIDArray[deviceIndex], CL_DEVICE_NAME,              sizeof(deviceName),      &deviceName,      NULL));
 		OPENCL_ERROR(clGetDeviceInfo(openCLDeviceIDArray[deviceIndex], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
@@ -1004,7 +1021,7 @@ void ListGPUsAndExit()
 
 void InitSearchDevices(BOOL displayDeviceInformation)
 {
-	int i;
+	int32_t i;
 	cudaDeviceProp CUDADeviceProperties;
 	
 	if (options.useOpenCLForCUDADevices) {
@@ -1102,7 +1119,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 		for (i = ((options.GPUIndex == GPU_INDEX_ALL) ? CUDADeviceCount                     : (options.GPUIndex    ));
 		     i < ((options.GPUIndex == GPU_INDEX_ALL) ? CUDADeviceCount + openCLDeviceCount : (options.GPUIndex + 1));
 			 ++i) {
-			int openCLDeviceIndex = i - CUDADeviceCount;
+			int32_t openCLDeviceIndex = i - CUDADeviceCount;
 			char deviceVendor [LEN_LINE_BUFFER_FOR_SCREEN];
 			char deviceName   [LEN_LINE_BUFFER_FOR_SCREEN];
 			char deviceVersion[LEN_LINE_BUFFER_FOR_SCREEN];
@@ -1127,10 +1144,10 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 				} else {
 					printf(    "  Name:                     %s\n",      deviceName);
 				}
-				printf(    "  Number of Compute Units:  %d\n",        (int)numComputeUnits);
-				printf(    "  Clock Frequency:          %dMHz\n",     (int)clockFrequency);
-				printf(    "  Global Memory Size:       %dM bytes\n", (int)(globalMemorySize / 1024 / 1024));
-				printf(    "  Max. Work Group Size:     %d\n",        (int)maxWorkGroupSize);
+				printf(    "  Number of Compute Units:  %d\n",        (int32_t)numComputeUnits);
+				printf(    "  Clock Frequency:          %dMHz\n",     (int32_t)clockFrequency);
+				printf(    "  Global Memory Size:       %dM bytes\n", (int32_t)(globalMemorySize / 1024 / 1024));
+				printf(    "  Max. Work Group Size:     %d\n",        (int32_t)maxWorkGroupSize);
 				printf(    "  Version:                  %s\n",        deviceVersion);
 				printf(    "  Driver Version:           %s\n",        driverVersion);
 				printf("\n");
@@ -1162,7 +1179,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 		if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU && numCPUSearchThreads <= 0) {
 			searchDevice = SEARCH_DEVICE_GPU;
 		} else 	if (displayDeviceInformation) {
-			int results[4];
+			int32_t results[4];
 			__cpuid(results, 1);
 
 			printf("CPU\n");
@@ -1179,9 +1196,9 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 	}
 }
 
-void ObtainOptions(int argCount, char **arguments)
+void ObtainOptions(int32_t argCount, char **arguments)
 {
-	int i;
+	int32_t i;
 	
 	// Get the application path and directory.
 	// strcpy(applicationPath,      arguments[0]);
@@ -1203,7 +1220,7 @@ void ObtainOptions(int argCount, char **arguments)
 	// Set default values if necessary.	
 	strncpy(tripcodeFilePath, DEFAULT_NAME_TRIPCODE_FILE, sizeof(tripcodeFilePath));
 
-	for (int indexArg = 1; indexArg < argCount; ++indexArg) {
+	for (int32_t indexArg = 1; indexArg < argCount; ++indexArg) {
 		if (strcmp(arguments[indexArg], "-o") == 0 && indexArg + 1 < argCount) {
 			++indexArg;
 			ERROR1(strlen(arguments[indexArg]) + 1 > sizeof(tripcodeFilePath),
@@ -1314,7 +1331,7 @@ void ObtainOptions(int argCount, char **arguments)
 		} else if (strcmp(arguments[indexArg], "-e") == 0 && indexArg + 1 < argCount) {
 			++indexArg;
 			strcpy(nameMutexForPausing, arguments[indexArg]);
-			int len = MultiByteToWideChar(CP_ACP, 0, arguments[indexArg], -1, nameMutexForPausingWC, MAX_LEN_INPUT_LINE);
+			int32_t len = MultiByteToWideChar(CP_ACP, 0, arguments[indexArg], -1, nameMutexForPausingWC, MAX_LEN_INPUT_LINE);
 			if (len < 0) {
 				len = 0;
 			} else if (len <= MAX_LEN_INPUT_LINE) {
@@ -1325,7 +1342,7 @@ void ObtainOptions(int argCount, char **arguments)
 		} else if (strcmp(arguments[indexArg], "-E") == 0 && indexArg + 1 < argCount) {
 			++indexArg;
 			strcpy(nameEventForTerminating, arguments[indexArg]);
-			int len = MultiByteToWideChar(CP_ACP, 0, arguments[indexArg], -1, nameEventForTerminatingWC, MAX_LEN_INPUT_LINE);
+			int32_t len = MultiByteToWideChar(CP_ACP, 0, arguments[indexArg], -1, nameEventForTerminatingWC, MAX_LEN_INPUT_LINE);
 			if (len < 0) {
 				len = 0;
 			} else if (len <= MAX_LEN_INPUT_LINE) {
@@ -1404,25 +1421,23 @@ void ObtainOptions(int argCount, char **arguments)
 
 void ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key)
 {
-	EnterCriticalSection(&criticalSection_currentState);
-	EnterCriticalSection(&criticalSection_ProcessTripcodePair);
-
 	ASSERT(lenTripcode    == 10 || lenTripcode    == 12);
 	ASSERT(lenTripcodeKey == 10 || lenTripcodeKey == 12);
 	
+	process_tripcode_pair_spinlock.lock();
 	if (!options.redirection) {
 #ifdef ENGLISH_VERSION
 		fprintf(tripcodeFile, "!");
 #else
 		fprintf(tripcodeFile, "%c%c", 0x81, 0x9f);
 #endif
-		for (int i = 0; i < lenTripcode; ++i)
+		for (int32_t i = 0; i < lenTripcode; ++i)
 			fprintf(tripcodeFile, "%c", tripcode[i]);
 		fprintf(tripcodeFile, " #");
-		for (int i = 0; i < lenTripcodeKey; ++i)
+		for (int32_t i = 0; i < lenTripcodeKey; ++i)
 			fprintf(tripcodeFile, "%c", key[i]);
 		fprintf(tripcodeFile, " (");
-		for (int i = 0; i < lenTripcodeKey; ++i) {
+		for (int32_t i = 0; i < lenTripcodeKey; ++i) {
 			fprintf(tripcodeFile, "%02X", key[i]);
 			if (i + 1 < lenTripcodeKey)
 				fprintf(tripcodeFile, " ");
@@ -1431,39 +1446,39 @@ void ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key)
 		fflush(tripcodeFile);
 	}  
 
-	if (!options.redirection) {
+	if (!options.redirection && !GetTerminationState() && !GetErrorState()) {
 #ifdef ENGLISH_VERSION
 		printf("  !");
 #else
 		printf("  %c%c", 0x81, 0x9f);
 #endif
-		for (int i = 0; i < lenTripcode; ++i)
+		for (int32_t i = 0; i < lenTripcode; ++i)
 			printf("%c", tripcode[i]);
 		printf(" #");
-		for (int i = 0; i < lenTripcodeKey; ++i)
+		for (int32_t i = 0; i < lenTripcodeKey; ++i)
 			printf("%c", key[i]);
 		printf(" (");
-		for (int i = 0; i < lenTripcodeKey; ++i) {
+		for (int32_t i = 0; i < lenTripcodeKey; ++i) {
 			printf("%02X", key[i]);
 			if (i + 1 < lenTripcodeKey)
 				printf(" ");
 		}
 		printf(")");
-		for (int i = 4 + lenTripcode + 2 + lenTripcodeKey + 2 + lenTripcodeKey * 3;
+		for (int32_t i = 4 + lenTripcode + 2 + lenTripcodeKey + 2 + lenTripcodeKey * 3;
 			i < SCREEN_WIDTH - 1;
 			++i) {
 			printf(" ");
 		}
 		printf("\n");
-	} else {
+	} else if (options.redirection) {
 		printf("[tripcode],%c%c", 0x81, 0x9f);
-		for (int i = 0; i < lenTripcode; ++i)
+		for (int32_t i = 0; i < lenTripcode; ++i)
 			printf("%c", tripcode[i]);
 		printf(",#");
-		for (int i = 0; i < lenTripcodeKey; ++i)
+		for (int32_t i = 0; i < lenTripcodeKey; ++i)
 			printf("%c", key[i]);
 		printf(",(");
-		for (int i = 0; i < lenTripcodeKey; ++i) {
+		for (int32_t i = 0; i < lenTripcodeKey; ++i) {
 			printf("%02X", key[i]);
 			if (i + 1 < lenTripcodeKey)
 				printf(" ");
@@ -1471,74 +1486,74 @@ void ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key)
 		printf(")\n");
 	}
 	fflush(stdout);
+	process_tripcode_pair_spinlock.unlock();
 
+	current_state_spinlock.lock();
 	++numValidTripcodes;
+	current_state_spinlock.unlock();
+
 	if (!options.redirection)
 		PrintStatus();
 	if (!options.redirection && options.beepWhenNewTripcodeIsFound)
 		printf("\a");
-	
-	LeaveCriticalSection(&criticalSection_ProcessTripcodePair);
-	LeaveCriticalSection(&criticalSection_currentState);
 }
 
 void ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char *key)
 {
-	EnterCriticalSection(&criticalSection_currentState);
-	EnterCriticalSection(&criticalSection_ProcessTripcodePair);
-
-	if (options.outputInvalidTripcode) {
+	process_tripcode_pair_spinlock.lock();
+	if (options.outputInvalidTripcode && !options.redirection && !GetTerminationState() && !GetErrorState()) {
 #ifdef ENGLISH_VERSION
 		fprintf(tripcodeFile, "!");
 #else
 		fprintf(tripcodeFile, "%c%c", 0x81, 0x9f);
 #endif
-		for (int i = 0; i < lenTripcode; ++i)
+		for (int32_t i = 0; i < lenTripcode; ++i)
 			fprintf(tripcodeFile, "%c", tripcode[i]);
 		fprintf(tripcodeFile, "  ");
-		for (int i = 0; i < lenTripcodeKey; ++i)
+		for (int32_t i = 0; i < lenTripcodeKey; ++i)
 			fprintf(tripcodeFile, " ");
 		fprintf(tripcodeFile, " (");
-		for (int i = 0; i < lenTripcodeKey; ++i) {
+		for (int32_t i = 0; i < lenTripcodeKey; ++i) {
 			fprintf(tripcodeFile, "%02X", key[i]);
 			if (i + 1 < lenTripcodeKey)
 				fprintf(tripcodeFile, " ");
 		}
 		fprintf(tripcodeFile, ")\n");
-		fflush(tripcodeFile);  
+		fflush(tripcodeFile);
 
 #ifdef ENGLISH_VERSION
 		printf("  !");
 #else
 		printf("  %c%c", 0x81, 0x9f);
 #endif
-		for (int i = 0; i < lenTripcode; ++i)
+		for (int32_t i = 0; i < lenTripcode; ++i)
 			printf("%c", tripcode[i]);
 		printf("  ");
-		for (int i = 0; i < lenTripcodeKey; ++i)
+		for (int32_t i = 0; i < lenTripcodeKey; ++i)
 			printf(" ");
 		printf(" (");
-		for (int i = 0; i < lenTripcodeKey; ++i) {
+		for (int32_t i = 0; i < lenTripcodeKey; ++i) {
 			printf("%02X", key[i]);
 			if (i + 1 < lenTripcodeKey)
 				printf(" ");
 		}
 		printf(")");
-		for (int i = 4 + lenTripcode + 2 + lenTripcodeKey + 2 + lenTripcodeKey * 3;
-		    i < SCREEN_WIDTH - 1;
-		    ++i) {
+		for (int32_t i = 4 + lenTripcode + 2 + lenTripcodeKey + 2 + lenTripcodeKey * 3;
+			i < SCREEN_WIDTH - 1;
+			++i) {
 			printf(" ");
 		}
 		printf("\n");
 		fflush(stdout);
-		
-		if (!options.redirection)
-			PrintStatus();
 	}
-	++numDiscardedTripcodes;
+	process_tripcode_pair_spinlock.unlock();
 
-	LeaveCriticalSection(&criticalSection_ProcessTripcodePair);
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.lock();
+	++numDiscardedTripcodes;
+	current_state_spinlock.unlock();
+
+	if (options.outputInvalidTripcode && !options.redirection && !GetTerminationState() && !GetErrorState())
+		PrintStatus();
 }
 
 void OpenTripcodeFile()
@@ -1547,100 +1562,100 @@ void OpenTripcodeFile()
 	ERROR0(tripcodeFilePath == NULL, ERROR_TRIPCODE_FILE, "The output file cannot be opened.");
 }
 
-void AddToNumGeneratedTripcodesByCPU(unsigned int num)
+void AddToNumGeneratedTripcodesByCPU(uint32_t num)
 {
-	EnterCriticalSection(&criticalSection_numGeneratedTripcodes);
+	num_generated_tripcodes_spinlock.lock();
 	numGeneratedTripcodes_CPU += num;
 	if (numGeneratedTripcodes_CPU >= 1000000) {
 		numGeneratedTripcodesByCPUInMillions += numGeneratedTripcodes_CPU / 1000000;
 		numGeneratedTripcodes_CPU           %= 1000000;
 	}
-	LeaveCriticalSection(&criticalSection_numGeneratedTripcodes);
+	num_generated_tripcodes_spinlock.unlock();
 }
 
-void AddToNumGeneratedTripcodesByGPU(unsigned int num)
+void AddToNumGeneratedTripcodesByGPU(uint32_t num)
 {
-	EnterCriticalSection(&criticalSection_numGeneratedTripcodes);
+	num_generated_tripcodes_spinlock.lock();
 	numGeneratedTripcodes_GPU += num;
 	if (numGeneratedTripcodes_GPU >= 1000000) {
 		numGeneratedTripcodesByGPUInMillions += numGeneratedTripcodes_GPU / 1000000;
 		numGeneratedTripcodes_GPU           %= 1000000;
 	}
-	LeaveCriticalSection(&criticalSection_numGeneratedTripcodes);
+	num_generated_tripcodes_spinlock.unlock();
 }
 
 double GetNumGeneratedTripcodesByCPU()
 {
-	EnterCriticalSection(&criticalSection_numGeneratedTripcodes);
+	num_generated_tripcodes_spinlock.lock();
 
 	double ret =   (double)numGeneratedTripcodesByCPUInMillions * 1000000
 	             +         numGeneratedTripcodes_CPU;
 	numGeneratedTripcodesByCPUInMillions = 0;
 	numGeneratedTripcodes_CPU           = 0;
 
-	LeaveCriticalSection(&criticalSection_numGeneratedTripcodes);
+	num_generated_tripcodes_spinlock.unlock();
 	
 	return ret;
 }
 
 double GetNumGeneratedTripcodesByGPU()
 {
-	EnterCriticalSection(&criticalSection_numGeneratedTripcodes);
+	num_generated_tripcodes_spinlock.lock();
 
 	double ret =   (double)numGeneratedTripcodesByGPUInMillions * 1000000
 	             +         numGeneratedTripcodes_GPU;
 	numGeneratedTripcodesByGPUInMillions = 0;
 	numGeneratedTripcodes_GPU           = 0;
 
-	LeaveCriticalSection(&criticalSection_numGeneratedTripcodes);
+	num_generated_tripcodes_spinlock.unlock();
 	
 	return ret;
 }
 
 void SetPauseState(BOOL newPauseState)
 {
-	EnterCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.lock();
 	isSearchPaused = newPauseState;
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.unlock();
 }
 
 BOOL GetPauseState()
 {
 	BOOL ret;
-	EnterCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.lock();
 	ret = isSearchPaused;
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.unlock();
 	return ret;
 }
 
 void SetErrorState()
 {
-	EnterCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.lock();
 	wasSearchAbortedWithError = TRUE;
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.unlock();
 }
 
 BOOL GetErrorState()
 {
 	BOOL ret;
-	EnterCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.lock();
 	ret = wasSearchAbortedWithError;
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.unlock();
 	return ret;
 }
 
 void SetTerminationState()
 {
-	EnterCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.lock();
 	wasSearchTerminated = TRUE;
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.unlock();
 }
 
 BOOL GetTerminationState()
 {
 	BOOL ret;
 
-	EnterCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.lock();
 
 	// Prepare for termination.
 	if (options.redirection && nameEventForTerminatingWC[0] != 0x0 && eventForTerminating == NULL) {
@@ -1654,21 +1669,19 @@ BOOL GetTerminationState()
 
 	ret = wasSearchTerminated;
 
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.unlock();
 
 	return ret;
 }
 
-double UpdateCurrentStatus(DWORD startingTime)
+double UpdateCurrentStatus(uint64_t startingTime)
 {
-	EnterCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.lock();
 	
 	double numGeneratedTripcodes_GPU = GetNumGeneratedTripcodesByGPU();
 	double numGeneratedTripcodes_CPU = GetNumGeneratedTripcodesByCPU();
-	DWORD  endingTime = timeGetTime();
-	double deltaTime = (endingTime >= startingTime)
-	                       ? (endingTime - startingTime             ) * 0.001
-	                       : (endingTime - startingTime + 0xffffffff) * 0.001;
+	uint64_t  endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	double deltaTime = (endingTime - startingTime             ) * 0.001;
 
 	totalNumGeneratedTripcodes     += numGeneratedTripcodes_GPU + numGeneratedTripcodes_CPU;
 	totalNumGeneratedTripcodes_GPU += numGeneratedTripcodes_GPU;
@@ -1685,7 +1698,7 @@ double UpdateCurrentStatus(DWORD startingTime)
 	prevNumValidTripcodes     = numValidTripcodes;
 	prevNumDiscardedTripcodes = numDiscardedTripcodes;
 
-	LeaveCriticalSection(&criticalSection_currentState);
+	current_state_spinlock.unlock();
 
 	return deltaTime;
 }
@@ -1699,23 +1712,23 @@ BOOL IsFirstByteSJIS(unsigned char ch)
 	}
 }
 
-void SetCharactersInTripcodeKey(unsigned char *key, int n)
+void SetCharactersInTripcodeKey(unsigned char *key, int32_t n)
 {
 	if (options.useOnlyASCIICharactersForKeys) {
-		for (int i = 0; i < n; i++){
+		for (int32_t i = 0; i < n; i++){
 			key[i] = RandomByte();
 			while ((i == 0 && (key[i] == '#' || key[i] == '$')) || !IS_ASCII_KEY_CHAR(key[i]))
 				key[i] = (unsigned char)(RandomByte() & 0xff);
 		}
 	} else if (options.useOneByteCharactersForKeys) {
-		for (int i = 0; i < n; i++){
+		for (int32_t i = 0; i < n; i++){
 			key[i] = RandomByte();
 			while ((i == 0 && (key[i] == '#' || key[i] == '$')) || !IS_ONE_BYTE_KEY_CHAR(key[i]))
 				key[i] = (unsigned char)(RandomByte() & 0xff);
 		}
 	} else {
 		BOOL isSecondByteSJIS = FALSE;
-		for (int i = 0; i < n; i++){
+		for (int32_t i = 0; i < n; i++){
 			if (!isSecondByteSJIS) {
 				key[i] = RandomByte();
 				while ((i == 0 && (key[i] == '#' || key[i] == '$')) || !(IS_ONE_BYTE_KEY_CHAR(key[i]) || IsFirstByteSJIS(key[i])))
@@ -1735,20 +1748,20 @@ void SetCharactersInTripcodeKey(unsigned char *key, int n)
 void SetCharactersInTripcodeKeyForSHA1Tripcode(unsigned char *key)
 {
 	if (options.useOnlyASCIICharactersForKeys) {
-		for (int i = 0; i < lenTripcodeKey; i++){
+		for (int32_t i = 0; i < lenTripcodeKey; i++){
 			key[i] = RandomByte();
 			while ((i == 0 && (key[i] == '#' || key[i] == '$')) || !IS_ASCII_KEY_CHAR(key[i]))
 				key[i] = (unsigned char)(RandomByte() & 0xff);
 		}
 	} else if (options.useOneByteCharactersForKeys) {
-		for (int i = 0; i < lenTripcodeKey; i++){
+		for (int32_t i = 0; i < lenTripcodeKey; i++){
 			key[i] = RandomByte();
 			while ((i == 0 && (key[i] == '#' || key[i] == '$')) || !IS_ONE_BYTE_KEY_CHAR(key[i]))
 				key[i] = (unsigned char)(RandomByte() & 0xff);
 		}
 	} else {
 		BOOL isSecondByteSJIS = FALSE;
-		for (int i = 0; i < lenTripcodeKey; i++){
+		for (int32_t i = 0; i < lenTripcodeKey; i++){
 			if (!isSecondByteSJIS) {
 				key[i] = (unsigned char)(RandomByte() & 0xff);
 				if (i == 3 || i == lenTripcodeKey - 1) {
@@ -1771,24 +1784,23 @@ void SetCharactersInTripcodeKeyForSHA1Tripcode(unsigned char *key)
 
 void StartCUDADeviceSearchThreads()
 {
-	int    i;
-	unsigned int winThreadID;
+	int32_t    i;
+	uint32_t winThreadID;
 	
 	ASSERT(numCUDADeviceSearchThreads > 0);
 
-	ERROR0((CUDADeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0((cuda_device_search_threads = new (std::nothrow) std::thread *[numCUDADeviceSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	ERROR0((CUDADeviceSearchThreadInfoArray = (struct CUDADeviceSearchThreadInfo *)malloc(sizeof(struct CUDADeviceSearchThreadInfo) * numCUDADeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	if (options.GPUIndex == GPU_INDEX_ALL) {
-		int CUDADeviceIndex;
+		int32_t CUDADeviceIndex;
 		for (CUDADeviceIndex = 0, i = 0; CUDADeviceIndex < CUDADeviceCount; ++CUDADeviceIndex) {
-			for (int j = 0; j < CUDA_NUM_THREADS_PER_DEVICE; ++j, ++i) {
+			for (int32_t j = 0; j < CUDA_NUM_THREADS_PER_DEVICE; ++j, ++i) {
 				ASSERT(i < numCUDADeviceSearchThreads);
 				CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex = CUDADeviceIndex;
 				CUDADeviceSearchThreadInfoArray[i].subindex = j;
 				CUDADeviceSearchThreadInfoArray[i].status[0] = '\0';
-				CUDADeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
+				CUDADeviceSearchThreadInfoArray[i].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 				CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceSearchThreadInfoArray[i].properties, CUDADeviceIndex));
-				InitializeCriticalSection(&CUDADeviceSearchThreadInfoArray[i].criticalSection);
 			}
 		}
 	} else if (options.GPUIndex < CUDADeviceCount) {
@@ -1797,57 +1809,41 @@ void StartCUDADeviceSearchThreads()
 			CUDADeviceSearchThreadInfoArray[i].CUDADeviceIndex = options.GPUIndex;
 			CUDADeviceSearchThreadInfoArray[i].subindex = i;
 			CUDADeviceSearchThreadInfoArray[i].status[0] = '\0';
-			CUDADeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
+			CUDADeviceSearchThreadInfoArray[i].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 			CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceSearchThreadInfoArray[i].properties, options.GPUIndex));
-			InitializeCriticalSection(&CUDADeviceSearchThreadInfoArray[i].criticalSection);
 		}
 	}
 
 	if (lenTripcode == 12) {
 		for (i = 0; i < numCUDADeviceSearchThreads; ++i) {
-			CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-			                                                        0,
-													                Thread_SearchForSHA1TripcodesOnCUDADevice,
-															        &(CUDADeviceSearchThreadInfoArray[i]),
-															        0,
-											                        &winThreadID);
-			ERROR0((CUDADeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
+			cuda_device_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForSHA1TripcodesOnCUDADevice, &(CUDADeviceSearchThreadInfoArray[i]));
+			ERROR0((cuda_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
 		}
 	} else {
 		ASSERT(lenTripcode == 10);
 		for (i = 0; i < numCUDADeviceSearchThreads; ++i) {
 			if (CUDADeviceSearchThreadInfoArray[i].properties.major >= 5) {
-				CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-																		0,
-																		Thread_SearchForDESTripcodesOnCUDADevice_Registers,
-																		&(CUDADeviceSearchThreadInfoArray[i]),
-																		0,
-																		&winThreadID);
+				cuda_device_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForDESTripcodesOnCUDADevice_Registers, &(CUDADeviceSearchThreadInfoArray[i]));
 			} else {
-				CUDADeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-																		0,
-																		Thread_SearchForDESTripcodesOnCUDADevice,
-																		&(CUDADeviceSearchThreadInfoArray[i]),
-																		0,
-																		&winThreadID);
+				cuda_device_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForDESTripcodesOnCUDADevice, &(CUDADeviceSearchThreadInfoArray[i]));
 			}
-			ERROR0((CUDADeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
+			ERROR0((cuda_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CUDA device search thread.");
 		}
 	}
 }
 
 void StartOpenCLDeviceSearchThreads()
 {
-	int          i, j;
-	unsigned int winThreadID;
+	int32_t          i, j;
+	uint32_t winThreadID;
 	char         deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 	
 	ASSERT(numOpenCLDeviceSearchThreads > 0);
 
-	ERROR0((openCLDeviceSearchThreadArray     = (HANDLE *)malloc(sizeof(HANDLE) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
-	ERROR0((openCLDeviceSearchThreadInfoArray = (struct OpenCLDeviceSearchThreadInfo *)malloc(sizeof(struct OpenCLDeviceSearchThreadInfo) * numOpenCLDeviceSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0((opencl_device_search_threads = new (std::nothrow) std::thread *[numOpenCLDeviceSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	ERROR0((openCLDeviceSearchThreadInfoArray = new (std::nothrow) struct OpenCLDeviceSearchThreadInfo [numOpenCLDeviceSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	if (options.GPUIndex == GPU_INDEX_ALL) {
-		int openCLDeviceIDArrayIndex = 0;
+		int32_t openCLDeviceIDArrayIndex = 0;
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
 			OPENCL_ERROR(clGetDeviceInfo(openCLDeviceIDArray[openCLDeviceIDArrayIndex], CL_DEVICE_VENDOR, sizeof(deviceVendor), &deviceVendor, NULL));
 			openCLDeviceSearchThreadInfoArray[i].openCLDeviceID  = openCLDeviceIDArray[openCLDeviceIDArrayIndex];
@@ -1863,7 +1859,7 @@ void StartOpenCLDeviceSearchThreads()
 			openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
 			openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
 			openCLDeviceSearchThreadInfoArray[i].numRestarts                = 0;
-			openCLDeviceSearchThreadInfoArray[i].timeLastUpdated            = timeGetTime();
+			openCLDeviceSearchThreadInfoArray[i].timeLastUpdated            = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 			openCLDeviceSearchThreadInfoArray[i].subindex                   = 0;
 			if (!openCLRunChildProcesses) {
 				for (j = 1; j < options.openCLNumThreads; ++j) {
@@ -1877,7 +1873,7 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = FALSE;
 					openCLDeviceSearchThreadInfoArray[i].childProcess = NULL;
 					openCLDeviceSearchThreadInfoArray[i].numRestarts = 0;
-					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
+					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 				}
 			} else {
 				openCLDeviceSearchThreadInfoArray[i].subindex       = 0;
@@ -1898,14 +1894,14 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes = 0;
 					openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes      = 0;
 					openCLDeviceSearchThreadInfoArray[i].numRestarts = 0;
-					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = timeGetTime();
+					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 				}
 			}
 			++openCLDeviceIDArrayIndex;
 		}
 
 	} else if (CUDADeviceCount <= options.GPUIndex && options.GPUIndex < CUDADeviceCount + openCLDeviceCount) {
-		int openCLDeviceIDArrayIndex = options.GPUIndex - CUDADeviceCount;
+		int32_t openCLDeviceIDArrayIndex = options.GPUIndex - CUDADeviceCount;
 		OPENCL_ERROR(clGetDeviceInfo(openCLDeviceIDArray[openCLDeviceIDArrayIndex], CL_DEVICE_VENDOR, sizeof(deviceVendor), &deviceVendor, NULL));
 		openCLDeviceSearchThreadInfoArray[0].openCLDeviceID  = openCLDeviceIDArray[openCLDeviceIDArrayIndex];
 		openCLDeviceSearchThreadInfoArray[0].index           = 0;
@@ -1918,8 +1914,9 @@ void StartOpenCLDeviceSearchThreads()
 		openCLDeviceSearchThreadInfoArray[0].currentSpeed               = 0;
 		openCLDeviceSearchThreadInfoArray[0].averageSpeed               = 0;
 		openCLDeviceSearchThreadInfoArray[0].totalNumGeneratedTripcodes = 0;
-		openCLDeviceSearchThreadInfoArray[0].numDiscardedTripcodes      = 0;
-		openCLDeviceSearchThreadInfoArray[0].timeLastUpdated = timeGetTime();
+		openCLDeviceSearchThreadInfoArray[0].numDiscardedTripcodes = 0;
+		openCLDeviceSearchThreadInfoArray[0].numRestarts = 0;
+		openCLDeviceSearchThreadInfoArray[0].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		if (!openCLRunChildProcesses) {
 			ASSERT(numOpenCLDeviceSearchThreads == options.openCLNumThreads);
 			openCLDeviceSearchThreadInfoArray[0].subindex       = 0;
@@ -1930,7 +1927,7 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].status[0]       = '\0';
 				openCLDeviceSearchThreadInfoArray[j].runChildProcess = FALSE;
 				openCLDeviceSearchThreadInfoArray[j].childProcess = NULL;
-				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = timeGetTime();
+				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 			}
 		} else {
 			openCLDeviceSearchThreadInfoArray[0].subindex = 0;
@@ -1947,32 +1944,23 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].currentSpeed               = 0;
 				openCLDeviceSearchThreadInfoArray[j].averageSpeed               = 0;
 				openCLDeviceSearchThreadInfoArray[j].totalNumGeneratedTripcodes = 0;
-				openCLDeviceSearchThreadInfoArray[j].numDiscardedTripcodes      = 0;
-				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = timeGetTime();
+				openCLDeviceSearchThreadInfoArray[j].numDiscardedTripcodes = 0;
+				openCLDeviceSearchThreadInfoArray[j].numRestarts = 0;
+				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 			}	
 		}
 	}
 
 	if (lenTripcode == 12) {
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			openCLDeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-			                                                        0,
-													                Thread_SearchForSHA1TripcodesOnOpenCLDevice,
-															        &(openCLDeviceSearchThreadInfoArray[i]),
-															        0,
-											                        &winThreadID);
-			ERROR0((openCLDeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start an OpenCL device search thread.");
+			opencl_device_search_threads[i] = new std::thread(Thread_SearchForSHA1TripcodesOnOpenCLDevice, &(openCLDeviceSearchThreadInfoArray[i]));
+			ERROR0((opencl_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a OpenCL device search thread.");
 		}
 	} else {
 		ASSERT(lenTripcode == 10);
 		for (i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			openCLDeviceSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL,
-			                                                        0,
-			                                                        Thread_SearchForDESTripcodesOnOpenCLDevice,
-															        &(openCLDeviceSearchThreadInfoArray[i]),
-															        0,
-														            &winThreadID);
-			ERROR0((openCLDeviceSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start an OpenCL device search thread.");
+			opencl_device_search_threads[i] = new std::thread(Thread_SearchForDESTripcodesOnOpenCLDevice, &(openCLDeviceSearchThreadInfoArray[i]));
+			ERROR0((opencl_device_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a OpenCL device search thread.");
 		}
 	}
 }
@@ -1989,27 +1977,27 @@ void StartCPUSearchThreads()
 {
 	ASSERT(numCPUSearchThreads > 0);
 
-	unsigned int winThreadID;
+	uint32_t winThreadID;
 	
-	if (CPUSearchThreadArray)
-		free(CPUSearchThreadArray);
-	ERROR0((CPUSearchThreadArray = (HANDLE *)malloc(sizeof(HANDLE) * numCPUSearchThreads)) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
+	if (cpu_search_threads)
+		delete [] cpu_search_threads;
+	ERROR0((cpu_search_threads = new (std::nothrow) std::thread *[numCPUSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	
-	for (int i = 0; i < numCPUSearchThreads; ++i) {
+	for (int32_t i = 0; i < numCPUSearchThreads; ++i) {
 		if (lenTripcode == 12) {
-			CPUSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL, 0, Thread_SearchForSHA1TripcodesOnCPU, NULL, 0, &winThreadID);
+			cpu_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForSHA1TripcodesOnCPU);
 		} else {
 			ASSERT(lenTripcode == 10);
-			CPUSearchThreadArray[i] = (HANDLE)_beginthreadex(NULL, 0, Thread_SearchForDESTripcodesOnCPU, NULL, 0, &winThreadID);
+			cpu_search_threads[i] = new (std::nothrow) std::thread(Thread_SearchForDESTripcodesOnCPU);
 		}
-		ERROR0((CPUSearchThreadArray[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CPU search thread.");
+		ERROR0((cpu_search_threads[i] == NULL), ERROR_SEARCH_THREAD, "Failed to start a CPU search thread.");
 	}
 }
 
-int GetParentProcessID()
+int32_t GetParentProcessID()
 {
-	int processID = GetCurrentProcessId();
-	int parentProcessID = -1;
+	int32_t processID = GetCurrentProcessId();
+	int32_t parentProcessID = -1;
 	HANDLE hSnapProcess = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	PROCESSENTRY32 processEntry = {0};
 	processEntry.dwSize = sizeof(PROCESSENTRY32);
@@ -2029,11 +2017,11 @@ int GetParentProcessID()
 
 void ListExpandedPatterns()
 {
-	for (int i = 0; i < numExpandedPatterns; ++i)
+	for (int32_t i = 0; i < numExpandedPatterns; ++i)
 		printf("%d: `%s' @ %d\n", i, expandedPatternArray[i].c, expandedPatternArray[i].pos);
 }
 
-int main(int argc, char **argv)
+int32_t main(int32_t argc, char **argv)
 {
 	BOOL   displayDeviceInformationAndExit = false;
 	BOOL   listExpandedPatternsAndExit     = false;
@@ -2095,14 +2083,13 @@ int main(int argc, char **argv)
 	}
 	PrintStatus();
 	
-	if (searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
-		StartGPUSearchThreads();
-
-	if (searchDevice == SEARCH_DEVICE_CPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
-		StartCPUSearchThreads();
 	
 	// The main loop.
-	DWORD startingTime = timeGetTime();
+	uint64_t startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	if (searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
+		StartGPUSearchThreads();
+	if (searchDevice == SEARCH_DEVICE_CPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
+		StartCPUSearchThreads();
 	HANDLE parentProcess = OpenProcess(SYNCHRONIZE, FALSE, GetParentProcessID());
 	while (!GetTerminationState()) {
 		// Break the main loop if necessary.
@@ -2110,8 +2097,8 @@ int main(int argc, char **argv)
 			break;
 
 		// Wait for the duration of STATUS_UPDATE_INTERVAL.
-		DWORD mutexForPausingState;
-		for (int i = 0; i < NUM_CHECKS_PER_INTERVAL; ++i) {
+		uint32_t mutexForPausingState;
+		for (int32_t i = 0; i < NUM_CHECKS_PER_INTERVAL; ++i) {
 			// Break the loop if the search is paused.
 			if (mutexForPausing) {
 				mutexForPausingState = WaitForSingleObject(mutexForPausing, 0);
@@ -2131,7 +2118,7 @@ int main(int argc, char **argv)
 			if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
 				break;
 
-			Sleep((DWORD)(STATUS_UPDATE_INTERVAL * 1000 / NUM_CHECKS_PER_INTERVAL));
+			Sleep((uint32_t)(STATUS_UPDATE_INTERVAL * 1000 / NUM_CHECKS_PER_INTERVAL));
 		}
 		if (GetTerminationState())
 			break;
@@ -2162,7 +2149,7 @@ int main(int argc, char **argv)
 				
 		//
 		CheckSearchThreads();
-		startingTime = timeGetTime();
+		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		PrintStatus();
 		
 		// Warn the user if the speed drops suddenly.
@@ -2178,31 +2165,31 @@ int main(int argc, char **argv)
 	// Terminate search threads.
 	SetTerminationState();
 	BOOL allThreadsHaveExited;
-	startingTime = timeGetTime();
-	DWORD currentTime, deltaTime;
+	startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	uint64_t currentTime, deltaTime;
 	do {
 		Sleep(100);
 		allThreadsHaveExited = TRUE;
-		for (int i = 0; i < numCUDADeviceSearchThreads; ++i) {
-			if (WaitForSingleObject(CUDADeviceSearchThreadArray[i], 0) != WAIT_OBJECT_0) {
+		for (int32_t i = 0; i < numCUDADeviceSearchThreads; ++i) {
+			if (WaitForSingleObject(cuda_device_search_threads[i]->native_handle(), 0) != WAIT_OBJECT_0) {
 				allThreadsHaveExited = FALSE;
 				break;
 			}
 		}
-		for (int i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
-			if (WaitForSingleObject(openCLDeviceSearchThreadArray[i], 0) != WAIT_OBJECT_0) {
+		for (int32_t i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
+			if (WaitForSingleObject(opencl_device_search_threads[i]->native_handle(), 0) != WAIT_OBJECT_0) {
 				allThreadsHaveExited = FALSE;
 				break;
 			}
 		}
-		for (int i = 0; i < numCPUSearchThreads; ++i) {
-			if (WaitForSingleObject(CPUSearchThreadArray[i], 0) != WAIT_OBJECT_0) {
+		for (int32_t i = 0; i < numCPUSearchThreads; ++i) {
+			if (WaitForSingleObject(cpu_search_threads[i]->native_handle(), 0) != WAIT_OBJECT_0) {
 				allThreadsHaveExited = FALSE;
 				break;
 			}
 		}
-		currentTime = timeGetTime();
-		deltaTime = (currentTime >= startingTime) ? (currentTime - startingTime) : (currentTime + (0xffffffffU - startingTime));
+		currentTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		deltaTime = currentTime - startingTime;
 	} while (deltaTime < 10 * 1000 && !allThreadsHaveExited);	
 
 	ReleaseResources();

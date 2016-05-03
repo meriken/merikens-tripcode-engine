@@ -139,8 +139,8 @@ BOOL VerifySHA1Tripcode(unsigned char *tripcode, unsigned char *key)
 	if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
 		return FALSE;
 
-	unsigned int W[80];
-    unsigned int A = H0, B = H1, C = H2, D = H3, E = H4, tmp;
+	uint32_t W[80];
+    uint32_t A = H0, B = H1, C = H2, D = H3, E = H4, tmp;
 
 	ROUND_00_TO_15_W(0, (key[ 0] << 24) | (key[ 1] << 16) | (key[ 2] << 8) | key[ 3]);
 	ROUND_00_TO_15_W(1, (key[ 4] << 24) | (key[ 5] << 16) | (key[ 6] << 8) | key[ 7]);

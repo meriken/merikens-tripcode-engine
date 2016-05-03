@@ -76,8 +76,8 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
 	salt[1] = CONVERT_CHAR_FOR_SALT(keyChar2);
 	DES_CreateExpansionFunction((char *)salt, expansionFunction);
-	//for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
-	//	printf("#define EF%02d %d\n", i, (int)expansionFunction[i]);
+	//for (int32_t i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
+	//	printf("#define EF%02d %d\n", i, (int32_t)expansionFunction[i]);
 
 	/*
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
@@ -116,7 +116,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	sourceCode = (char*)malloc(OPENCL_MAX_SIZE_SOURCE_CODE);
 	ERROR0(sourceCode == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	sourceCode[0] = '\0';
-	for (int i = 0; i < 7; ++i) {
+	for (int32_t i = 0; i < 7; ++i) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
 		if (keyChar1 & (1 << i)) {
 			sprintf(s, "#define K%02dC 0xffffffffU\n#define K%02dXOR(dest, val) (dest) = ~(val)\n#define K%02dXORV(val) ~(val)\n", i + 7, i + 7, i + 7);
@@ -125,7 +125,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		}
 		strcat(sourceCode, s);
 	}
-	for (int i = 0; i < 7; ++i) {
+	for (int32_t i = 0; i < 7; ++i) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
 		if (keyChar2 & (1 << i)) {
 			sprintf(s, "#define K%02dC 0xffffffffU\n#define K%02dXOR(dest, val) (dest) = ~(val)\n#define K%02dXORV(val) ~(val)\n", i + 14, i + 14, i + 14);
@@ -134,17 +134,17 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		}
 		strcat(sourceCode, s);
 	}
-	for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i) {
+	for (int32_t i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
-		sprintf(s, "#define EF%02d %d\n", i, (int)expansionFunction[i]);
+		sprintf(s, "#define EF%02d %d\n", i, (int32_t)expansionFunction[i]);
 		strcat(sourceCode, s);
-		sprintf(s, "#define DB_EF%02d DB%02d\n", i, (int)expansionFunction[i]);
+		sprintf(s, "#define DB_EF%02d DB%02d\n", i, (int32_t)expansionFunction[i]);
 		strcat(sourceCode, s);
 	}
 	unsigned char key7Array[OPENCL_DES_BS_DEPTH];
-	int randomByteForKey7 = RandomByte();
+	int32_t randomByteForKey7 = RandomByte();
 	//strcat(sourceCode, "__constant unsigned char key7Array[] = {");
-	for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i) {
+	for (int32_t i = 0; i < OPENCL_DES_BS_DEPTH; ++i) {
 		key7Array[i] = keyCharTable_SecondByteAndOneByte[randomByteForKey7 + i];
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; 
 		//sprintf(s, "0x%02x,", key7Array[i]);
@@ -152,10 +152,10 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		strcat(sourceCode, s);
 	}
 	//strcat(sourceCode, "};\n");
-	for (int j = 0; j < 7; ++j) {
+	for (int32_t j = 0; j < 7; ++j) {
 		char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
-		unsigned int k = 0;
-		for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i)
+		uint32_t k = 0;
+		for (int32_t i = 0; i < OPENCL_DES_BS_DEPTH; ++i)
 			k |= ((key7Array[i] >> j) & 0x1) << i;
 		sprintf(s, "#define K%02dC 0x%08x\n#define K%02dXOR(dest, val) (dest) = ((val) ^ 0x%08x)\n#define K%02dXORV(val) ((val) ^ 0x%08x)\n", j + 49, k, j + 49, k, j + 49, k);
 		strcat(sourceCode, s);
@@ -191,7 +191,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		OPENCL_ERROR(openCLError);
 		unsigned char **binaryArray = (unsigned char **)malloc(sizeof(unsigned char *) * numDevices);
 		ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
-		for(int i = 0; i < numDevices; ++i) {
+		for(int32_t i = 0; i < numDevices; ++i) {
 			binaryArray[i] = (unsigned char *)malloc(binarySizeArray[i]);
 			ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 		}
@@ -203,7 +203,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 			fclose(binaryFile);
 		}
 		free(binarySizeArray);
-		for(int i = 0; i < numDevices; ++i)
+		for(int32_t i = 0; i < numDevices; ++i)
 			free(binaryArray[i]);
 		free(binaryArray);
 	}
@@ -223,7 +223,7 @@ static void ExtractTextSectionInELFFileIntoFile(char *ELFFilePath, char *textSec
     
     reader.load(ELFFilePath);
     Elf_Half sec_num = reader.sections.size();
-    for ( int i = 0; i < sec_num; ++i ) {
+    for ( int32_t i = 0; i < sec_num; ++i ) {
         section* psec = reader.sections[i];
 		if (psec->get_name() == ".text") {
 			ofstream textSectionFile;
@@ -261,11 +261,11 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
     section* data_sec = NULL;
     section* symtab_sec = NULL;
     section* strtab_sec = NULL;
-    for ( int i = 0; i < sec_num; ++i ) {
+    for ( int32_t i = 0; i < sec_num; ++i ) {
 		if (reader.sections[i]->get_name() == ".strtab")
 			strtab_sec = reader.sections[i];
 	}
-    for ( int i = 0; i < sec_num; ++i ) {
+    for ( int32_t i = 0; i < sec_num; ++i ) {
         section* src_sec = reader.sections[i];
 		if (src_sec->get_name() == ".shstrtab" || src_sec->get_type() == SHT_NULL)
 			continue;
@@ -298,8 +298,8 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 			Elf_Half section_index;
 			unsigned char other;
 
-			for (int i = 0; i < src_symbols.get_symbols_num(); ++i) {
-				int j = 0;
+			for (int32_t i = 0; i < src_symbols.get_symbols_num(); ++i) {
+				int32_t j = 0;
 				string_section_accessor strings = string_section_accessor(strtab_sec);
 
 				src_symbols.get_symbol(i, name, value, size, bind, type, section_index, other);
@@ -316,9 +316,9 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 			}
 			*/
 			char *data = new char [src_sec->get_size()];
-			for (int i = 0; i < src_sec->get_size(); ++i) {
+			for (int32_t i = 0; i < src_sec->get_size(); ++i) {
 				data[i] = (src_sec->get_data())[i];
-				//printf("%02x ", (int)(((unsigned char *)data)[i]));
+				//printf("%02x ", (int32_t)(((unsigned char *)data)[i]));
 				//if (i % 16 == 15)
 				//	printf("\n");
 			}
@@ -326,8 +326,8 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 			if (!innerELFFile && src_sec->get_size() >=  16 + 24 * 3)
 				*(uint64_t *)(data + 24 * 2 + 16) = textSectionSize;
 			dest_sec->set_data(data, src_sec->get_size());
-			//for (int i = 0; i < src_sec->get_size(); ++i) {
-			//	printf("%02x ", (int)(((unsigned char *)data)[i]));
+			//for (int32_t i = 0; i < src_sec->get_size(); ++i) {
+			//	printf("%02x ", (int32_t)(((unsigned char *)data)[i]));
 			//	if (i % 16 == 15)
 			//		printf("\n");
 			//}
@@ -342,7 +342,7 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 	}
 
 	Elf_Half seg_num = reader.segments.size();
-    for ( int i = 0; i < seg_num; ++i ) {
+    for ( int32_t i = 0; i < seg_num; ++i ) {
         segment* src_seg = reader.segments[i];
 		segment* dest_seg = writer.segments.add();
 		dest_seg->set_type(src_seg->get_type());
@@ -360,7 +360,7 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 			size_t size = text_sec_size + data_sec_size + symtab_sec_size + strtab_sec_size;
 			char *data = new char [size], *p = data;
 			const char *q;
-			int i;
+			int32_t i;
 			for (i = 0, q = text_sec->get_data();   i < text_sec_size;   ++i) *p++ = *q++;
 			for (i = 0, q = data_sec->get_data();   i < data_sec_size;   ++i) *p++ = *q++;
 			for (i = 0, q = symtab_sec->get_data(); i < symtab_sec_size; ++i) *p++ = *q++;
@@ -374,7 +374,7 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 
 		if (src_seg->get_type() == PT_NOTE && innerELFFile) {
 			unsigned char *data = (unsigned char *)(dest_seg->get_data());
-			for (int i = 0; i < dest_seg->get_file_size() - 8; ++i) {
+			for (int32_t i = 0; i < dest_seg->get_file_size() - 8; ++i) {
 				if (   data[i    ] == 0x41
 					&& data[i + 1] == 0x10
 					&& data[i + 2] == 0x00
@@ -383,9 +383,9 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 					&& data[i + 5] == 0
 					&& data[i + 6] == 0
 					&& data[i + 7] == 0) {
-					//printf("VGPR: %d\n", (int)data[i + 4]);
+					//printf("VGPR: %d\n", (int32_t)data[i + 4]);
 					data[i + 4] = 128U; // VGPR
-					//printf("VGPR: %d\n", (int)data[i + 4]);
+					//printf("VGPR: %d\n", (int32_t)data[i + 4]);
 				} else if (   data[i    ] == 0x42
 						   && data[i + 1] == 0x10
 						   && data[i + 2] == 0x00
@@ -394,9 +394,9 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 						   && data[i + 5] == 0
 						   && data[i + 6] == 0
 						   && data[i + 7] == 0) {
-					//printf("SGPR: %d\n", (int)data[i + 4]);
+					//printf("SGPR: %d\n", (int32_t)data[i + 4]);
 					data[i + 4] = 102U; // SGPR
-					//printf("SGPR: %d\n", (int)data[i + 4]);
+					//printf("SGPR: %d\n", (int32_t)data[i + 4]);
 				}
 			}
 		}
@@ -480,7 +480,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	};
 	cl_int         openCLError;
 
-	EnterCriticalSection(&criticalSection_ANSISystemFunction);
+	system_command_spinlock.lock();
 
 	// Create an expansion function based on the salt.
 	unsigned char  salt[2];
@@ -499,20 +499,20 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	sprintf(sourceFileFullPath, "%s\\%s", applicationDirectory, sourceFilePath);
 	if (sourceFile = fopen(sourceFileFullPath, "w")) {
-		for (int i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
+		for (int32_t i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
 			fprintf(sourceFile, "DB_EF%02d = %s\n", i, registerMap[expansionFunction[i]]);
 
 		unsigned char key7Array[OPENCL_DES_BS_DEPTH];
-		int randomByteForKey7 = RandomByte();
-		for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i) {
+		int32_t randomByteForKey7 = RandomByte();
+		for (int32_t i = 0; i < OPENCL_DES_BS_DEPTH; ++i) {
 			key7Array[i] = keyCharTable_SecondByteAndOneByte[randomByteForKey7 + i];
 			char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; 
 			fprintf(sourceFile, "KEY7_%02d = 0x%02x\n", i, key7Array[i]);
 		}
-		for (int j = 0; j < 7; ++j) {
+		for (int32_t j = 0; j < 7; ++j) {
 			char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; // may be too big.
-			unsigned int k = 0;
-			for (int i = 0; i < OPENCL_DES_BS_DEPTH; ++i)
+			uint32_t k = 0;
+			for (int32_t i = 0; i < OPENCL_DES_BS_DEPTH; ++i)
 				k |= ((key7Array[i] >> j) & 0x1) << i;
 			fprintf(sourceFile, "K%02d = 0x%08x\n", j + 49, k);
 		}
@@ -613,10 +613,10 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		system(assemblerCommand);
 	}
 
-	LeaveCriticalSection(&criticalSection_ANSISystemFunction);
+	system_command_spinlock.unlock();
 }
 
-unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
+void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
 	cl_context       context;
 	cl_command_queue commandQueue;
@@ -630,22 +630,22 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	cl_mem openCL_chunkBitmap;
 	cl_mem openCL_partialKeyFrom3To6Array;
 	cl_int         openCLError;
-	cl_device_id   deviceID = ((OpenCLDeviceSearchThreadInfo *)info)->openCLDeviceID;
+	cl_device_id   deviceID = info->openCLDeviceID;
 	cl_uint        numComputeUnits;
 	char           status[LEN_LINE_BUFFER_FOR_SCREEN] = {'\0'};
 	char           buildOptions[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1] = {'\0'}; 
 	KeyInfo        keyInfo;
 	unsigned char  expansionFunction[96];
 
-	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
-		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
-		return 0;
+	if (info->runChildProcess) {
+		Thread_RunChildProcessForOpenCLDevice(info);
+		return;
 	}
 
-	UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Starting a tripcode search...");
+	UpdateOpenCLDeviceStatus(info, "[thread] Starting a tripcode search...");
 
 	// Random wait time between 0 and 10 seconds for increased stability.
-	Sleep((DWORD)RandomByte() * 10000 / 256);
+	Sleep((uint32_t)RandomByte() * 10000 / 256);
 
 	// Determine the sizes of local and global work items.
 	size_t  numWorkItemsPerComputeUnit;
@@ -701,12 +701,12 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	}
 
 	// Create memory blocks for CPU.
-	unsigned int  sizeOutputArray = globalWorkSize;
+	uint32_t  sizeOutputArray = globalWorkSize;
 	GPUOutput    *outputArray     = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
 	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
-	unsigned int *compactMediumChunkBitmap = (unsigned int *)calloc(MEDIUM_CHUNK_BITMAP_SIZE / 8, sizeof(unsigned int));
+	uint32_t *compactMediumChunkBitmap = (uint32_t *)calloc(MEDIUM_CHUNK_BITMAP_SIZE / 8, sizeof(uint32_t));
 	ERROR0(compactMediumChunkBitmap == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
-	for (int i = 0; i < MEDIUM_CHUNK_BITMAP_SIZE; ++i)
+	for (int32_t i = 0; i < MEDIUM_CHUNK_BITMAP_SIZE; ++i)
 		if (mediumChunkBitmap[i])
 			compactMediumChunkBitmap[i >> 5] |= 0x1 << (i & 0x1f);
 	// printf("sizeOutputArray = %u\n", sizeOutputArray);
@@ -717,9 +717,9 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	if (options.maximizeKeySpace)
 		strcat(buildOptions, " -DMAXIMIZE_KEY_SPACE ");
 	char tempBuildOption[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1];
-	sprintf(tempBuildOption, " -DOPENCL_DES_LOCAL_WORK_SIZE=%d ", (int)localWorkSize);
+	sprintf(tempBuildOption, " -DOPENCL_DES_LOCAL_WORK_SIZE=%d ", (int32_t)localWorkSize);
 	strcat(buildOptions, tempBuildOption);
-	sprintf(tempBuildOption, " -DOPENCL_DES_BS_DEPTH=%d ", (int)OPENCL_DES_BS_DEPTH);
+	sprintf(tempBuildOption, " -DOPENCL_DES_BS_DEPTH=%d ", (int32_t)OPENCL_DES_BS_DEPTH);
 	strcat(buildOptions, tempBuildOption);
 	strcat(buildOptions, " -w ");
 	if (strcmp(deviceVendor, OPENCL_VENDOR_AMD) == 0)
@@ -754,10 +754,10 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	double       timeElapsed = 0;
 	double       numGeneratedTripcodes = 0;
 	double       averageSpeed = 0;
-	DWORD        startingTime = timeGetTime();
-	DWORD        endingTime;
+	int64_t        startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	int64_t        endingTime;
 	double       deltaTime;
-	int          execCounter = 0;
+	int32_t          execCounter = 0;
 	BOOL         firstBuild = TRUE;
 	
 	// Create an OpenCL context.
@@ -767,7 +767,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	// Create memory blocks for the OpenCL device.
 	openCL_outputArray          = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(GPUOutput) * sizeOutputArray,     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	openCL_keyInfo              = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(keyInfo),                         NULL, &openCLError); OPENCL_ERROR(openCLError);
-	openCL_tripcodeChunkArray   = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(unsigned int) * numTripcodeChunk, NULL, &openCLError); OPENCL_ERROR(openCLError);
+	openCL_tripcodeChunkArray   = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(uint32_t) * numTripcodeChunk, NULL, &openCLError); OPENCL_ERROR(openCLError);
 	openCL_smallChunkBitmap       = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_CHUNK_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
 	openCL_compactMediumChunkBitmap = clCreateBuffer(context, CL_MEM_READ_ONLY,  MEDIUM_CHUNK_BITMAP_SIZE / 8,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
 	openCL_chunkBitmap            = clCreateBuffer(context, CL_MEM_READ_ONLY,  CHUNK_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
@@ -776,7 +776,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 	while (!GetTerminationState()) {
 		// Build the kernel.
 		if (firstBuild || --execCounter < 0) {
-			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL program...");
+			UpdateOpenCLDeviceStatus(info, "[thread] Creating an OpenCL program...");
 
 			if (!firstBuild) {
 				OPENCL_ERROR(clReleaseKernel(kernel));
@@ -807,7 +807,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
 				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, binaryFilePath);
 			}
-			UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), "[thread] Creating an OpenCL kernel...");
+			UpdateOpenCLDeviceStatus(info, "[thread] Creating an OpenCL kernel...");
 			kernel = clCreateKernel(program, "OpenCL_DES_PerformSearching", &openCLError);
 			// printf("clCreateKernel(): done\n");
    			OPENCL_ERROR(openCLError);
@@ -824,18 +824,18 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 			OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),  (void *)&openCL_compactMediumChunkBitmap));
 			OPENCL_ERROR(clSetKernelArg(kernel, 7, sizeof(cl_mem),  (void *)&openCL_chunkBitmap));
 			OPENCL_ERROR(clSetKernelArg(kernel, 8, sizeof(cl_mem),  (void *)&openCL_partialKeyFrom3To6Array));
-			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,   CL_TRUE, 0, sizeof(unsigned int) * numTripcodeChunk, tripcodeChunkArray,   0, NULL, NULL));
+			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,   CL_TRUE, 0, sizeof(uint32_t) * numTripcodeChunk, tripcodeChunkArray,   0, NULL, NULL));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_smallChunkBitmap,       CL_TRUE, 0, SMALL_CHUNK_BITMAP_SIZE,                   smallChunkBitmap,       0, NULL, NULL));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_compactMediumChunkBitmap,       CL_TRUE, 0, MEDIUM_CHUNK_BITMAP_SIZE / 8,     compactMediumChunkBitmap,       0, NULL, NULL));
 			OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_chunkBitmap,            CL_TRUE, 0, CHUNK_BITMAP_SIZE,                         chunkBitmap,            0, NULL, NULL));
 
-			execCounter = 16384 + ((int)RandomByte() * 32 - 128 * 32);;
+			execCounter = 16384 + ((int32_t)RandomByte() * 32 - 128 * 32);;
 			firstBuild = FALSE;
 		}
 
 		// Set the first character of the key.
 		do {
-			for (int i = 3; i < lenTripcode; ++i)
+			for (int32_t i = 3; i < lenTripcode; ++i)
 				keyInfo.partialKeyAndRandomBytes[i] = 'A';
 			if (options.useOneByteCharactersForKeys) {
 				keyInfo.partialKeyAndRandomBytes[0] = keyCharTable_OneByte[RandomByte()];
@@ -855,18 +855,18 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		BOOL isKey4SecondByte = isSecondByte;
 
 		//
-		unsigned int keyFrom00To27 =   ((keyInfo.partialKeyAndRandomBytes[0] & 0x7f) << 0)
+		uint32_t keyFrom00To27 =   ((keyInfo.partialKeyAndRandomBytes[0] & 0x7f) << 0)
 			                          | ((keyInfo.partialKeyAndRandomBytes[1] & 0x7f) << 7)
 									  | ((keyInfo.partialKeyAndRandomBytes[2] & 0x7f) << 14)
 									  | ((keyInfo.partialKeyAndRandomBytes[3] & 0x7f) << 21);
-		OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(unsigned int), (void *)&keyFrom00To27));
+		OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(uint32_t), (void *)&keyFrom00To27));
 
 		// Generate random bytes for the keyInfo.partialKeyAndRandomBytes to ensure the randomness of generated keys.
-		for (int i = 4; i < lenTripcode; ++i)
+		for (int32_t i = 4; i < lenTripcode; ++i)
 			keyInfo.partialKeyAndRandomBytes[i] = RandomByte();
 		
 		// Generate part of the keys.
-		for (int i = 0; i < globalWorkSize; ++i) {
+		for (int32_t i = 0; i < globalWorkSize; ++i) {
 			isSecondByte = isKey4SecondByte;
 			partialKeyFrom3To6Array[i].partialKeyFrom3To6[0] = keyInfo.partialKeyAndRandomBytes[3];
 			SET_KEY_CHAR(partialKeyFrom3To6Array[i].partialKeyFrom3To6[1], isSecondByte, keyCharTable_FirstByte, keyInfo.partialKeyAndRandomBytes[4] + ((i >> 10) & 0x1f));
@@ -881,7 +881,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		OPENCL_ERROR(clEnqueueReadBuffer(commandQueue, openCL_outputArray, CL_TRUE, 0, sizeOutputArray * sizeof(GPUOutput), outputArray, 0, NULL, NULL));
 		OPENCL_ERROR(clFinish(commandQueue));
 		// We can save registers this way.
-		for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
+		for (uint32_t indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
 			GPUOutput *output = &outputArray[indexOutput];
 			ASSERT(output->numGeneratedTripcodes <= 32);
 			ASSERT(output->numMatchingTripcodes <= 1);
@@ -899,13 +899,11 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 		numGeneratedTripcodes += ProcessGPUOutput(keyInfo.partialKeyAndRandomBytes, outputArray, sizeOutputArray, FALSE);
 
 		// Measure the current speed.
-		endingTime = timeGetTime();
-		deltaTime = (endingTime >= startingTime)
-		                ? ((double)endingTime - (double)startingTime                     ) * 0.001
-		                : ((double)endingTime - (double)startingTime + (double)0xffffffff) * 0.001;
+		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		deltaTime = (endingTime - startingTime) * 0.001;
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
-		startingTime = timeGetTime();
+		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		timeElapsed += deltaTime;
 		averageSpeed = numGeneratedTripcodes / timeElapsed;
 
@@ -916,7 +914,7 @@ unsigned WINAPI Thread_SearchForDESTripcodesOnOpenCLDevice(LPVOID info)
 				globalWorkSize,
 				numWorkItemsPerComputeUnit,
 				localWorkSize);
-		UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), status);
+		UpdateOpenCLDeviceStatus(info, status);
 	}
  
     // Clean up.

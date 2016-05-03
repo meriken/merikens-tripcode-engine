@@ -46,16 +46,11 @@
 
 char *crypt(char *key, char *salt);
 
-static BOOL             wasCriticalSectionInitialized = FALSE;
-static CRITICAL_SECTION criticalSection;
+static spinlock descrypt_spinlock;
 
 BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-        if (!wasCriticalSectionInitialized) {
-                InitializeCriticalSection(&criticalSection);
-                wasCriticalSectionInitialized = TRUE;
-        }
-        EnterCriticalSection(&criticalSection);
+        descrypt_spinlock.lock();
 
         if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
                 return FALSE;
@@ -64,7 +59,7 @@ BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
         BOOL fillRestWithZero = FALSE;
         
         strcpy(actualKey, (char *)key);
-        for (int i = 0; i < lenTripcodeKey; ++i) {
+        for (int32_t i = 0; i < lenTripcodeKey; ++i) {
                 if (fillRestWithZero) {
                         actualKey[i] = 0x00;
                 } else if (actualKey[i] == 0x80) {
@@ -83,25 +78,21 @@ BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
         fflush(stdout);
 #endif
 
-        LeaveCriticalSection(&criticalSection);
+        descrypt_spinlock.unlock();
 
         return result;
 }
 
 void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
-    if (!wasCriticalSectionInitialized) {
-            InitializeCriticalSection(&criticalSection);
-            wasCriticalSectionInitialized = TRUE;
-    }
-    EnterCriticalSection(&criticalSection);
+    descrypt_spinlock.lock();
 
     char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
     BOOL fillRestWithZero = FALSE;
         
     memcpy(actualKey, (char *)key, 8);
 	actualKey[8] = '\0';
-	for (int i = 0; i < lenTripcodeKey; ++i) {
+	for (int32_t i = 0; i < lenTripcodeKey; ++i) {
             if (fillRestWithZero) {
                     actualKey[i] = 0x00;
             } else if (actualKey[i] == 0x80) {
@@ -111,7 +102,7 @@ void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
     strncpy((char *)tripcode, crypt((char *)actualKey, (char *)(actualKey + 1)) + 3, 10);
 	tripcode[10] = '\0';
 
-    LeaveCriticalSection(&criticalSection);
+    descrypt_spinlock.unlock();
 }
 
 
@@ -123,8 +114,8 @@ void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
 
 #define _UFC_32_ TRUE
 
-typedef unsigned ufc_long;
-typedef unsigned long32;
+typedef uint32_t ufc_long;
+typedef uint32_t long32;
 
 /*
  * UFC-crypt: ultra fast crypt(3) implementation
@@ -168,7 +159,7 @@ typedef unsigned long32;
  * Permutation done once on the 56 bit 
  *  key derived from the original 8 byte ASCII key.
  */
-static int pc1[56] = { 
+static int32_t pc1[56] = { 
   57, 49, 41, 33, 25, 17,  9,  1, 58, 50, 42, 34, 26, 18,
   10,  2, 59, 51, 43, 35, 27, 19, 11,  3, 60, 52, 44, 36,
   63, 55, 47, 39, 31, 23, 15,  7, 62, 54, 46, 38, 30, 22,
@@ -179,7 +170,7 @@ static int pc1[56] = {
  * How much to rotate each 28 bit half of the pc1 permutated
  *  56 bit key before using pc2 to give the i' key
  */
-static int rots[16] = { 
+static int32_t rots[16] = { 
   1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 
 };
 
@@ -187,7 +178,7 @@ static int rots[16] = {
  * Permutation giving the key 
  * of the i' DES round 
  */
-static int pc2[48] = { 
+static int32_t pc2[48] = { 
   14, 17, 11, 24,  1,  5,  3, 28, 15,  6, 21, 10,
   23, 19, 12,  4, 26,  8, 16,  7, 27, 20, 13,  2,
   41, 52, 31, 37, 47, 55, 30, 40, 51, 45, 33, 48,
@@ -198,19 +189,19 @@ static int pc2[48] = {
  * The E expansion table which selects
  * bits from the 32 bit intermediate result.
  */
-static int esel[48] = { 
+static int32_t esel[48] = { 
   32,  1,  2,  3,  4,  5,  4,  5,  6,  7,  8,  9,
    8,  9, 10, 11, 12, 13, 12, 13, 14, 15, 16, 17,
   16, 17, 18, 19, 20, 21, 20, 21, 22, 23, 24, 25,
   24, 25, 26, 27, 28, 29, 28, 29, 30, 31, 32,  1
 };
-static int e_inverse[64];
+static int32_t e_inverse[64];
 
 /* 
  * Permutation done on the 
  * result of sbox lookups 
  */
-static int perm32[32] = {
+static int32_t perm32[32] = {
   16,  7, 20, 21, 29, 12, 28, 17,  1, 15, 23, 26,  5, 18, 31, 10,
   2,   8, 24, 14, 32, 27,  3,  9, 19, 13, 30,  6, 22, 11,  4, 25
 };
@@ -218,7 +209,7 @@ static int perm32[32] = {
 /* 
  * The sboxes
  */
-static int sbox[8][4][16]= {
+static int32_t sbox[8][4][16]= {
         { { 14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7 },
           {  0, 15,  7,  4, 14,  2, 13,  1, 10,  6, 12, 11,  9,  5,  3,  8 },
           {  4,  1, 14,  8, 13,  6,  2, 11, 15, 12,  9,  7,  3, 10,  5,  0 },
@@ -272,7 +263,7 @@ static int sbox[8][4][16]= {
  * This is the initial 
  * permutation matrix
  */
-static int initial_perm[64] = { 
+static int32_t initial_perm[64] = { 
   58, 50, 42, 34, 26, 18, 10,  2, 60, 52, 44, 36, 28, 20, 12, 4,
   62, 54, 46, 38, 30, 22, 14,  6, 64, 56, 48, 40, 32, 24, 16, 8,
   57, 49, 41, 33, 25, 17,  9,  1, 59, 51, 43, 35, 27, 19, 11, 3,
@@ -283,7 +274,7 @@ static int initial_perm[64] = {
  * This is the final 
  * permutation matrix
  */
-static int final_perm[64] = {
+static int32_t final_perm[64] = {
   40,  8, 48, 16, 56, 24, 64, 32, 39,  7, 47, 15, 55, 23, 63, 31,
   38,  6, 46, 14, 54, 22, 62, 30, 37,  5, 45, 13, 53, 21, 61, 29,
   36,  4, 44, 12, 52, 20, 60, 28, 35,  3, 43, 11, 51, 19, 59, 27,
@@ -390,7 +381,7 @@ static ufc_long longmask[32] = {
 
 pr_bits(a, n)
   ufc_long *a;
-  int n;
+  int32_t n;
   { ufc_long i, j, t, tmp;
     n /= 8;
     for(i = 0; i < n; i++) {
@@ -423,12 +414,12 @@ static set_bits(v, b)
  * bzero and some don't have memset.
  */
 
-STATIC void clearmem(char *start, int cnt)
+STATIC void clearmem(char *start, int32_t cnt)
   { while(cnt--)
       *start++ = '\0';
   }
 
-static int initialized = 0;
+static int32_t initialized = 0;
 
 /* lookup a 6 bit value in sbox */
 
@@ -440,8 +431,8 @@ static int initialized = 0;
  */
 
 void init_des()
-  { int comes_from_bit;
-    int bit, sg;
+  { int32_t comes_from_bit;
+    int32_t bit, sg;
     ufc_long j;
     ufc_long mask1, mask2;
 
@@ -514,8 +505,8 @@ void init_des()
      *
      */
     for(sg = 0; sg < 4; sg++) {
-      int j1, j2;
-      int s1, s2;
+      int32_t j1, j2;
+      int32_t s1, s2;
     
       for(j1 = 0; j1 < 64; j1++) {
         s1 = s_lookup(2 * sg, j1);
@@ -570,10 +561,10 @@ void init_des()
      */
     clearmem((char*)efp, sizeof efp);
     for(bit = 0; bit < 64; bit++) {
-      int o_bit, o_long;
+      int32_t o_bit, o_long;
       ufc_long word_value, mask1, mask2;
-      int comes_from_f_bit, comes_from_e_bit;
-      int comes_from_word, bit_within_word;
+      int32_t comes_from_f_bit, comes_from_e_bit;
+      int32_t comes_from_word, bit_within_word;
 
       /* See where bit i belongs in the two 32 bit long's */
       o_long = bit / 32; /* 0..1  */
@@ -639,7 +630,7 @@ STATIC void shuffle_sb(k, saltbits)
 
 static unsigned char current_salt[3] = "&&"; /* invalid value */
 static ufc_long current_saltbits = 0;
-static int direction = 0;
+static int32_t direction = 0;
 
 STATIC void setup_salt(char *s)
   { ufc_long i, j, saltbits;
@@ -658,7 +649,7 @@ STATIC void setup_salt(char *s)
      */
     saltbits = 0;
     for(i = 0; i < 2; i++) {
-      long c=ascii_to_bin(s[i]);
+      int32_t c=ascii_to_bin(s[i]);
       if(c < 0 || c > 63)
         c = 0;
       for(j = 0; j < 6; j++) {
@@ -682,7 +673,7 @@ STATIC void setup_salt(char *s)
 
 STATIC void ufc_mk_keytab(char *key)
   { ufc_long v1, v2, *k1;
-    int i;
+    int32_t i;
 #ifdef _UFC_32_
     long32 v, *k2 = &_ufc_keytab[0][0];
 #endif
@@ -769,7 +760,7 @@ ufc_long *_ufc_dofinalperm(ufc_long l1, ufc_long l2, ufc_long r1, ufc_long r2)
 
 STATIC char *output_conversion(ufc_long v1, ufc_long v2, char *salt)
   { static char outbuf[14];
-    int i, s;
+    int32_t i, s;
 
     outbuf[0] = salt[0];
     outbuf[1] = salt[1] ? salt[1] : salt[0];
@@ -838,9 +829,9 @@ char *fcrypt(char *key, char *salt)
  * encrypt/decrypt according to edflag
  */
 
-void encrypt(char *block, int edflag)
+void encrypt(char *block, int32_t edflag)
   { ufc_long l1, l2, r1, r2, *s;
-    int i;
+    int32_t i;
 
     /*
      * Undo any salt changes to E expansion
@@ -920,7 +911,7 @@ void encrypt(char *block, int edflag)
  */
 
 void setkey(char *key)
-  { int i,j;
+  { int32_t i,j;
     unsigned char c;
     unsigned char ktab[8];
 
@@ -976,7 +967,7 @@ extern long32 _ufc_sb0[], _ufc_sb1[], _ufc_sb2[], _ufc_sb3[];
 #define SBA(sb, v) (*(long32*)((char*)(sb)+(v)))
 
 ufc_long *_ufc_doit(ufc_long l1, ufc_long l2, ufc_long r1, ufc_long r2, ufc_long itr)
-  { int i;
+  { int32_t i;
     long32 s, *k;
 
     while(itr--) {
@@ -1016,7 +1007,7 @@ extern long64 _ufc_sb0[], _ufc_sb1[], _ufc_sb2[], _ufc_sb3[];
 
 ufc_long *_ufc_doit(l1, l2, r1, r2, itr)
   ufc_long l1, l2, r1, r2, itr;
-  { int i;
+  { int32_t i;
     long64 l, r, s, *k;
 
     l = (((long64)l1) << 32) | ((long64)l2);
@@ -1053,7 +1044,7 @@ ufc_long *_ufc_doit(l1, l2, r1, r2, itr)
 // BITSLICE DES                                                              //
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef unsigned int vtype;
+typedef uint32_t vtype;
 
 #define BITSLICE_DES_DEPTH     32
 
@@ -1586,7 +1577,7 @@ typedef struct {
 #define y(p, q) (dataBlocks[p]                    ^ expandedKeySchedule[keyScheduleIndexBase + (q)])
 #define z(r)    (dataBlocks[r])
 
-static void CPU_DES_SBoxes1(unsigned char *expansionFunction, vtype *expandedKeySchedule, vtype *dataBlocks, int keyScheduleIndexBase)
+static void CPU_DES_SBoxes1(unsigned char *expansionFunction, vtype *expandedKeySchedule, vtype *dataBlocks, int32_t keyScheduleIndexBase)
 {
 	vtype var0;
 	vtype var1;
@@ -1618,7 +1609,7 @@ static void CPU_DES_SBoxes1(unsigned char *expansionFunction, vtype *expandedKey
 	s8(y(27, 42), y(28, 43), y(29, 44), y(30, 45), y(31, 46), y( 0, 47), z(36), z(58), z(46), z(52));
 }
 
-static void CPU_DES_SBoxes2(unsigned char *expansionFunction, vtype *expandedKeySchedule, vtype *dataBlocks, int keyScheduleIndexBase)
+static void CPU_DES_SBoxes2(unsigned char *expansionFunction, vtype *expandedKeySchedule, vtype *dataBlocks, int32_t keyScheduleIndexBase)
 {
 	vtype var0;
 	vtype var1;
@@ -1680,7 +1671,7 @@ static char DES_indexToCharTable[64] =
 	/* 54 */ 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
 };
 
-static unsigned char *DES_GetTripcode(DES_Context *context, int tripcodeIndex, unsigned char *tripcode)
+static unsigned char *DES_GetTripcode(DES_Context *context, int32_t tripcodeIndex, unsigned char *tripcode)
 {
 	// Perform the final permutation as necessary.
   	tripcode[0] = DES_indexToCharTable[GET_TRIPCODE_CHAR_INDEX(context->dataBlocks, tripcodeIndex, 63, 31, 38,  6, 46, 14, 0)];
@@ -1699,7 +1690,7 @@ static unsigned char *DES_GetTripcode(DES_Context *context, int tripcodeIndex, u
 }
 
 #define CLEAR_KEYS(charIndex)                       \
-	for (int i = 0; i < 7; ++i) {                   \
+	for (int32_t i = 0; i < 7; ++i) {                   \
 		context.keys[(charIndex) * 7 + i] = 0;     \
 	}                                               \
 
@@ -1708,10 +1699,10 @@ static unsigned char *DES_GetTripcode(DES_Context *context, int tripcodeIndex, u
 			context.keys[i] |= 1 << tripcodeIndex; \
 	}                                      \
 
-static void DES_SetSalt(DES_Context *context, int salt)
+static void DES_SetSalt(DES_Context *context, int32_t salt)
 {
-	int mask;
-	int src, dst;
+	int32_t mask;
+	int32_t src, dst;
 
 	mask = 1;
 	for (dst = 0; dst < 48; dst++) {
@@ -1790,8 +1781,8 @@ static unsigned char charTableForSeed[256] = {
 
 static void DES_Crypt25(DES_Context *context)
 {
-	int iterations, roundsAndSwapped; 
-	int keyScheduleIndexBase = 0;
+	int32_t iterations, roundsAndSwapped; 
+	int32_t keyScheduleIndexBase = 0;
 
 	roundsAndSwapped = 8;
 	iterations = 25;
@@ -1874,7 +1865,7 @@ static unsigned char keySchedule[0x300] = {
 	 9, 51, 21, 30,  1, 23, 36,  3, 14, 24, 44, 15, 16,  0, 49, 28,
 };
 
-void Generate10CharTripcodes(TripcodeKeyPair *p, int numTripcodes)
+void Generate10CharTripcodes(TripcodeKeyPair *p, int32_t numTripcodes)
 {
 	DES_Context context;
 
@@ -1887,7 +1878,7 @@ void Generate10CharTripcodes(TripcodeKeyPair *p, int numTripcodes)
 	CLEAR_KEYS(6);
 	CLEAR_KEYS(7);
 
-	for (int tripcodeIndex = 0; tripcodeIndex < numTripcodes; ++tripcodeIndex) {
+	for (int32_t tripcodeIndex = 0; tripcodeIndex < numTripcodes; ++tripcodeIndex) {
 		SET_BIT_FOR_KEY( 0, 0, 0);
 		SET_BIT_FOR_KEY( 1, 0, 1);
 		SET_BIT_FOR_KEY( 2, 0, 2);
@@ -1953,10 +1944,10 @@ void Generate10CharTripcodes(TripcodeKeyPair *p, int numTripcodes)
 		SET_BIT_FOR_KEY(55, 7, 6);
 	}
 
-	for (int i = 0; i < 0x300; ++i)
+	for (int32_t i = 0; i < 0x300; ++i)
 		context.expandedKeySchedule[i] = context.keys[keySchedule[i]];
 
-	for (int i = 0; i < NUM_DATA_BLOCKS; ++i) {
+	for (int32_t i = 0; i < NUM_DATA_BLOCKS; ++i) {
 		context.dataBlocks[i] = 0;
 	}
 
@@ -1966,7 +1957,7 @@ void Generate10CharTripcodes(TripcodeKeyPair *p, int numTripcodes)
 
 	DES_Crypt25(&context);
 	
-	for (int tripcodeIndex = 0; tripcodeIndex < numTripcodes; ++tripcodeIndex) {
+	for (int32_t tripcodeIndex = 0; tripcodeIndex < numTripcodes; ++tripcodeIndex) {
 		DES_GetTripcode(&context, tripcodeIndex, p[tripcodeIndex].tripcode.c);
 		p[tripcodeIndex].tripcode.c[10] = '\0';
 	}

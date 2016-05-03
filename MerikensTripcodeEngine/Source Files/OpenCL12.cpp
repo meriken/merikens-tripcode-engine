@@ -111,7 +111,7 @@ void __stdcall OnOpenCLError(const char *errorInfo, const void *privateInfo, siz
 struct {
 	char   *vendor;
 	char   *name;
-	int     numCU;
+	int32_t     numCU;
 	char   *productName;
 
 	char   *sourceFile_SHA1;
@@ -178,7 +178,7 @@ struct {
  
 char *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numComputeUnits)
 {
-	for (int i = 0; deviceSettingsArray[i].vendor != NULL; ++i) {
+	for (int32_t i = 0; deviceSettingsArray[i].vendor != NULL; ++i) {
 		if (   (   strcmp(deviceSettingsArray[i].vendor, vendor) == 0
 			    && deviceSettingsArray[i].name == NULL               )
 		    || (   strcmp(deviceSettingsArray[i].vendor, vendor) == 0
@@ -210,7 +210,7 @@ void GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_VENDOR,            sizeof(deviceVendor),    &deviceVendor,    NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_NAME,              sizeof(deviceName),      &deviceName,      NULL));
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
-	for (int i = 0; deviceSettingsArray[i].vendor != NULL; ++i) {
+	for (int32_t i = 0; deviceSettingsArray[i].vendor != NULL; ++i) {
 		if (   (   strcmp(deviceSettingsArray[i].vendor, deviceVendor) == 0
 			    && deviceSettingsArray[i].name == NULL                     )
 		    || (   strcmp(deviceSettingsArray[i].vendor, deviceVendor) == 0
@@ -241,7 +241,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
 	// This thread may be restarted. See CheckSearchThreads().
 	double       prevTotalNumGeneratedTripcodes = info->totalNumGeneratedTripcodes;
-	unsigned int prevNumDiscardedTripcodes      = info->numDiscardedTripcodes;
+	uint32_t prevNumDiscardedTripcodes      = info->numDiscardedTripcodes;
 	
 	char   status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 
@@ -250,7 +250,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	GetParametersForOpenCLDevice(info->openCLDeviceID, NULL, &numWorkItemsPerComputeUnit, &localWorkSize, NULL);
 
 	char childProcessPath[MAX_LEN_COMMAND_LINE + 1];
-	int applicationPathLen = strlen(applicationPath);
+	int32_t applicationPathLen = strlen(applicationPath);
 	strcpy(childProcessPath, applicationPath);
 	if (strcmp(childProcessPath + applicationPathLen - 6, "64.exe") == 0) {
 		strcpy(childProcessPath + applicationPathLen - 6, ".exe"); // For 32-bit OpenCL binaries
@@ -266,7 +266,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 			numWorkItemsPerComputeUnit,
 			localWorkSize,
 			options.openCLNumThreads);
-	for (int patternFileIndex = 0; patternFileIndex < numPatternFiles; ++patternFileIndex) {
+	for (int32_t patternFileIndex = 0; patternFileIndex < numPatternFiles; ++patternFileIndex) {
 		strcat(commandLine, " -f ");
 		strcat(commandLine, patternFilePathArray[patternFileIndex]);
 	}
@@ -303,7 +303,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	HANDLE hInputWriteTmp,hInputRead,hInputWrite;
 	HANDLE hErrorWrite;
 	HANDLE hThread;
-	DWORD  ThreadId;
+	uint32_t  ThreadId;
 	SECURITY_ATTRIBUTES securityAttributes;
 
 	securityAttributes.nLength= sizeof(SECURITY_ATTRIBUTES);
@@ -331,7 +331,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	MultiByteToWideChar(CP_ACP, 0, commandLine, -1, commandLineWC, MAX_LEN_COMMAND_LINE);
 	ERROR0(!CreateProcess(NULL, commandLineWC, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInfo), ERROR_CHILD_PROCESS, "CreateProcess");
 	hChildProcess = processInfo.hProcess;
-	UpdateOpenCLDeviceStatus_ChildProcess(((OpenCLDeviceSearchThreadInfo *)info), "[process] Started child process.", 0, 0, 0, 0, hChildProcess);
+	UpdateOpenCLDeviceStatus_ChildProcess(info, "[process] Started child process.", 0, 0, 0, 0, hChildProcess);
 
 	// Close pipe handles.
 	ERROR0(!CloseHandle(processInfo.hThread), ERROR_CHILD_PROCESS, "CloseHandle");
@@ -344,9 +344,9 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	// 						(LPVOID)hInputWrite,0,&ThreadId);
 	// if (hThread == NULL) DisplayError("CreateThread");
 
-	CHAR  lpBuffer[LEN_LINE_BUFFER_FOR_SCREEN];
+	CHAR  lpBuffer[65536];
 	DWORD nBytesRead;
-	DWORD nCharsWritten;
+	uint32_t nCharsWritten;
 
 	while(!GetTerminationState())
 	{
@@ -354,7 +354,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		// We restart the child process in CheckSearchThreads() instead.
 		// ERROR0(WaitForSingleObject(hChildProcess, 0) != WAIT_TIMEOUT, ERROR_CHILD_PROCESS, "A child process terminated unexpectedly.");
 
-		if (!ReadFile(hOutputRead, lpBuffer, sizeof(lpBuffer), &nBytesRead, NULL) || !nBytesRead) {
+		if (!ReadFile(hOutputRead, lpBuffer, sizeof(lpBuffer) - 1, &nBytesRead, NULL) || !nBytesRead) {
 			if (GetLastError() == ERROR_BROKEN_PIPE)
 				break;
 			else
@@ -367,7 +367,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		if (strncmp(lpBuffer, "[tripcode],", strlen("[tripcode],")) == 0) {
 			unsigned char tripcode[MAX_LEN_TRIPCODE + 1];
 			unsigned char key     [MAX_LEN_TRIPCODE_KEY + 1];
-			int i, j;
+			int32_t i, j;
 			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode                         ] == ',');
 			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode + 1                     ] == '#');
 			ASSERT(lpBuffer[10 + 1 + 2 + lenTripcode + 1 + 1 + lenTripcodeKey] == ',');
@@ -380,7 +380,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 			ProcessPossibleMatch(tripcode, key);
 		} else if (strncmp(lpBuffer, "[status],", strlen("[status],")) == 0) {
 			double       currentSpeed, averageSpeed, totalNumGeneratedTripcodes;
-			unsigned int numDiscardedTripcodes;
+			uint32_t numDiscardedTripcodes;
 			char *delimiter = ",";
 			char *currentToken = strtok(lpBuffer, delimiter);                                                                                           //     "[status]"
 			BOOL isGood = (currentToken != NULL);
@@ -390,7 +390,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   currentSpeed_CPU,
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%lf", &averageSpeed);       // 	   averageSpeed,
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   timeForOneMatch,
-			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   (int)(matchingProbDiff * 100),
+			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   (int32_t)(matchingProbDiff * 100),
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%lf", &totalNumGeneratedTripcodes); // 	   prevTotalNumGeneratedTripcodes,
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   prevNumValidTripcodes,
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          // 	   IsCUDADeviceOptimizationInProgress(),
@@ -403,8 +403,8 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 						averageSpeed / 1000000,
 						numWorkItemsPerComputeUnit,
 						localWorkSize,
-						((OpenCLDeviceSearchThreadInfo *)info)->numRestarts);
-				UpdateOpenCLDeviceStatus_ChildProcess(((OpenCLDeviceSearchThreadInfo *)info), 
+						info->numRestarts);
+				UpdateOpenCLDeviceStatus_ChildProcess(info, 
 													  status, 
 													  currentSpeed, 
 													  averageSpeed, 
@@ -413,7 +413,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 													  hChildProcess);
 			}
 		} else if (strncmp(lpBuffer, "[error],", strlen("[error],")) == 0) {
-			int   errorCode;
+			int32_t   errorCode;
 			char *delimiter = ",";
 			char *currentToken = strtok(lpBuffer, delimiter); // "[error]"
 			BOOL isGood = (currentToken != NULL);
@@ -446,7 +446,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 {
 	cl_int         openCLError;
 	
-	EnterCriticalSection(&criticalSection_ANSISystemFunction);
+	system_command_spinlock.lock();
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
@@ -511,25 +511,26 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);
 
-	LeaveCriticalSection(&criticalSection_ANSISystemFunction);
+	system_command_spinlock.unlock();
 }
 
-unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
+void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 {
 	cl_int         openCLError;
-	cl_device_id   deviceID = ((OpenCLDeviceSearchThreadInfo *)info)->openCLDeviceID;
+	cl_device_id   deviceID = info->openCLDeviceID;
 	cl_uint        numComputeUnits;
 	char           status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 	char           buildOptions[MAX_LEN_COMMAND_LINE + 1] = ""; 
 	unsigned char  key[MAX_LEN_TRIPCODE + 1];
 
-	if (((OpenCLDeviceSearchThreadInfo *)info)->runChildProcess) {
-		Thread_RunChildProcessForOpenCLDevice((OpenCLDeviceSearchThreadInfo *)info);
-		return 0;
+
+	if (info->runChildProcess) {
+		Thread_RunChildProcessForOpenCLDevice(info);
+		return;
 	}
 
 	// Random wait time between 0 and 10 seconds for increased stability.
-	Sleep((DWORD)RandomByte() * 10000 / 256);
+	Sleep((uint32_t)RandomByte() * 10000 / 256);
 
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	key[lenTripcode] = '\0';
@@ -648,7 +649,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	OPENCL_ERROR(openCLError);
 	unsigned char **binaryArray = (unsigned char **)malloc(sizeof(unsigned char *) * numDevices);
 	ERROR0(binaryArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
-	for(int i = 0; i < numDevices; ++i) {
+	for(int32_t i = 0; i < numDevices; ++i) {
 		binaryArray[i] = (unsigned char *)malloc(binarySizeArray[i]);
 		ERROR0(binaryArray[i] == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	}
@@ -662,7 +663,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		fclose(binaryFile);
 	}
 	free(binarySizeArray);
-	for(int i = 0; i < numDevices; ++i)
+	for(int32_t i = 0; i < numDevices; ++i)
 		free(binaryArray[i]);
 	free(binaryArray);
 	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.asm", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
@@ -674,7 +675,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 #endif
 
 	// Create memory blocks for CPU.
-	unsigned int  sizeOutputArray = globalWorkSize;
+	uint32_t  sizeOutputArray = globalWorkSize;
 	GPUOutput    *outputArray     = (GPUOutput *)malloc(sizeof(GPUOutput) * sizeOutputArray);
 	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	// printf("sizeOutputArray = %u\n", sizeOutputArray);
@@ -682,14 +683,14 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	// Create memory blocks for the OpenCL device.
 	cl_mem openCL_outputArray                       = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(GPUOutput) * sizeOutputArray,     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_key                               = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(key),                             NULL, &openCLError); OPENCL_ERROR(openCLError);
-	cl_mem openCL_tripcodeChunkArray                = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(unsigned int) * numTripcodeChunk, NULL, &openCLError); OPENCL_ERROR(openCLError);
+	cl_mem openCL_tripcodeChunkArray                = clCreateBuffer(context, CL_MEM_READ_ONLY,  sizeof(uint32_t) * numTripcodeChunk, NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyCharTable_OneByte              = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyCharTable_FirstByte            = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyCharTable_SecondByte           = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_keyCharTable_SecondByteAndOneByte = clCreateBuffer(context, CL_MEM_READ_ONLY,  SIZE_KEY_CHAR_TABLE,                     NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_smallChunkBitmap                    = clCreateBuffer(context, CL_MEM_READ_ONLY,  SMALL_CHUNK_BITMAP_SIZE,                   NULL, &openCLError); OPENCL_ERROR(openCLError);
 	cl_mem openCL_chunkBitmap                         = clCreateBuffer(context, CL_MEM_READ_ONLY,  CHUNK_BITMAP_SIZE,                         NULL, &openCLError); OPENCL_ERROR(openCLError);
-	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,                CL_TRUE, 0, sizeof(unsigned int) * numTripcodeChunk, tripcodeChunkArray,                0, NULL, NULL));
+	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_tripcodeChunkArray,                CL_TRUE, 0, sizeof(uint32_t) * numTripcodeChunk, tripcodeChunkArray,                0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_OneByte,              CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_OneByte,              0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_FirstByte,            CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_FirstByte,            0, NULL, NULL));
 	OPENCL_ERROR(clEnqueueWriteBuffer(commandQueue, openCL_keyCharTable_SecondByte,           CL_TRUE, 0, SIZE_KEY_CHAR_TABLE,                     keyCharTable_SecondByte,           0, NULL, NULL));
@@ -701,8 +702,8 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 	double       timeElapsed = 0;
 	double       numGeneratedTripcodes = 0;
 	double       averageSpeed = 0;
-	DWORD        startingTime = timeGetTime();
-	DWORD        endingTime;
+	uint64_t        startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	uint64_t        endingTime;
 	double       deltaTime;
 	while (!GetTerminationState()) {
 		// Choose a random key.
@@ -714,7 +715,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 			key[7] = ((key[7] & 0xfc) | 0x03); if (!IsValidKey(key)) { SetCharactersInTripcodeKeyForSHA1Tripcode(key); continue; }
 			break;
 		}
-		for (int i = 0; i < 4; ++i)
+		for (int32_t i = 0; i < 4; ++i)
 			key[i] = RandomByte();
 		key[11] = RandomByte();
 
@@ -723,7 +724,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		OPENCL_ERROR(clSetKernelArg(kernel, 0, sizeof(cl_mem),       (void *)&openCL_outputArray));
 		OPENCL_ERROR(clSetKernelArg(kernel, 1, sizeof(cl_mem),       (void *)&openCL_key));
 		OPENCL_ERROR(clSetKernelArg(kernel, 2, sizeof(cl_mem),       (void *)&openCL_tripcodeChunkArray));
-		OPENCL_ERROR(clSetKernelArg(kernel, 3, sizeof(unsigned int), (void *)&numTripcodeChunk));
+		OPENCL_ERROR(clSetKernelArg(kernel, 3, sizeof(uint32_t), (void *)&numTripcodeChunk));
 		OPENCL_ERROR(clSetKernelArg(kernel, 4, sizeof(cl_mem),       (void *)&openCL_keyCharTable_OneByte));
 		OPENCL_ERROR(clSetKernelArg(kernel, 5, sizeof(cl_mem),       (void *)&openCL_keyCharTable_FirstByte));
 		OPENCL_ERROR(clSetKernelArg(kernel, 6, sizeof(cl_mem),       (void *)&openCL_keyCharTable_SecondByte));
@@ -739,7 +740,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		OPENCL_ERROR(clEnqueueReadBuffer(commandQueue, openCL_outputArray, CL_TRUE, 0, sizeOutputArray * sizeof(GPUOutput), outputArray, 0, NULL, NULL));
 	    OPENCL_ERROR(clFlush (commandQueue));
 	    OPENCL_ERROR(clFinish(commandQueue));
-		for (unsigned int indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
+		for (uint32_t indexOutput = 0; indexOutput < sizeOutputArray; indexOutput++){
 			GPUOutput *output = &outputArray[indexOutput];
 			ASSERT(output->numGeneratedTripcodes <= 2048 * 4);
 			ASSERT(output->numMatchingTripcodes <= 1);
@@ -747,13 +748,11 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 		numGeneratedTripcodes += ProcessGPUOutput(key, outputArray, sizeOutputArray, TRUE);
 
 		// Measure the current speed.
-		endingTime = timeGetTime();
-		deltaTime = (endingTime >= startingTime)
-		                ? ((double)endingTime - (double)startingTime                     ) * 0.001
-		                : ((double)endingTime - (double)startingTime + (double)0xffffffff) * 0.001;
+		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		deltaTime = (endingTime - startingTime) * 0.001;
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
-		startingTime = timeGetTime();
+		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		timeElapsed += deltaTime;
 		averageSpeed = numGeneratedTripcodes / timeElapsed;
 		
@@ -764,7 +763,7 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnOpenCLDevice(LPVOID info)
 				globalWorkSize,
 				numWorkItemsPerComputeUnit,
 				localWorkSize);
-		UpdateOpenCLDeviceStatus(((OpenCLDeviceSearchThreadInfo *)info), status);
+		UpdateOpenCLDeviceStatus(info, status);
 	}
  
     // Clean up.

@@ -580,7 +580,7 @@ typedef __declspec(align(16)) __m128i vtype;
 #define y(p, q) DES_VECTOR_XOR_FUNC(dataBlocks[p],                    expandedKeySchedule[keyScheduleIndexBase + (q)])
 #define z(r)    (dataBlocks[r])
 
-void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase)
+void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int32_t keyScheduleIndexBase)
 {
 	vtype var0;
 	vtype var1;
@@ -613,7 +613,7 @@ void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *e
 	s8(y(27, 42), y(28, 43), y(29, 44), y(30, 45), y(31, 46), y( 0, 47), z(36), z(58), z(46), z(52));
 }
 
-void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int keyScheduleIndexBase)
+void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int32_t keyScheduleIndexBase)
 {
 	vtype var0;
 	vtype var1;

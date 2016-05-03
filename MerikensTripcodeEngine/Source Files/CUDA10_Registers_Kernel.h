@@ -181,18 +181,18 @@ __global__ void KERNEL_FUNC(SALT)(
 #endif
 	unsigned char      *passCountArray,
 	unsigned char      *tripcodeIndexArray,
-	unsigned int       *tripcodeChunkArray,
-	unsigned int        numTripcodeChunk,
-	int                 intSalt,
+	uint32_t       *tripcodeChunkArray,
+	uint32_t        numTripcodeChunk,
+	int32_t                 intSalt,
 	unsigned char      *key0Array,
 	unsigned char      *key7Array,
 	DES_Vector         *keyVectorsFrom49To55,
 	unsigned char      *keyAndRandomBytes,
-	const int           searchMode) {
+	const int32_t           searchMode) {
 	
-	for (int i = 0; i < COMPACT_MEDIUM_CHUNK_BITMAP_SIZE / CUDA_DES_NUM_THREADS_PER_BLOCK; ++i) \
+	for (int32_t i = 0; i < COMPACT_MEDIUM_CHUNK_BITMAP_SIZE / CUDA_DES_NUM_THREADS_PER_BLOCK; ++i) \
 	{ 
-		int index = i * CUDA_DES_NUM_THREADS_PER_BLOCK + threadIdx.x;
+		int32_t index = i * CUDA_DES_NUM_THREADS_PER_BLOCK + threadIdx.x;
 		cudaSharedCompactMediumChunkBitmap[index] = cudaCompactMediumChunkBitmap[index];
 	}
 	__syncthreads();
@@ -263,8 +263,8 @@ __global__ void KERNEL_FUNC(SALT)(
 	
 	DES_Vector temp0, temp1;
 
-	int tripcodeIndex;
-	int passCount;
+	int32_t tripcodeIndex;
+	int32_t passCount;
 	for (passCount = 0; passCount < CUDA_DES_MAX_PASS_COUNT; ++passCount) {
 		key = key0Array[passCount];
 		DES_Vector K00 = ((key & (0x1U << 0)) ? 0xffffffffU : 0x0);
@@ -283,9 +283,9 @@ __global__ void KERNEL_FUNC(SALT)(
 		DES_Vector DB50 = 0, DB51 = 0, DB52 = 0, DB53 = 0, DB54 = 0, DB55 = 0, DB56 = 0, DB57 = 0, DB58 = 0, DB59 = 0;
 		DES_Vector DB60 = 0, DB61 = 0, DB62 = 0, DB63 = 0; 
 
-		for (int ii = 0; ii < 25; ++ii) {
+		for (int32_t ii = 0; ii < 25; ++ii) {
 			DATASWAP;
-			for (int i = 0; i < 2; ++i) {
+			for (int32_t i = 0; i < 2; ++i) {
 
 #if !defined(SALT) || __CUDA_ARCH__ < 500
 #if !defined(SALT)
@@ -377,7 +377,7 @@ __global__ void KERNEL_FUNC(SALT)(
 
 		if (numTripcodeChunk == 1 && searchMode == SEARCH_MODE_FORWARD_MATCHING) {
 			for (tripcodeIndex = 0; tripcodeIndex < CUDA_DES_BS_DEPTH; ++tripcodeIndex) {
-				unsigned int tripcodeChunk = tripcodeChunkArray[0];
+				uint32_t tripcodeChunk = tripcodeChunkArray[0];
 				if (GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB63, DB31, DB38, DB06, DB46, DB14, 0) != ((tripcodeChunk >> (6 * 4)) & 0x3f))
 					continue;
 				if (GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB54, DB22, DB62, DB30, DB37, DB05, 0) != ((tripcodeChunk >> (6 * 3)) & 0x3f))
@@ -392,7 +392,7 @@ __global__ void KERNEL_FUNC(SALT)(
 			}
 		} else if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
 			for (tripcodeIndex = 0; tripcodeIndex < CUDA_DES_BS_DEPTH; ++tripcodeIndex) {
-				unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB63, DB31, DB38, DB06, DB46, DB14, 4)
+				uint32_t tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB63, DB31, DB38, DB06, DB46, DB14, 4)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB54, DB22, DB62, DB30, DB37, DB05, 3)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB45, DB13, DB53, DB21, DB61, DB29, 2)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB36, DB04, DB44, DB12, DB52, DB20, 1)
@@ -405,7 +405,7 @@ __global__ void KERNEL_FUNC(SALT)(
 			}
 		} else if (searchMode == SEARCH_MODE_BACKWARD_MATCHING) {
 			for (tripcodeIndex = 0; tripcodeIndex < CUDA_DES_BS_DEPTH; ++tripcodeIndex) {
-				unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB51, DB19, DB59, DB27, DB34, DB02, 4)
+				uint32_t tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB51, DB19, DB59, DB27, DB34, DB02, 4)
 							                 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB42, DB10, DB50, DB18, DB58, DB26, 3)
 									         | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB33, DB01, DB41, DB09, DB49, DB17, 2)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB57, DB25, DB32, DB00, DB40, DB08, 1)
@@ -418,7 +418,7 @@ __global__ void KERNEL_FUNC(SALT)(
 			}
 		} else if (searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING) {
 			for (tripcodeIndex = 0; tripcodeIndex < CUDA_DES_BS_DEPTH; ++tripcodeIndex) {
-				unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB63, DB31, DB38, DB06, DB46, DB14, 4)
+				uint32_t tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB63, DB31, DB38, DB06, DB46, DB14, 4)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB54, DB22, DB62, DB30, DB37, DB05, 3)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB45, DB13, DB53, DB21, DB61, DB29, 2)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB36, DB04, DB44, DB12, DB52, DB20, 1)
@@ -437,7 +437,7 @@ __global__ void KERNEL_FUNC(SALT)(
 			}
 		} else {
 			for (tripcodeIndex = 0; tripcodeIndex < CUDA_DES_BS_DEPTH; ++tripcodeIndex) {
-				unsigned int tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB63, DB31, DB38, DB06, DB46, DB14, 4)
+				uint32_t tripcodeChunk =   GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB63, DB31, DB38, DB06, DB46, DB14, 4)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB54, DB22, DB62, DB30, DB37, DB05, 3)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB45, DB13, DB53, DB21, DB61, DB29, 2)
 											 | GET_TRIPCODE_CHAR_INDEX(tripcodeIndex, DB36, DB04, DB44, DB12, DB52, DB20, 1)

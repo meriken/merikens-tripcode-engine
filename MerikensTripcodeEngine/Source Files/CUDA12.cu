@@ -144,21 +144,21 @@ __device__ __constant__ unsigned char   CUDA_smallChunkBitmap[SMALL_CHUNK_BITMAP
 __global__ void (functionName)(\
 	GPUOutput     *outputArray,\
 	unsigned char *chunkBitmap,\
-	unsigned int  *tripcodeChunkArray,\
-	unsigned int   numTripcodeChunk,\
+	uint32_t  *tripcodeChunkArray,\
+	uint32_t   numTripcodeChunk,\
 	unsigned char *keyAndRandomBytes\
 ) {
 
 #define CUDA_SHA1_BEFORE_SEARCHING                                                                         \
-	unsigned int        A, B, C, D, E, tmp;                                                                \
+	uint32_t        A, B, C, D, E, tmp;                                                                \
 	unsigned char       key0, key1, key2, key3, key11;                                                     \
 	unsigned char       found = 0;                                                                         \
 	BOOL                isSecondByte = FALSE;                                                              \
 	unsigned char      *tableForKey2;                                                                      \
 	GPUOutput          *output = &outputArray[blockIdx.x * CUDA_SHA1_NUM_THREADS_PER_BLOCK + threadIdx.x]; \
-    int                 passCount;                                                                         \
-	int                 randomByte2 = keyAndRandomBytes[2];                                                         \
-	int                 randomByte3 = keyAndRandomBytes[3];                                                         \
+    int32_t                 passCount;                                                                         \
+	int32_t                 randomByte2 = keyAndRandomBytes[2];                                                         \
+	int32_t                 randomByte3 = keyAndRandomBytes[3];                                                         \
 	                                                                                                       \
 	output->numMatchingTripcodes = 0;                                                                      \
 	SET_KEY_CHAR(key0, isSecondByte, cudaKeyCharTable_FirstByte, keyAndRandomBytes[0] + (blockIdx.x >> 6));        \
@@ -166,7 +166,7 @@ __global__ void (functionName)(\
 	tableForKey2 = (isSecondByte) ? (cudaKeyCharTable_SecondByte) : (cudaKeyCharTable_FirstByte);        \
 	key11 = cudaKeyCharTable_SecondByteAndOneByte[keyAndRandomBytes[11] + (blockIdx.x & 0x3f)];                    \
 	                                                                                                       \
-	__shared__ unsigned int PW[80+1];                                                                        \
+	__shared__ uint32_t PW[80+1];                                                                        \
 	__shared__ unsigned char smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];                                        \
 	if (threadIdx.x == 0) {                                                                                \
 		PW[0]  = 0;                                                                                        \
@@ -186,10 +186,10 @@ __global__ void (functionName)(\
 		PW[14] = 0;                                                                                        \
 		PW[15] = 12 * 8;                                                                                   \
 		PW[16] = ROTL(1, PW[16 - 3] ^ PW[16 - 8] ^ PW[16 - 14]);                                           \
-		for (int t = 17; t < 80; ++t)                                                                      \
+		for (int32_t t = 17; t < 80; ++t)                                                                      \
 			PW[t] = ROTL(1, PW[(t) - 3] ^ PW[(t) - 8] ^ PW[(t) - 14] ^ PW[(t) - 16]);                      \
 			                                                                                               \
-		for (int i = 0; i < SMALL_CHUNK_BITMAP_SIZE; ++i)                                                    \
+		for (int32_t i = 0; i < SMALL_CHUNK_BITMAP_SIZE; ++i)                                                    \
 			smallChunkBitmap[i] = CUDA_smallChunkBitmap[i];                                                    \
 	}                                                                                                      \
 	__syncthreads();                                                                                       \
@@ -207,33 +207,33 @@ __global__ void (functionName)(\
 		D = H3;                                                                                            \
 		E = H4;                                                                                            \
 		                                                                                                   \
-		unsigned int W0   = (key0 << 24) | (key1 << 16) | (key2 << 8) | key3;                              \
-		unsigned int W0_1 = ROTL(1,  W0);                                                                  \
-		unsigned int W0_2 = ROTL(2,  W0);                                                                  \
-		unsigned int W0_3 = ROTL(3,  W0);                                                                  \
-		unsigned int W0_4 = ROTL(4,  W0);                                                                  \
-		unsigned int W0_5 = ROTL(5,  W0);                                                                  \
-		unsigned int W0_6 = ROTL(6,  W0);                                                                  \
-		unsigned int W0_7 = ROTL(7,  W0);                                                                  \
-		unsigned int W0_8 = ROTL(8,  W0);                                                                  \
-		unsigned int W0_9 = ROTL(9,  W0);                                                                  \
-		unsigned int W010 = ROTL(10, W0);                                                                  \
-		unsigned int W011 = ROTL(11, W0);                                                                  \
-		unsigned int W012 = ROTL(12, W0);                                                                  \
-		unsigned int W013 = ROTL(13, W0);                                                                  \
-		unsigned int W014 = ROTL(14, W0);                                                                  \
-		unsigned int W015 = ROTL(15, W0);                                                                  \
-		unsigned int W016 = ROTL(16, W0);                                                                  \
-		unsigned int W017 = ROTL(17, W0);                                                                  \
-		unsigned int W018 = ROTL(18, W0);                                                                  \
-		unsigned int W019 = ROTL(19, W0);                                                                  \
-		unsigned int W020 = ROTL(20, W0);                                                                  \
-		unsigned int W021 = ROTL(21, W0);                                                                  \
-		unsigned int W022 = ROTL(22, W0);                                                                  \
-		unsigned int W0_6___W0_4        = W0_6        ^ W0_4;                                              \
-		unsigned int W0_6___W0_4___W0_7 = W0_6___W0_4 ^ W0_7;                                              \
-		unsigned int W0_8___W0_4        = W0_8        ^ W0_4;                                              \
-		unsigned int W0_8___W012        = W0_8        ^ W012;                                              \
+		uint32_t W0   = (key0 << 24) | (key1 << 16) | (key2 << 8) | key3;                              \
+		uint32_t W0_1 = ROTL(1,  W0);                                                                  \
+		uint32_t W0_2 = ROTL(2,  W0);                                                                  \
+		uint32_t W0_3 = ROTL(3,  W0);                                                                  \
+		uint32_t W0_4 = ROTL(4,  W0);                                                                  \
+		uint32_t W0_5 = ROTL(5,  W0);                                                                  \
+		uint32_t W0_6 = ROTL(6,  W0);                                                                  \
+		uint32_t W0_7 = ROTL(7,  W0);                                                                  \
+		uint32_t W0_8 = ROTL(8,  W0);                                                                  \
+		uint32_t W0_9 = ROTL(9,  W0);                                                                  \
+		uint32_t W010 = ROTL(10, W0);                                                                  \
+		uint32_t W011 = ROTL(11, W0);                                                                  \
+		uint32_t W012 = ROTL(12, W0);                                                                  \
+		uint32_t W013 = ROTL(13, W0);                                                                  \
+		uint32_t W014 = ROTL(14, W0);                                                                  \
+		uint32_t W015 = ROTL(15, W0);                                                                  \
+		uint32_t W016 = ROTL(16, W0);                                                                  \
+		uint32_t W017 = ROTL(17, W0);                                                                  \
+		uint32_t W018 = ROTL(18, W0);                                                                  \
+		uint32_t W019 = ROTL(19, W0);                                                                  \
+		uint32_t W020 = ROTL(20, W0);                                                                  \
+		uint32_t W021 = ROTL(21, W0);                                                                  \
+		uint32_t W022 = ROTL(22, W0);                                                                  \
+		uint32_t W0_6___W0_4        = W0_6        ^ W0_4;                                              \
+		uint32_t W0_6___W0_4___W0_7 = W0_6___W0_4 ^ W0_7;                                              \
+		uint32_t W0_8___W0_4        = W0_8        ^ W0_4;                                              \
+		uint32_t W0_8___W012        = W0_8        ^ W012;                                              \
 		                                                                                                   \
 		ROUND_00_TO_19(0,  W0);                                                                            \
 		ROUND_00_TO_19(1,  PW[1]);                                                                         \
@@ -324,7 +324,7 @@ __global__ void (functionName)(\
 		B += H1;                                                                                           \
 		C += H2;                                                                                           \
 		                                                                                                   \
-		unsigned int tripcodeChunk = A >> 2;                                                               \
+		uint32_t tripcodeChunk = A >> 2;                                                               \
 
 #define CUDA_SHA1_USE_SMALL_CHUNK_BITMAP                                                     \
 		if (smallChunkBitmap[tripcodeChunk >> ((5 - SMALL_CHUNK_BITMAP_LEN_STRING) * 6)]) \
@@ -335,7 +335,7 @@ __global__ void (functionName)(\
 			continue;
 
 #define CUDA_SHA1_LINEAR_SEARCH \
-	for (unsigned int i = 0; i < numTripcodeChunk; i++){ \
+	for (uint32_t i = 0; i < numTripcodeChunk; i++){ \
 		if (tripcodeChunkArray[i] == tripcodeChunk) { \
 			found = 1; \
 			break; \
@@ -346,7 +346,7 @@ __global__ void (functionName)(\
 
 #define CUDA_SHA1_BINARY_SEARCH \
 		{\
-			int lower = 0, upper = numTripcodeChunk - 1, middle = lower;         \
+			int32_t lower = 0, upper = numTripcodeChunk - 1, middle = lower;         \
 			while (tripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) { \
 				middle = (lower + upper) >> 1;                                          \
 				if (tripcodeChunk > tripcodeChunkArray[middle]) {                   \
@@ -391,7 +391,7 @@ __global__ void (functionName)(\
 }
 
 CUDA_SHA1_DEFINE_SEARCH_FUNCTION(CUDA_SHA1_PerformSearching_ForwardMatching_1Chunk)
-	unsigned int      tripcodeChunk0 = tripcodeChunkArray[0];
+	uint32_t      tripcodeChunk0 = tripcodeChunkArray[0];
 CUDA_SHA1_BEFORE_SEARCHING
 	if (tripcodeChunk == tripcodeChunk0) {
 		found = 1;
@@ -482,34 +482,34 @@ CUDA_SHA1_END_OF_SEAERCH_FUNCTION
 // CUDA SEARCH THREAD FOR 12 CHARACTER TRIPCODES                             //
 ///////////////////////////////////////////////////////////////////////////////
 
-unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
+void Thread_SearchForSHA1TripcodesOnCUDADevice(CUDADeviceSearchThreadInfo *info)
 {
 	cudaDeviceProp CUDADeviceProperties;
-	unsigned int         numBlocksPerSM;
-	unsigned int         numBlocksPerGrid;
+	uint32_t         numBlocksPerSM;
+	uint32_t         numBlocksPerGrid;
 	GPUOutput *outputArray = NULL;
 	GPUOutput *CUDA_outputArray = NULL;
-	unsigned int     *CUDA_tripcodeChunkArray = NULL;
+	uint32_t     *CUDA_tripcodeChunkArray = NULL;
 	unsigned char      *CUDA_chunkBitmap = NULL;
 	unsigned char      *cudaKeyAndRandomBytes;
-	unsigned int      sizeOutputArray;
+	uint32_t      sizeOutputArray;
 	unsigned char       key[MAX_LEN_TRIPCODE + 1];
 	char        status[LEN_LINE_BUFFER_FOR_SCREEN] = "";
 	double      timeElapsed = 0;
 	double      numGeneratedTripcodes = 0;
 	double      speed = 0;
-	DWORD       startingTime;
-	DWORD       endingTime;
+	uint64_t       startingTime;
+	uint64_t       endingTime;
 	double      deltaTime;
 
 	key[lenTripcode] = '\0';
 	
-	CUDA_ERROR(cudaSetDevice(((CUDADeviceSearchThreadInfo *)info)->CUDADeviceIndex));
-	CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceProperties, ((CUDADeviceSearchThreadInfo *)info)->CUDADeviceIndex));
+	CUDA_ERROR(cudaSetDevice(info->CUDADeviceIndex));
+	CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceProperties, info->CUDADeviceIndex));
 	if (CUDADeviceProperties.computeMode == cudaComputeModeProhibited) {
 		sprintf(status, "[disabled]");
-		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
-		return 0;
+		UpdateCUDADeviceStatus(info, status);
+		return;
 	}
 
 	numBlocksPerSM = options.CUDANumBlocksPerSM;
@@ -519,11 +519,11 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	ERROR0(outputArray == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_outputArray, sizeof(GPUOutput) * sizeOutputArray));
 	CUDA_ERROR(cudaMalloc((void **)&CUDA_chunkBitmap, CHUNK_BITMAP_SIZE));
-	CUDA_ERROR(cudaMalloc((void **)&CUDA_tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk)); 
+	CUDA_ERROR(cudaMalloc((void **)&CUDA_tripcodeChunkArray, sizeof(uint32_t) * numTripcodeChunk)); 
 	CUDA_ERROR(cudaMalloc((void **)&cudaKeyAndRandomBytes, sizeof(unsigned char) * 12)); 
  
-	EnterCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
-	CUDA_ERROR(cudaMemcpy(CUDA_tripcodeChunkArray, tripcodeChunkArray, sizeof(unsigned int) * numTripcodeChunk, cudaMemcpyHostToDevice));
+	info->mutex.lock();
+	CUDA_ERROR(cudaMemcpy(CUDA_tripcodeChunkArray, tripcodeChunkArray, sizeof(uint32_t) * numTripcodeChunk, cudaMemcpyHostToDevice));
 	CUDA_ERROR(cudaMemcpy(CUDA_chunkBitmap, chunkBitmap, CHUNK_BITMAP_SIZE, cudaMemcpyHostToDevice));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_base64CharTable,                   base64CharTable,                    sizeof(base64CharTable)));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_OneByte,              keyCharTable_OneByte,               SIZE_KEY_CHAR_TABLE));
@@ -531,16 +531,16 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByte,           keyCharTable_SecondByte,            SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(cudaKeyCharTable_SecondByteAndOneByte, keyCharTable_SecondByteAndOneByte,  SIZE_KEY_CHAR_TABLE));
 	CUDA_ERROR(cudaMemcpyToSymbol(CUDA_smallChunkBitmap,                    smallChunkBitmap,                     SMALL_CHUNK_BITMAP_SIZE));
-	LeaveCriticalSection(&((CUDADeviceSearchThreadInfo *)info)->criticalSection);
+	info->mutex.unlock();
 
-	startingTime = timeGetTime();
+	startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 
 	while (!GetTerminationState()) {
 		// Choose a random key.
 		SetCharactersInTripcodeKeyForSHA1Tripcode(key);
 		if (!IsValidKey(key))
 			continue;
-		for (int i = 0; i < 4; ++i)
+		for (int32_t i = 0; i < 4; ++i)
 			key[i] = RandomByte();
 		key[11] = RandomByte();
 				
@@ -630,20 +630,18 @@ unsigned WINAPI Thread_SearchForSHA1TripcodesOnCUDADevice(LPVOID info)
 		numGeneratedTripcodes += ProcessGPUOutput(key, outputArray, sizeOutputArray, TRUE);
 
 		//
-		endingTime = timeGetTime();
-		deltaTime = (endingTime >= startingTime)
-								? ((double)endingTime - (double)startingTime                     ) * 0.001
-								: ((double)endingTime - (double)startingTime + (double)0xffffffff) * 0.001;
+		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+		deltaTime = (endingTime - startingTime) * 0.001;
 		while (GetPauseState() && !GetTerminationState())
 			Sleep(PAUSE_INTERVAL);
-		startingTime = timeGetTime();
+		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		timeElapsed += deltaTime;
 		speed = numGeneratedTripcodes / timeElapsed;
 		sprintf(status,
 			    "%.1lfM TPS, %d blocks/SM",
 				speed / 1000000,
 				numBlocksPerSM);
-		UpdateCUDADeviceStatus(((CUDADeviceSearchThreadInfo *)info), status);
+		UpdateCUDADeviceStatus(info, status);
 	}
 
 	RELEASE_AND_SET_TO_NULL(CUDA_outputArray,        cudaFree);

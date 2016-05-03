@@ -48,7 +48,7 @@ __device__ __shared__   unsigned char   cudaSharedCompactMediumChunkBitmap[COMPA
 // BITSLICE DES                                                              //
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef unsigned int DES_Vector;
+typedef uint32_t DES_Vector;
 
 #define CUDA_DES_BS_DEPTH                   32
 #define CUDA_DES_MAX_PASS_COUNT             32
@@ -76,7 +76,7 @@ typedef unsigned int DES_Vector;
 
 #define BINARY_SEARCH\
 	{\
-		int lower = 0, upper = numTripcodeChunk - 1, middle = lower;\
+		int32_t lower = 0, upper = numTripcodeChunk - 1, middle = lower;\
 		while (tripcodeChunk != tripcodeChunkArray[middle] && lower <= upper) {\
 			middle = (lower + upper) >> 1;\
 			if (tripcodeChunk > tripcodeChunkArray[middle]) {\
