@@ -2083,14 +2083,13 @@ int32_t main(int32_t argc, char **argv)
 	}
 	PrintStatus();
 	
-	if (searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
-		StartGPUSearchThreads();
-
-	if (searchDevice == SEARCH_DEVICE_CPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
-		StartCPUSearchThreads();
 	
 	// The main loop.
 	uint64_t startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
+	if (searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
+		StartGPUSearchThreads();
+	if (searchDevice == SEARCH_DEVICE_CPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
+		StartCPUSearchThreads();
 	HANDLE parentProcess = OpenProcess(SYNCHRONIZE, FALSE, GetParentProcessID());
 	while (!GetTerminationState()) {
 		// Break the main loop if necessary.
