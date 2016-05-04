@@ -588,8 +588,8 @@ static uint32_t SearchForTripcodes(DES_Context *context)
 	uint32_t   tripcodeIndex;
 	unsigned char  randomByteKey6, randomByteKey7, randomByteKey8, randomByteKey9;
 
-	tripcode[lenTripcode] = '\0';
-	key     [lenTripcode] = '\0';
+	tripcode[tripcode_length] = '\0';
+	key     [tripcode_length] = '\0';
 	
 	randomByteKey6 = RandomByte();
 	randomByteKey7 = RandomByte();
@@ -598,7 +598,7 @@ static uint32_t SearchForTripcodes(DES_Context *context)
 		
 	do {
 		SetCharactersInTripcodeKey(key, 4);
-		for (int32_t i = 4; i < lenTripcode; ++i)
+		for (int32_t i = 4; i < tripcode_length; ++i)
 			key[i] = 'A';
 	} while (!IsValidKey(key));
 
@@ -894,7 +894,7 @@ second_part:
 				} else {
 					DES_GetTripcodeChunks(context, tripcodeIndex, generatedTripcodeChunkArray, searchMode);
 					int32_t maxPos = (searchMode == SEARCH_MODE_FLEXIBLE || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)
-						                ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN)
+						                ? (tripcode_length - MIN_LEN_EXPANDED_PATTERN)
 						                : (0);
 					for (int32_t pos = 0; !found && pos <= maxPos; ++pos)
 						QUICK_SEARCH_FOR_TRIPCODE_CHUNK(pos)

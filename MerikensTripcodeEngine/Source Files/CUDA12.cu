@@ -502,7 +502,7 @@ void Thread_SearchForSHA1TripcodesOnCUDADevice(CUDADeviceSearchThreadInfo *info)
 	uint64_t       endingTime;
 	double      deltaTime;
 
-	key[lenTripcode] = '\0';
+	key[tripcode_length] = '\0';
 	
 	CUDA_ERROR(cudaSetDevice(info->CUDADeviceIndex));
 	CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceProperties, info->CUDADeviceIndex));

@@ -1627,7 +1627,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice(CUDADeviceSearchThreadInfo *info)
 	unsigned char   *CUDA_key7Array; // [CUDA_DES_BS_DEPTH];
 	DES_Vector      *CUDA_keyFrom49To55Array; // [7];
 
-	key[lenTripcode] = '\0';
+	key[tripcode_length] = '\0';
 	
 	CUDA_ERROR(cudaSetDevice(info->CUDADeviceIndex));
 	CUDA_ERROR(cudaGetDeviceProperties(&CUDADeviceProperties, info->CUDADeviceIndex));
@@ -1680,7 +1680,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice(CUDADeviceSearchThreadInfo *info)
 		unsigned char key0Array[CUDA_DES_MAX_PASS_COUNT];
 		unsigned char randomByteForKey0 = RandomByte();
 		int32_t j = 0;
-		for (int32_t i = 3; i < lenTripcode; ++i)
+		for (int32_t i = 3; i < tripcode_length; ++i)
 			key[i] = 'A';
 		for (int32_t i = 0; i < CUDA_DES_MAX_PASS_COUNT; ++i) {
 			do {
@@ -1690,7 +1690,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice(CUDADeviceSearchThreadInfo *info)
 		}
 
 		// Generate random bytes for the key to ensure its randomness.
-		for (int32_t i = 3; i < lenTripcode; ++i)
+		for (int32_t i = 3; i < tripcode_length; ++i)
 			key[i] = RandomByte();
 		
 		//

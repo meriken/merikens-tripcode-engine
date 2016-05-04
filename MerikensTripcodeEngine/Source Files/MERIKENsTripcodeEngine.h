@@ -65,7 +65,8 @@
 #endif
 #include <mutex>
 
-// Boost
+// Boost 1.60.0
+#include <boost/iostreams/stream.hpp>
 #include <boost/process.hpp> // Boost.Process 0.5
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
@@ -121,8 +122,8 @@ extern int32_t prevLineCount;
 
 // Search Parameters
 extern int32_t searchMode;
-extern int32_t lenTripcode;
-extern int32_t lenTripcodeKey;
+extern int32_t tripcode_length;
+extern int32_t tripcode_key_length;
 
 // Character tables
 extern int32_t           numFirstByte;
@@ -175,7 +176,7 @@ extern char *GetErrorMessage(int32_t errorCode);
 //
 extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, char *status);
 extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status);
-extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, boost::process::child *child_process);
+extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes);
 
 //
 extern void show_cursor();
@@ -284,6 +285,7 @@ extern void Thread_SearchForDESTripcodesOnCUDADevice(CUDADeviceSearchThreadInfo 
 extern void Thread_SearchForDESTripcodesOnCUDADevice_Registers(CUDADeviceSearchThreadInfo *info);
 extern void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
 
+extern void StartChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
 extern void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
 
 extern void DES_CreateExpansionFunction(char *saltString, unsigned char *expansionFunction);

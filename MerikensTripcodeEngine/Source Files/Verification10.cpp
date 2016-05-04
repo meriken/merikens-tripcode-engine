@@ -52,14 +52,14 @@ BOOL VerifyDESTripcode(unsigned char *tripcode, unsigned char *key)
 {
         descrypt_spinlock.lock();
 
-        if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
+        if (strlen((char *)tripcode) != tripcode_length || strlen((char *)key) != tripcode_key_length)
                 return FALSE;
         
         char actualKey[MAX_LEN_TRIPCODE_KEY + 1];
         BOOL fillRestWithZero = FALSE;
         
         strcpy(actualKey, (char *)key);
-        for (int32_t i = 0; i < lenTripcodeKey; ++i) {
+        for (int32_t i = 0; i < tripcode_key_length; ++i) {
                 if (fillRestWithZero) {
                         actualKey[i] = 0x00;
                 } else if (actualKey[i] == 0x80) {
@@ -92,7 +92,7 @@ void GenerateDESTripcode(unsigned char *tripcode, unsigned char *key)
         
     memcpy(actualKey, (char *)key, 8);
 	actualKey[8] = '\0';
-	for (int32_t i = 0; i < lenTripcodeKey; ++i) {
+	for (int32_t i = 0; i < tripcode_key_length; ++i) {
             if (fillRestWithZero) {
                     actualKey[i] = 0x00;
             } else if (actualKey[i] == 0x80) {

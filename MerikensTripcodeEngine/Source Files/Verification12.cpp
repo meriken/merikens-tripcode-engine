@@ -136,7 +136,7 @@
 
 BOOL VerifySHA1Tripcode(unsigned char *tripcode, unsigned char *key)
 {
-	if (strlen((char *)tripcode) != lenTripcode || strlen((char *)key) != lenTripcodeKey)
+	if (strlen((char *)tripcode) != tripcode_length || strlen((char *)key) != tripcode_key_length)
 		return FALSE;
 
 	uint32_t W[80];
