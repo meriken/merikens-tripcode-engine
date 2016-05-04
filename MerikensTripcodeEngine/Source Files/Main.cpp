@@ -614,10 +614,11 @@ void CheckSearchThreads()
 			auto native_handle = opencl_device_search_threads[index]->native_handle();
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
-			boost_process_spinlock.lock();
-			delete info->input_stream;
-			boost::process::terminate(*(info->child_process));
-			boost_process_spinlock.unlock();
+			// For some strange reasons, these lines result in an APPCRASH.
+			// boost_process_spinlock.lock();
+			// delete info->input_stream;
+			// boost::process::terminate(*(info->child_process));
+			// boost_process_spinlock.unlock();
 #ifdef _WINDOWS_
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
