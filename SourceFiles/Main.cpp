@@ -728,10 +728,6 @@ void PrintStatus()
 		}
 		opencl_device_search_thread_info_array_spinlock.unlock();
 	}
-#if FALSE
-	if (CUDADeviceSearchThreadInfoArray && IsCUDADeviceOptimizationInProgress())
-		sprintf(NEXT_LINE, "      [optimization in progress]");
-#endif
 
 	double currentSpeed_childProcesses = 0;
 	double averageSpeed_childProcesses = 0;
@@ -783,8 +779,10 @@ void PrintStatus()
 #ifdef DISPLAY_MAXIMUM_SPEED
 		sprintf(NEXT_LINE, "      %3.2lfM tripcode/s (maximum)", maximumSpeed);
 #endif
-		averageSpeed     = prevTotalNumGeneratedTripcodes     / totalTime + averageSpeed_childProcesses;
-		averageSpeed_GPU = prevTotalNumGeneratedTripcodes_GPU / totalTime + averageSpeed_childProcesses;
+		// averageSpeed = prevTotalNumGeneratedTripcodes / totalTime + averageSpeed_childProcesses;
+		// averageSpeed_GPU = prevTotalNumGeneratedTripcodes_GPU / totalTime + averageSpeed_childProcesses;
+		averageSpeed     = (prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses) / totalTime;
+		averageSpeed_GPU = (prevTotalNumGeneratedTripcodes_GPU + totalNumGeneratedTripcodes_childProcesses) / totalTime;
 		averageSpeed_CPU = prevTotalNumGeneratedTripcodes_CPU / totalTime;
 		sprintf(NEXT_LINE, "      %3.2lfM tripcode/s (average)",  averageSpeed / 1000000);
 		if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU) {
