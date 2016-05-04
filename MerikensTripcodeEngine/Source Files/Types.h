@@ -130,7 +130,6 @@ struct OpenCLDeviceSearchThreadInfo {
 	uint32_t     numRestarts;
 	BOOL         runChildProcess;
 	boost::process::child *child_process;
-	boost::iostreams::stream<boost::iostreams::file_descriptor_source> *input_stream;
 	uint64_t     timeLastUpdated;
 };
 

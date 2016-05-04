@@ -140,7 +140,7 @@ inline void ConvertRaw12CharTripcodeIntoDisplayFormat(uint32_t *rawTripcodeArray
 			BINARY_SEARCH_FOR_TRIPCODE_CHUNK(1)                                                                                                             \
 		} else {                                                                                                                                            \
 			int32_t maxPos = (searchMode == SEARCH_MODE_FLEXIBLE || searchMode == SEARCH_MODE_FORWARD_AND_BACKWARD_MATCHING)                                    \
-						        ? (tripcode_length - MIN_LEN_EXPANDED_PATTERN)                                                                                  \
+						        ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN)                                                                                  \
 						        : (0);                                                                                                                      \
 			for (int32_t pos = 0; pos <= maxPos; ++pos)                                                                                                         \
 				BINARY_SEARCH_FOR_TRIPCODE_CHUNK(pos)                                                                                                       \
@@ -305,11 +305,11 @@ static uint32_t SearchForTripcodesWithMaximumOptimization()
 	unsigned char  tripcode[MAX_LEN_TRIPCODE + 1], key[MAX_LEN_TRIPCODE_KEY + 1];
 	uint32_t   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
 	uint32_t   numGeneratedTripcodes = 0;
-	int32_t            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (tripcode_length - MIN_LEN_EXPANDED_PATTERN) : (0);
+	int32_t            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);
 	uint32_t   rawTripcodeArray[4][3];
 	
- 	tripcode[tripcode_length]    = '\0';
-	key     [tripcode_key_length] = '\0';
+ 	tripcode[lenTripcode]    = '\0';
+	key     [lenTripcodeKey] = '\0';
 
 	SetCharactersInTripcodeKeyForSHA1Tripcode(key);
 	while (TRUE) {
@@ -563,8 +563,8 @@ static uint32_t SearchForTripcodesWithOptimization()
 	uint32_t   numGeneratedTripcodes = 0;
 	uint32_t   rawTripcodeArray[4][3];
 	
- 	tripcode[tripcode_length] = '\0';
-	key     [tripcode_key_length] = '\0';
+ 	tripcode[lenTripcode] = '\0';
+	key     [lenTripcodeKey] = '\0';
 
 	SetCharactersInTripcodeKeyForSHA1Tripcode(key);
 	while (TRUE) {
@@ -826,11 +826,11 @@ static uint32_t SearchForTripcodesWithoutOptimization()
 	unsigned char  tripcode[MAX_LEN_TRIPCODE + 1], key[MAX_LEN_TRIPCODE_KEY + 1];
 	uint32_t   generatedTripcodeChunkArray[MAX_LEN_TRIPCODE - MIN_LEN_EXPANDED_PATTERN + 1];
 	uint32_t   numGeneratedTripcodes = 0;
-	int32_t            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (tripcode_length - MIN_LEN_EXPANDED_PATTERN) : (0);
+	int32_t            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);
 	uint32_t   rawTripcodeArray[4][3];
 	
- 	tripcode[tripcode_length]    = '\0';
-	key     [tripcode_key_length] = '\0';
+ 	tripcode[lenTripcode]    = '\0';
+	key     [lenTripcodeKey] = '\0';
 
 	SetCharactersInTripcodeKeyForSHA1Tripcode(key);
 	while (TRUE) {

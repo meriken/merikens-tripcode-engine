@@ -77,14 +77,14 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 
 	// Create a hash value from the tripcode.
 	int32_t hashValueUpper = 0;
-	for (int32_t i = 0; i < tripcode_length; i += 2) {
+	for (int32_t i = 0; i < lenTripcode; i += 2) {
 		int32_t j;
 		for (j = 0; j < 63 && base64CharTable[j] != tripcode[i]; ++j)
 			;
 		hashValueUpper ^= j;
 	}
 	int32_t hashValueLower = 0;
-	for (int32_t i = 1; i < tripcode_length; i += 2) {
+	for (int32_t i = 1; i < lenTripcode; i += 2) {
 		int32_t j;
 		for (j = 0; j < 63 && base64CharTable[j] != tripcode[i]; ++j)
 			;
@@ -96,7 +96,7 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 	// Check to see if the tripcode is a duplicate.
 	TripcodeLinkedList *p = matchedTripcodeTable[tableIndex];
 	while (p != NULL) {
-		if (strncmp((char *)(p->tripcode), (char *)tripcode, tripcode_length) == 0) {
+		if (strncmp((char *)(p->tripcode), (char *)tripcode, lenTripcode) == 0) {
 			result = TRUE;
 			// printf("[DUPLICATE FOUND]\n");
 			goto exit;
@@ -108,8 +108,8 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 	TripcodeLinkedList *newNode = (TripcodeLinkedList *)malloc(sizeof(TripcodeLinkedList));
 	ERROR0(newNode == NULL, ERROR_NO_MEMORY, "Not enough memory");
 	newNode->next = matchedTripcodeTable[tableIndex];
-	strncpy((char *)(newNode->tripcode), (char *)tripcode, tripcode_length);
-	newNode->tripcode[tripcode_length] = '\0';
+	strncpy((char *)(newNode->tripcode), (char *)tripcode, lenTripcode);
+	newNode->tripcode[lenTripcode] = '\0';
 	matchedTripcodeTable[tableIndex] = newNode;
 
 exit:

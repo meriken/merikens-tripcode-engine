@@ -835,7 +835,7 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *in
 
 		// Set the first character of the key.
 		do {
-			for (int32_t i = 3; i < tripcode_length; ++i)
+			for (int32_t i = 3; i < lenTripcode; ++i)
 				keyInfo.partialKeyAndRandomBytes[i] = 'A';
 			if (options.useOneByteCharactersForKeys) {
 				keyInfo.partialKeyAndRandomBytes[0] = keyCharTable_OneByte[RandomByte()];
@@ -862,7 +862,7 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *in
 		OPENCL_ERROR(clSetKernelArg(kernel, 9, sizeof(uint32_t), (void *)&keyFrom00To27));
 
 		// Generate random bytes for the keyInfo.partialKeyAndRandomBytes to ensure the randomness of generated keys.
-		for (int32_t i = 4; i < tripcode_length; ++i)
+		for (int32_t i = 4; i < lenTripcode; ++i)
 			keyInfo.partialKeyAndRandomBytes[i] = RandomByte();
 		
 		// Generate part of the keys.

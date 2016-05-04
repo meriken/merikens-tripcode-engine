@@ -165,7 +165,7 @@
 
 #define IS_LAST_CHAR_OF_TRIPCODE(c)                        \
     (   IS_BASE64_CHAR(c)                                  \
-     && (   (tripcode_length == 12)                            \
+     && (   (lenTripcode == 12)                            \
          || (((charToIndexTableForDES[c]) & 0x03) == 0x00))) \
 
 // ',', '%', and '+' are excluded in the following macro.

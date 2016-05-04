@@ -162,7 +162,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice_Registers(CUDADeviceSearchThreadIn
 	uint64_t           endingTime;
 	double          deltaTime;
 
-	keyAndRandomBytes[tripcode_length] = '\0';
+	keyAndRandomBytes[lenTripcode] = '\0';
 	salt[2] = '\0';
 	
 	CUDA_ERROR(cudaSetDevice(info->CUDADeviceIndex));
@@ -225,7 +225,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice_Registers(CUDADeviceSearchThreadIn
 	while (!GetTerminationState()) {
 		// Choose the first 3 characters of the keyAndRandomBytes.
 		int32_t intSalt;
-		for (int32_t i = 3; i < tripcode_length; ++i)
+		for (int32_t i = 3; i < lenTripcode; ++i)
 			keyAndRandomBytes[i] = 'A';
 		do {
 			SetCharactersInTripcodeKey(keyAndRandomBytes, 3);
@@ -249,7 +249,7 @@ void Thread_SearchForDESTripcodesOnCUDADevice_Registers(CUDADeviceSearchThreadIn
 		}
 		
 		// Generate random bytes for the key to ensure its randomness.
-		for (int32_t i = 3; i < tripcode_length; ++i)
+		for (int32_t i = 3; i < lenTripcode; ++i)
 			keyAndRandomBytes[i] = RandomByte();
 
 		//
