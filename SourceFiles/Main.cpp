@@ -615,20 +615,22 @@ void CheckSearchThreads()
 			auto native_handle = opencl_device_search_threads[index]->native_handle();
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
+			
+			// Boost.Processs is happy with none of these lines below.
 #if 0
 			if (info->child_process) {
 				boost_process_spinlock.lock();
 				boost::process::terminate(*(info->child_process));
 				boost_process_spinlock.unlock();
 			}
-#endif
-			info->child_process = NULL;
 #ifdef _WINDOWS_
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
 			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 			pthread_cancel(native_handle);
 #endif
+#endif
+			info->child_process = NULL;
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
 			++info->numRestarts;
