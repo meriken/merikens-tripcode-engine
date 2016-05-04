@@ -31,7 +31,7 @@ Currently [MTY CL][2] is the only practical alternative to this program, and thi
 
 ## Donations
 
-I would really appreciate donations as it is quite expensive to buy hardware for testing.
+I would really appreciate donations as it is quite expensive to keep buying hardware for testing.
 I am also working on the English version of my tripcode search service and would like to add more servers.
 
 * PayPal: `meriken.ygch.net@gmail.com`
@@ -44,9 +44,9 @@ You need the following tools to build Meriken's Tripcode Engine.
 * Visual Studio 2013 Community
 * CUDA Toolkit 7.5
 * AMD APP SDK 3.0
-* YASM 1.2.0
+* YASM 1.2.0 **(DO NOT USE YASM 1.3.0!)**
 
-This program uses Boost 1.60.0 and Boost Process. Make sure to copy Boost files into appropriate Visual Studio folders.
+This program uses Boost 1.60.0 and Boost Process 0.5. Make sure to copy Boost files into appropriate Visual Studio folders.
 
 See `MerikensTripcodeEngine.h` for various build options. Don't forget to define `ENGLISH_VERSION` if you want to build an English version for 4chan.
 
@@ -64,7 +64,7 @@ You need the following software installed in order to run the application:
 
 ## Usage
 
-Make sure to download and install the required software packages before 
+Make sure to download and install the required software before 
 executing the program. If there is no OpenCL driver in the system, make sure to copy
 either `OpenCL\x86\OpenCL.dll` or `OpenCL\x64\OpenCL.dll`,
 depending on the operating system, to the folder where 
