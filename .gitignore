@@ -32,3 +32,5 @@ MerikensTripcodeEngine/Release/OpenCL10.cl_49_Hawaii.co
 *.hsail
 MerikensTripcodeEngine/Release/OpenCL10.cl_50_Hawaii.co
 *.i-0abf6143
+WindowsBinaries/OpenCL/*.cl
+WindowsBinaries/OpenCL/bin/*.asm
