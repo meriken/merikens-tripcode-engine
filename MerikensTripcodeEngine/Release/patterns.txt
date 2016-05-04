@@ -1,5 +1,0 @@
-#regex
-^TEST/
-#/TES\.$
-#\.TES\.
-#^[:digit:]+$
