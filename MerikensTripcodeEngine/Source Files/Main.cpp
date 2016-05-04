@@ -615,11 +615,13 @@ void CheckSearchThreads()
 			auto native_handle = opencl_device_search_threads[index]->native_handle();
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
+#if 0
 			if (info->child_process) {
 				boost_process_spinlock.lock();
 				boost::process::terminate(*(info->child_process));
 				boost_process_spinlock.unlock();
 			}
+#endif
 			info->child_process = NULL;
 #ifdef _WINDOWS_
 			TerminateThread(native_handle, 0);
@@ -631,7 +633,11 @@ void CheckSearchThreads()
 			info->averageSpeed = 0;
 			++info->numRestarts;
 
-			opencl_device_search_threads[index] = new std::thread(Thread_RunChildProcessForOpenCLDevice, &(openCLDeviceSearchThreadInfoArray[index]));
+			uint32_t winThreadID;
+			opencl_device_search_threads[index] = new std::thread((lenTripcode == 10) 
+																	       ? Thread_SearchForDESTripcodesOnOpenCLDevice
+													                       : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
+																	   &(openCLDeviceSearchThreadInfoArray[index]));
 		}
 		//*/
 	}
