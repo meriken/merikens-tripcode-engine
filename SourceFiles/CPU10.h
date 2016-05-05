@@ -1050,7 +1050,7 @@ void CPU_DES_MAIN_LOOP()
 
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())
-			Sleep(PAUSE_INTERVAL);
+			sleep_for_milliseconds(PAUSE_INTERVAL);
 
 		uint32_t numGeneratedTripcodes = SearchForTripcodes(&context);
 		AddToNumGeneratedTripcodesByCPU(numGeneratedTripcodes);

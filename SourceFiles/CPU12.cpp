@@ -643,7 +643,7 @@ void Thread_SearchForSHA1TripcodesOnCPU()
 
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())
-			Sleep(PAUSE_INTERVAL);
+			sleep_for_milliseconds(PAUSE_INTERVAL);
 
 		uint32_t numGeneratedTripcodes = (useAVX2) ? SearchForTripcodesWithOptimization_AVX2()
 			                                           : SearchForTripcodesWithOptimization();

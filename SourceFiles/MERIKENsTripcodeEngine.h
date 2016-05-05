@@ -186,8 +186,9 @@ extern double ProcessGPUOutput(unsigned char *key, GPUOutput *outputArray, uint3
 extern void   ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key);
 extern void   ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char *key);
 
-//
-BOOL IsFirstByteSJIS(unsigned char ch);
+// Others
+extern BOOL IsFirstByteSJIS(unsigned char ch);
+extern void sleep_for_milliseconds(uint32_t milliseconds);
 
 
 

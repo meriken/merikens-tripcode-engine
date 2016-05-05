@@ -167,6 +167,11 @@ uint32_t     numGeneratedTripcodesByCPUInMillions;
 // FUNCTIONS                                                                 //
 ///////////////////////////////////////////////////////////////////////////////
 
+void sleep_for_milliseconds(uint32_t milliseconds)
+{
+	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+}
+
 char *GetErrorMessage(int32_t errorCode)
 {
 	switch (errorCode) {
@@ -895,7 +900,7 @@ BOOL WINAPI ControlHandler(_In_  DWORD dwCtrlType)
 	case CTRL_LOGOFF_EVENT:
 		SetTerminationState();
 		while (TRUE)
-			Sleep(1000);
+			sleep_for_milliseconds(1000);
 		return TRUE;
 	default:
 		return FALSE;
@@ -2129,7 +2134,7 @@ int32_t main(int32_t argc, char **argv)
 			if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
 				break;
 
-			Sleep((uint32_t)(STATUS_UPDATE_INTERVAL * 1000 / NUM_CHECKS_PER_INTERVAL));
+			sleep_for_milliseconds((uint32_t)(STATUS_UPDATE_INTERVAL * 1000 / NUM_CHECKS_PER_INTERVAL));
 		}
 		if (GetTerminationState())
 			break;
@@ -2148,7 +2153,7 @@ int32_t main(int32_t argc, char **argv)
 
 				SetPauseState(TRUE);
 				KeepSearchThreadsAlive();
-				Sleep(PAUSE_INTERVAL);
+				sleep_for_milliseconds(PAUSE_INTERVAL);
 			}
 			if (mutexForPausingState == WAIT_OBJECT_0) {
 				ReleaseMutex(mutexForPausing);
@@ -2179,7 +2184,7 @@ int32_t main(int32_t argc, char **argv)
 	startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 	uint64_t currentTime, deltaTime;
 	do {
-		Sleep(100);
+		sleep_for_milliseconds(100);
 		allThreadsHaveExited = TRUE;
 		for (int32_t i = 0; i < numCUDADeviceSearchThreads; ++i) {
 			if (WaitForSingleObject(cuda_device_search_threads[i]->native_handle(), 0) != WAIT_OBJECT_0) {

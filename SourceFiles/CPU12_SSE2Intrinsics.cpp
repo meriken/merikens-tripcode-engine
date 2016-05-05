@@ -930,7 +930,7 @@ void Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
 {
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())
-			Sleep(PAUSE_INTERVAL);
+			sleep_for_milliseconds(PAUSE_INTERVAL);
 
 		uint32_t numGeneratedTripcodes;
 		numGeneratedTripcodes = (options.SHA1OptimizationForCPU == 0) ? SearchForTripcodesWithoutOptimization() :

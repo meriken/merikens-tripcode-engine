@@ -633,7 +633,7 @@ void Thread_SearchForSHA1TripcodesOnCUDADevice(CUDADeviceSearchThreadInfo *info)
 		endingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		deltaTime = (endingTime - startingTime) * 0.001;
 		while (GetPauseState() && !GetTerminationState())
-			Sleep(PAUSE_INTERVAL);
+			sleep_for_milliseconds(PAUSE_INTERVAL);
 		startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		timeElapsed += deltaTime;
 		speed = numGeneratedTripcodes / timeElapsed;
