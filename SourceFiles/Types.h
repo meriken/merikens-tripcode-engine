@@ -157,25 +157,51 @@ public:
 };
 
 namespace mte {
-	class named_mutex : private boost::interprocess::ipcdetail::winapi_mutex_wrapper {
+	class named_event {
 		std::string data_name;
-		bool data_is_open;
+		HANDLE native_event_handle;
 
 	public:
-		named_mutex() : data_is_open(false) {}
-		~named_mutex() {}
-		bool is_open() { return data_is_open; }
+		named_event() : native_event_handle(NULL)
+		{
+		}
+
+		~named_event()
+		{
+			if (native_event_handle)
+				CloseHandle(native_event_handle);
+		}
+
+		bool is_open()
+		{
+			return (native_event_handle != NULL && native_event_handle != INVALID_HANDLE_VALUE);
+		}
+
 		bool open_or_create(const char *arg_name)
 		{
+			if (is_open())
+				return false;
 			data_name = arg_name;
-			boost::interprocess::permissions permissions;
-			permissions.set_unrestricted();
-			return (data_is_open = boost::interprocess::ipcdetail::winapi_mutex_wrapper::open_or_create(data_name.data(), permissions));
+			std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>> converter(new std::codecvt_byname<wchar_t, char, std::mbstate_t>("cp" + std::to_string(GetACP())));
+			native_event_handle = OpenEvent(EVENT_ALL_ACCESS, false, converter.from_bytes(arg_name).data());
+			return is_open();
 		}
-		void lock() { boost::interprocess::ipcdetail::winapi_mutex_wrapper::lock(); }
-		bool try_lock() { return boost::interprocess::ipcdetail::winapi_mutex_wrapper::try_lock(); }
-		void unlock() { boost::interprocess::ipcdetail::winapi_mutex_wrapper::unlock(); }
-		std::string name() { return data_name; }
+
+		void wait() 
+		{ 
+			if (is_open())
+				WaitForSingleObject(native_event_handle, INFINITE);
+		}
+
+		bool poll() 
+		{ 
+			return is_open() && WaitForSingleObject(native_event_handle, 0) == WAIT_OBJECT_0;
+		}
+		
+		std::string name() 
+		{
+			return data_name; 
+		}
 	};
 }
 

@@ -42,8 +42,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "MerikensTripcodeEngine.h"
-#include <locale>
-#include <codecvt>
 #include <boost/iostreams/stream.hpp>
 #include <boost/locale.hpp>
 
@@ -305,13 +303,13 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	} else {
 		args.push_back(CONVERT_FROM_BYTES("--use-one-and-two-byte-characters-for-keys"));
 	}
-	if (strlen(nameMutexForPausing) > 0) {
+	if (pause_event.is_open()) {
 		args.push_back(CONVERT_FROM_BYTES("-e"));
-		args.push_back(CONVERT_FROM_BYTES(std::string(nameMutexForPausing)));
+		args.push_back(CONVERT_FROM_BYTES(pause_event.name()));
 	}
-	if (strlen(nameEventForTerminating) > 0) {
+	if (termination_event.is_open()) {
 		args.push_back(CONVERT_FROM_BYTES("-E"));
-		args.push_back(CONVERT_FROM_BYTES(std::string(nameEventForTerminating)));
+		args.push_back(CONVERT_FROM_BYTES(termination_event.name()));
 	}
 
 	boost::process::pipe pipe = boost::process::create_pipe();

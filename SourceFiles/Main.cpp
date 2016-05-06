@@ -93,12 +93,8 @@ FILE *tripcodeFile = NULL;
 std::atomic_bool pause_state       = ATOMIC_VAR_INIT(false);
 std::atomic_bool termination_state = ATOMIC_VAR_INIT(false);
 std::atomic_bool error_state       = ATOMIC_VAR_INIT(false);
-static HANDLE       termination_mutex = NULL;
-static HANDLE pause_mutex = NULL;
-char         nameMutexForPausing[MAX_LEN_INPUT_LINE + 1] = "";
-static WCHAR nameMutexForPausingWC    [MAX_LEN_INPUT_LINE + 1] = L"";
-char         nameEventForTerminating  [MAX_LEN_INPUT_LINE + 1] =  "";
-static WCHAR nameEventForTerminatingWC[MAX_LEN_INPUT_LINE + 1] = L"";
+mte::named_event termination_event;
+mte::named_event pause_event;
 
 // GPUs
 int32_t           CUDADeviceCount   = 0;
@@ -167,6 +163,49 @@ uint32_t     numGeneratedTripcodesByCPUInMillions;
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS                                                                 //
 ///////////////////////////////////////////////////////////////////////////////
+void SetPauseState(BOOL newPauseState)
+{
+	pause_state.store(newPauseState);
+}
+
+BOOL GetPauseState()
+{
+	return pause_state.load();
+}
+
+BOOL UpdatePauseState()
+{
+	if (pause_event.is_open())
+		pause_state.store(pause_event.poll());
+	return pause_state.load();
+}
+
+void SetErrorState()
+{
+	error_state.store(true);
+}
+
+BOOL GetErrorState()
+{
+	return error_state.load();
+}
+
+void SetTerminationState()
+{
+	termination_state.store(true);
+}
+
+BOOL GetTerminationState()
+{
+	return termination_state.load();
+}
+
+BOOL UpdateTerminationState()
+{
+	if (termination_event.is_open())
+		termination_state.store(termination_event.poll());
+	return termination_state.load();
+}
 
 void sleep_for_milliseconds(uint32_t milliseconds)
 {
@@ -228,12 +267,12 @@ char *GetErrorMessage(int32_t errorCode)
 	}
 }
 
+#include <random>
+std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char> random_bytes_engine;
+
 unsigned char RandomByte()
 {
-	uint32_t randomValue;
-
-	rand_s(&randomValue);
-	return (unsigned char)(randomValue & 0x000000ff);
+	return random_bytes_engine();
 }
 
 void ReleaseResources()
@@ -243,14 +282,6 @@ void ReleaseResources()
 	RELEASE_AND_SET_TO_NULL(regexPatternArray,    free);
 	if (tripcodeFile) {
 		RELEASE_AND_SET_TO_NULL(tripcodeFile,     fclose);
-	}
-	if (pause_mutex) {
-		CloseHandle(pause_mutex);
-		pause_mutex = NULL;
-	}
-	if (termination_mutex) {
-		CloseHandle(termination_mutex);
-		termination_mutex = NULL;
 	}
 }
 
@@ -671,7 +702,7 @@ void KeepSearchThreadsAlive()
 
 void PrintStatus()
 {
-	if (GetErrorState() || GetTerminationState())
+	if (GetErrorState() || UpdateTerminationState())
 		return;
 
 	current_state_spinlock.lock();
@@ -1346,26 +1377,10 @@ void ObtainOptions(int32_t argCount, char **arguments)
 			options.redirection = TRUE;
 
 		} else if (strcmp(arguments[indexArg], "-e") == 0 && indexArg + 1 < argCount) {
-			++indexArg;
-			strcpy(nameMutexForPausing, arguments[indexArg]);
-			int32_t len = MultiByteToWideChar(CP_ACP, 0, arguments[indexArg], -1, nameMutexForPausingWC, MAX_LEN_INPUT_LINE);
-			if (len < 0) {
-				len = 0;
-			} else if (len <= MAX_LEN_INPUT_LINE) {
-				nameMutexForPausingWC[len] = 0;
-			}
-			nameMutexForPausingWC[MAX_LEN_INPUT_LINE] = 0;
+			pause_event.open_or_create(arguments[++indexArg]);
 
 		} else if (strcmp(arguments[indexArg], "-E") == 0 && indexArg + 1 < argCount) {
-			++indexArg;
-			strcpy(nameEventForTerminating, arguments[indexArg]);
-			int32_t len = MultiByteToWideChar(CP_ACP, 0, arguments[indexArg], -1, nameEventForTerminatingWC, MAX_LEN_INPUT_LINE);
-			if (len < 0) {
-				len = 0;
-			} else if (len <= MAX_LEN_INPUT_LINE) {
-				nameEventForTerminatingWC[len] = 0;
-			}
-			nameEventForTerminatingWC[MAX_LEN_INPUT_LINE] = 0;
+			termination_event.open_or_create(arguments[++indexArg]);
 
 		} else if (strcmp(arguments[indexArg], "--use-one-byte-characters-for-keys") == 0) {
 			options.useOneByteCharactersForKeys = TRUE;
@@ -1463,7 +1478,7 @@ void ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key)
 		fflush(tripcodeFile);
 	}  
 
-	if (!options.redirection && !GetTerminationState() && !GetErrorState()) {
+	if (!options.redirection && !UpdateTerminationState() && !GetErrorState()) {
 #ifdef ENGLISH_VERSION
 		printf("  !");
 #else
@@ -1518,7 +1533,7 @@ void ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key)
 void ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char *key)
 {
 	process_tripcode_pair_spinlock.lock();
-	if (options.outputInvalidTripcode && !options.redirection && !GetTerminationState() && !GetErrorState()) {
+	if (options.outputInvalidTripcode && !options.redirection && !UpdateTerminationState() && !GetErrorState()) {
 #ifdef ENGLISH_VERSION
 		fprintf(tripcodeFile, "!");
 #else
@@ -1569,7 +1584,7 @@ void ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char *key)
 	++numDiscardedTripcodes;
 	current_state_spinlock.unlock();
 
-	if (options.outputInvalidTripcode && !options.redirection && !GetTerminationState() && !GetErrorState())
+	if (options.outputInvalidTripcode && !options.redirection && !UpdateTerminationState() && !GetErrorState())
 		PrintStatus();
 }
 
@@ -1629,55 +1644,6 @@ double GetNumGeneratedTripcodesByGPU()
 	return ret;
 }
 
-void SetPauseState(BOOL newPauseState)
-{
-	pause_state.store(newPauseState);
-}
-
-BOOL GetPauseState()
-{
-	if (pause_mutex && pause_mutex != INVALID_HANDLE_VALUE) {
-		DWORD result = WaitForSingleObject(pause_mutex, 1000);
-		if (result == WAIT_TIMEOUT) {
-			pause_state.store(true);
-		}
-		else if (result == WAIT_OBJECT_0) {
-			ReleaseMutex(pause_mutex);
-			pause_state.store(false);
-		}
-	}
-	return pause_state.load();
-}
-
-void SetErrorState()
-{
-	error_state.store(true);
-}
-
-BOOL GetErrorState()
-{
-	return error_state.load();
-}
-
-void SetTerminationState()
-{
-	termination_state.store(true);
-}
-
-BOOL GetTerminationState()
-{
-	if (termination_mutex && termination_mutex != INVALID_HANDLE_VALUE) {
-		DWORD result = WaitForSingleObject(termination_mutex, 1000);
-		if (result == WAIT_TIMEOUT) {
-			termination_state.store(true);
-		}
-		else if (result == WAIT_OBJECT_0) {
-			ReleaseMutex(termination_mutex);
-			termination_state.store(false);
-		}
-	}
-	return termination_state.load();
-}
 
 double UpdateCurrentStatus(uint64_t startingTime)
 {
@@ -2032,6 +1998,14 @@ void ListExpandedPatterns()
 
 int32_t main(int32_t argc, char **argv)
 {
+	// Some versions of OpenCL.dll are buggy.
+	// /DELAYLOAD:"OpenCL.dll" is also necessary.
+#if _WIN32
+	SetDllDirectoryA("OpenCL\\x86");
+#elif _WIN64
+	SetDllDirectoryA("OpenCL\\x64");
+#endif
+
 	BOOL   displayDeviceInformationAndExit = false;
 	BOOL   listExpandedPatternsAndExit     = false;
 
@@ -2075,16 +2049,6 @@ int32_t main(int32_t argc, char **argv)
 	if (!options.redirection)
 		exit(0);
 #endif
-
-	// Prepare for pausing and termination.
-	if (nameEventForTerminatingWC[0] != 0x0 && termination_mutex == NULL) {
-		termination_mutex = OpenMutex(MUTEX_ALL_ACCESS, false, nameEventForTerminatingWC);
-		ERROR0(!termination_mutex, ERROR_MUTEX, "Failed to open a mutex.")
-	}
-	if (nameMutexForPausingWC[0] != 0x0 && pause_mutex == NULL) {
-		pause_mutex = OpenMutex(MUTEX_ALL_ACCESS, false, nameMutexForPausingWC);
-		ERROR0(!pause_mutex, ERROR_MUTEX, "Failed to open a mutex.") 
-	}
 	
 	if (!options.redirection) {
 		printf("TRIPCODES\n");
@@ -2094,7 +2058,6 @@ int32_t main(int32_t argc, char **argv)
 	}
 	PrintStatus();
 	
-	
 	// The main loop.
 	uint64_t startingTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 	if (searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
@@ -2102,24 +2065,19 @@ int32_t main(int32_t argc, char **argv)
 	if (searchDevice == SEARCH_DEVICE_CPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
 		StartCPUSearchThreads();
 	HANDLE parentProcess = OpenProcess(SYNCHRONIZE, FALSE, GetParentProcessID());
-	while (!GetTerminationState()) {
+	while (!UpdateTerminationState()) {
 		// Break the main loop if necessary.
 		if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
 			break;
 
 		// Wait for the duration of STATUS_UPDATE_INTERVAL.
-		uint32_t pause_mutexState;
 		for (int32_t i = 0; i < NUM_CHECKS_PER_INTERVAL; ++i) {
 			// Break the loop if the search is paused.
-			if (pause_mutex) {
-				if (GetPauseState()) {
-					SetPauseState(TRUE);
-					break;
-				}
-			}
+			if (UpdatePauseState())
+				break;
 
 			// Break the loop if the search was terminated.
-			if (GetTerminationState())
+			if (UpdateTerminationState())
 				break;
 
 			// Break the loop if the parent process has already quit.
@@ -2128,26 +2086,24 @@ int32_t main(int32_t argc, char **argv)
 
 			sleep_for_milliseconds((uint32_t)(STATUS_UPDATE_INTERVAL * 1000 / NUM_CHECKS_PER_INTERVAL));
 		}
-		if (GetTerminationState())
+		if (UpdateTerminationState())
 			break;
 		UpdateCurrentStatus(startingTime);
 		
 		// Pause searching if necessary.
-		if (pause_mutex) {
-			while (GetPauseState()) {
-				// Break the loop if the search was terminated.
-				if (GetTerminationState())
-					break;
+		while (UpdatePauseState()) {
+			// Break the loop if the search was terminated.
+			if (UpdateTerminationState())
+				break;
 
-				// Break the loop if the parent process has already quit.
-				if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
-					break;
+			// Break the loop if the parent process has already quit.
+			if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
+				break;
 
-				KeepSearchThreadsAlive();
-				sleep_for_milliseconds(PAUSE_INTERVAL);
-			}
+			KeepSearchThreadsAlive();
+			sleep_for_milliseconds(PAUSE_INTERVAL);
 		}
-		if (GetTerminationState())
+		if (UpdateTerminationState())
 			break;
 				
 		//

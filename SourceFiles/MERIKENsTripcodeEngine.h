@@ -46,8 +46,6 @@
 // INCLUDE FILES                                                             //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define _CRT_RAND_S // for rand_s()
-
 // For Win32
 #include <windows.h>
 #include <process.h>
@@ -64,6 +62,8 @@
 #include <thread>
 #endif
 #include <mutex>
+#include <locale>
+#include <codecvt>
 
 // Boost
 #ifndef __CUDACC__
@@ -150,9 +150,9 @@ extern int32_t searchDevice;
 #ifndef __CUDACC__
 extern spinlock system_command_spinlock;
 extern spinlock boost_process_spinlock;
+extern mte::named_event termination_event;
+extern mte::named_event pause_event;
 #endif
-extern char     nameMutexForPausing    [MAX_LEN_INPUT_LINE + 1];
-extern char     nameEventForTerminating[MAX_LEN_INPUT_LINE + 1];
 
 //
 extern void          AddToNumGeneratedTripcodesByCPU(uint32_t num);
