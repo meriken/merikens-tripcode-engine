@@ -46,6 +46,8 @@
 // INCLUDE FILES                                                             //
 ///////////////////////////////////////////////////////////////////////////////
 
+#define _CRT_RAND_S
+
 // For Win32
 #include <windows.h>
 #include <process.h>
