@@ -66,6 +66,9 @@
 #include <mutex>
 
 // Boost
+#ifndef __CUDACC__
+#include <boost/interprocess/sync/windows/winapi_mutex_wrapper.hpp>
+#endif
 #include <boost/process.hpp> // Boost.Process 0.5
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
@@ -81,10 +84,7 @@
 #include <cuda_runtime.h>
 #include <CL/cl.h>
 
-// For MPIR
-// #include "mpir.h"
-
-//
+// MTE
 #include "Constants.h"
 #include "Types.h"
 #include "Macros.h"

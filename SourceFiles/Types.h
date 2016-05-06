@@ -156,4 +156,27 @@ public:
 	}
 };
 
+namespace mte {
+	class named_mutex : private boost::interprocess::ipcdetail::winapi_mutex_wrapper {
+		std::string data_name;
+		bool data_is_open;
+
+	public:
+		named_mutex() : data_is_open(false) {}
+		~named_mutex() {}
+		bool is_open() { return data_is_open; }
+		bool open_or_create(const char *arg_name)
+		{
+			data_name = arg_name;
+			boost::interprocess::permissions permissions;
+			permissions.set_unrestricted();
+			return (data_is_open = boost::interprocess::ipcdetail::winapi_mutex_wrapper::open_or_create(data_name.data(), permissions));
+		}
+		void lock() { boost::interprocess::ipcdetail::winapi_mutex_wrapper::lock(); }
+		bool try_lock() { return boost::interprocess::ipcdetail::winapi_mutex_wrapper::try_lock(); }
+		void unlock() { boost::interprocess::ipcdetail::winapi_mutex_wrapper::unlock(); }
+		std::string name() { return data_name; }
+	};
+}
+
 #endif

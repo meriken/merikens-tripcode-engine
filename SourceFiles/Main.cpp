@@ -89,8 +89,13 @@ char  patternFilePathArray[MAX_NUM_PATTERN_FILES][MAX_LEN_FILE_PATH + 1];
 char  tripcodeFilePath    [MAX_LEN_FILE_PATH + 1];
 FILE *tripcodeFile = NULL;
 
-// Inter process communication
-char         nameMutexForPausing      [MAX_LEN_INPUT_LINE + 1] =  "";
+// Interprocess communication
+std::atomic_bool pause_state       = ATOMIC_VAR_INIT(false);
+std::atomic_bool termination_state = ATOMIC_VAR_INIT(false);
+std::atomic_bool error_state       = ATOMIC_VAR_INIT(false);
+static HANDLE       termination_mutex = NULL;
+static HANDLE pause_mutex = NULL;
+char         nameMutexForPausing[MAX_LEN_INPUT_LINE + 1] = "";
 static WCHAR nameMutexForPausingWC    [MAX_LEN_INPUT_LINE + 1] = L"";
 char         nameEventForTerminating  [MAX_LEN_INPUT_LINE + 1] =  "";
 static WCHAR nameEventForTerminatingWC[MAX_LEN_INPUT_LINE + 1] = L"";
@@ -128,10 +133,6 @@ double           totalNumGeneratedTripcodes_CPU = 0;
 double       prevTotalNumGeneratedTripcodes = 0;
 double       prevTotalNumGeneratedTripcodes_GPU = 0;
 double       prevTotalNumGeneratedTripcodes_CPU = 0;
-BOOL         isSearchPaused      = FALSE;
-BOOL         wasSearchTerminated = FALSE;
-BOOL         wasSearchAbortedWithError = FALSE;
-HANDLE       eventForTerminating = NULL;
 int32_t prevLineCount = 0;
 
 
@@ -243,9 +244,13 @@ void ReleaseResources()
 	if (tripcodeFile) {
 		RELEASE_AND_SET_TO_NULL(tripcodeFile,     fclose);
 	}
-	if (eventForTerminating) {
-		CloseHandle(eventForTerminating);
-		eventForTerminating = NULL;
+	if (pause_mutex) {
+		CloseHandle(pause_mutex);
+		pause_mutex = NULL;
+	}
+	if (termination_mutex) {
+		CloseHandle(termination_mutex);
+		termination_mutex = NULL;
 	}
 }
 
@@ -1617,7 +1622,7 @@ double GetNumGeneratedTripcodesByGPU()
 	double ret =   (double)numGeneratedTripcodesByGPUInMillions * 1000000
 	             +         numGeneratedTripcodes_GPU;
 	numGeneratedTripcodesByGPUInMillions = 0;
-	numGeneratedTripcodes_GPU           = 0;
+	numGeneratedTripcodes_GPU           = 0;	
 
 	num_generated_tripcodes_spinlock.unlock();
 	
@@ -1626,64 +1631,52 @@ double GetNumGeneratedTripcodesByGPU()
 
 void SetPauseState(BOOL newPauseState)
 {
-	current_state_spinlock.lock();
-	isSearchPaused = newPauseState;
-	current_state_spinlock.unlock();
+	pause_state.store(newPauseState);
 }
 
 BOOL GetPauseState()
 {
-	BOOL ret;
-	current_state_spinlock.lock();
-	ret = isSearchPaused;
-	current_state_spinlock.unlock();
-	return ret;
+	if (pause_mutex && pause_mutex != INVALID_HANDLE_VALUE) {
+		DWORD result = WaitForSingleObject(pause_mutex, 1000);
+		if (result == WAIT_TIMEOUT) {
+			pause_state.store(true);
+		}
+		else if (result == WAIT_OBJECT_0) {
+			ReleaseMutex(pause_mutex);
+			pause_state.store(false);
+		}
+	}
+	return pause_state.load();
 }
 
 void SetErrorState()
 {
-	current_state_spinlock.lock();
-	wasSearchAbortedWithError = TRUE;
-	current_state_spinlock.unlock();
+	error_state.store(true);
 }
 
 BOOL GetErrorState()
 {
-	BOOL ret;
-	current_state_spinlock.lock();
-	ret = wasSearchAbortedWithError;
-	current_state_spinlock.unlock();
-	return ret;
+	return error_state.load();
 }
 
 void SetTerminationState()
 {
-	current_state_spinlock.lock();
-	wasSearchTerminated = TRUE;
-	current_state_spinlock.unlock();
+	termination_state.store(true);
 }
 
 BOOL GetTerminationState()
 {
-	BOOL ret;
-
-	current_state_spinlock.lock();
-
-	// Prepare for termination.
-	if (options.redirection && nameEventForTerminatingWC[0] != 0x0 && eventForTerminating == NULL) {
-		eventForTerminating = OpenEvent(EVENT_ALL_ACCESS, false, nameEventForTerminatingWC);
-		ERROR0(!eventForTerminating, ERROR_EVENT, "Failed to open an event.") 
+	if (termination_mutex && termination_mutex != INVALID_HANDLE_VALUE) {
+		DWORD result = WaitForSingleObject(termination_mutex, 1000);
+		if (result == WAIT_TIMEOUT) {
+			termination_state.store(true);
+		}
+		else if (result == WAIT_OBJECT_0) {
+			ReleaseMutex(termination_mutex);
+			termination_state.store(false);
+		}
 	}
-
-	// Check to see if a termination event has occured.
-	if (eventForTerminating && WaitForSingleObject(eventForTerminating, 0) == WAIT_OBJECT_0)
-		wasSearchTerminated = true;
-
-	ret = wasSearchTerminated;
-
-	current_state_spinlock.unlock();
-
-	return ret;
+	return termination_state.load();
 }
 
 double UpdateCurrentStatus(uint64_t startingTime)
@@ -2083,13 +2076,15 @@ int32_t main(int32_t argc, char **argv)
 		exit(0);
 #endif
 
-	// Prepare for pausing.
-	HANDLE mutexForPausing = NULL;
-	if (options.redirection && nameMutexForPausingWC[0] != 0x0) {
-		mutexForPausing = OpenMutex(MUTEX_ALL_ACCESS, false, nameMutexForPausingWC);
-		ERROR0(!mutexForPausing, ERROR_EVENT, "Failed to open an event.") 
+	// Prepare for pausing and termination.
+	if (nameEventForTerminatingWC[0] != 0x0 && termination_mutex == NULL) {
+		termination_mutex = OpenMutex(MUTEX_ALL_ACCESS, false, nameEventForTerminatingWC);
+		ERROR0(!termination_mutex, ERROR_MUTEX, "Failed to open a mutex.")
 	}
-	isSearchPaused = FALSE;
+	if (nameMutexForPausingWC[0] != 0x0 && pause_mutex == NULL) {
+		pause_mutex = OpenMutex(MUTEX_ALL_ACCESS, false, nameMutexForPausingWC);
+		ERROR0(!pause_mutex, ERROR_MUTEX, "Failed to open a mutex.") 
+	}
 	
 	if (!options.redirection) {
 		printf("TRIPCODES\n");
@@ -2113,14 +2108,11 @@ int32_t main(int32_t argc, char **argv)
 			break;
 
 		// Wait for the duration of STATUS_UPDATE_INTERVAL.
-		uint32_t mutexForPausingState;
+		uint32_t pause_mutexState;
 		for (int32_t i = 0; i < NUM_CHECKS_PER_INTERVAL; ++i) {
 			// Break the loop if the search is paused.
-			if (mutexForPausing) {
-				mutexForPausingState = WaitForSingleObject(mutexForPausing, 0);
-				if (mutexForPausingState == WAIT_OBJECT_0) {
-					ReleaseMutex(mutexForPausing);
-				} else if (mutexForPausingState == WAIT_TIMEOUT) {
+			if (pause_mutex) {
+				if (GetPauseState()) {
 					SetPauseState(TRUE);
 					break;
 				}
@@ -2141,8 +2133,8 @@ int32_t main(int32_t argc, char **argv)
 		UpdateCurrentStatus(startingTime);
 		
 		// Pause searching if necessary.
-		if (mutexForPausing) {
-			while ((mutexForPausingState = WaitForSingleObject(mutexForPausing, 0)) == WAIT_TIMEOUT) {
+		if (pause_mutex) {
+			while (GetPauseState()) {
 				// Break the loop if the search was terminated.
 				if (GetTerminationState())
 					break;
@@ -2151,13 +2143,8 @@ int32_t main(int32_t argc, char **argv)
 				if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
 					break;
 
-				SetPauseState(TRUE);
 				KeepSearchThreadsAlive();
 				sleep_for_milliseconds(PAUSE_INTERVAL);
-			}
-			if (mutexForPausingState == WAIT_OBJECT_0) {
-				ReleaseMutex(mutexForPausing);
-				SetPauseState(FALSE);
 			}
 		}
 		if (GetTerminationState())
@@ -2175,8 +2162,6 @@ int32_t main(int32_t argc, char **argv)
 
 	// Close handles.
 	CloseHandle(parentProcess);
-	if (mutexForPausing)
-		CloseHandle(mutexForPausing);
 
 	// Terminate search threads.
 	SetTerminationState();

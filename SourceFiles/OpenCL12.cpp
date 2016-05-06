@@ -479,9 +479,6 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *i
 	char           buildOptions[MAX_LEN_COMMAND_LINE + 1] = ""; 
 	unsigned char  key[MAX_LEN_TRIPCODE + 1];
 
-	// Random wait time between 0 and 10 seconds for increased stability.
-	sleep_for_milliseconds((uint32_t)RandomByte() * 10000 / 256);
-
 	OPENCL_ERROR(clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(numComputeUnits), &numComputeUnits, NULL));
 	key[lenTripcode] = '\0';
 	

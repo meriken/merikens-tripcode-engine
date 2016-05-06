@@ -644,9 +644,6 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *in
 
 	UpdateOpenCLDeviceStatus(info, "[thread] Starting a tripcode search...");
 
-	// Random wait time between 0 and 10 seconds for increased stability.
-	sleep_for_milliseconds((uint32_t)RandomByte() * 10000 / 256);
-
 	// Determine the sizes of local and global work items.
 	size_t  numWorkItemsPerComputeUnit;
 	size_t  localWorkSize;
