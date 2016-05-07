@@ -270,7 +270,7 @@ char *GetErrorMessage(int32_t errorCode)
 
 #if _WIN32
 
-// The other version results in strange errors on Windows.
+// The other version causes strange errors on Windows.
 unsigned char RandomByte()
 {
 	unsigned int randomValue;
@@ -2014,16 +2014,18 @@ void ListExpandedPatterns()
 {
 	for (int32_t i = 0; i < numExpandedPatterns; ++i)
 		printf("%d: `%s' @ %d\n", i, expandedPatternArray[i].c, expandedPatternArray[i].pos);
-}
+}	
 
 int32_t main(int32_t argc, char **argv)
 {
 	// Some versions of OpenCL.dll are buggy.
 	// /DELAYLOAD:"OpenCL.dll" is also necessary.
 #if _WIN64
-	ERROR0(LoadLibrary(L"OpenCL\\x64\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
+	// ERROR0(LoadLibrary(L"OpenCL\\x64\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
+	SetDllDirectory(L"OpenCL\\x64");
 #elif _WIN32
-	ERROR0(LoadLibrary(L"OpenCL\\x86\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
+	// ERROR0(LoadLibrary(L"OpenCL\\x86\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
+	SetDllDirectory(L"OpenCL\\x86");
 #endif
 
 	BOOL   displayDeviceInformationAndExit = false;
