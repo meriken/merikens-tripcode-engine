@@ -36,8 +36,12 @@
 // MACROS                                                                    //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef _MSC_VER
+#define _getch()
+#endif
+
 #define ERROR0(cond, code, msg)                                   \
-	if (cond && !GetErrorState()) {                                                   \
+	if ((cond) && !GetErrorState()) {                                                   \
 		SetErrorState(); \
 		if (options.redirection) {                                \
 			fprintf(stderr, "%d\n", (code));                      \
@@ -54,7 +58,7 @@
 	}                                                             \
 	
 #define ERROR1(cond, code, msg, arg1)                     \
-	if (cond && !GetErrorState()) {                                           \
+	if ((cond) && !GetErrorState()) {                                           \
 		SetErrorState(); \
 		if (options.redirection) {                        \
 			fprintf(stderr, "%d,%s\n", (code), (arg1));   \

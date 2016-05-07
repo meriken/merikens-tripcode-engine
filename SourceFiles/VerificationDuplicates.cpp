@@ -64,8 +64,6 @@ static BOOL                wasMatchedTripcodeTableInitialized = FALSE;
 
 BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 {
-	BOOL result = FALSE;
-
 	duplicates_spinlock.lock();
 
 	// Initialize the table.
@@ -97,9 +95,8 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 	TripcodeLinkedList *p = matchedTripcodeTable[tableIndex];
 	while (p != NULL) {
 		if (strncmp((char *)(p->tripcode), (char *)tripcode, lenTripcode) == 0) {
-			result = TRUE;
-			// printf("[DUPLICATE FOUND]\n");
-			goto exit;
+			duplicates_spinlock.unlock();
+			return TRUE;
 		}
 		p = p->next;
 	}
@@ -112,7 +109,6 @@ BOOL IsTripcodeDuplicate(unsigned char *tripcode)
 	newNode->tripcode[lenTripcode] = '\0';
 	matchedTripcodeTable[tableIndex] = newNode;
 
-exit:
 	duplicates_spinlock.unlock();
-	return result;
+	return FALSE;
 }

@@ -48,13 +48,16 @@
 
 #define _CRT_RAND_S
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__)
 // For Win32
 #include <windows.h>
 #include <process.h>
 #include <tlhelp32.h>
-#include <conio.h>
 #include <ctype.h>
+#endif
+
+#if (defined(_WIN32) || defined(_WIN64)) && !defined(__CYGWIN__)
+#include <conio.h>
 #endif
 
 // Standard C++ libraries
@@ -66,8 +69,8 @@
 #include <thread>
 #endif
 #include <mutex>
-#include <locale>
 #include <codecvt>
+#include <locale>
 
 // Boost
 #include <boost/process.hpp> // Boost.Process 0.5
@@ -81,9 +84,13 @@
 #include <mmintrin.h>     
 
 // For CUDA and OpenCL
+#ifdef ENABLE_CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
+#endif
+#ifdef ENABLE_OPENCL
 #include <CL/cl.h>
+#endif
 
 // MTE
 #include "Constants.h"
@@ -171,7 +178,7 @@ extern void SetErrorState();
 extern BOOL GetErrorState();
 extern void SetTerminationState();
 extern BOOL GetTerminationState();
-extern char *GetErrorMessage(int32_t errorCode);
+extern const char *GetErrorMessage(int32_t errorCode);
 
 //
 extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, char *status);
@@ -253,11 +260,15 @@ extern "C" void DES_Crypt25_x86_AVX2        (void *context);
 // OPENCL                                                                    //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef ENABLE_OPENCL
+
 extern char           *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numComputeUnits);
 extern void            GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_t *numWorkItemsPerComputeUnit, size_t *localWorkSize, char *options);
 extern char           *ConvertOpenCLErrorCodeToString(cl_int openCLError);
 extern void __stdcall  OnOpenCLError(const char *errorInfo, const void *privateInfo, size_t sizePrivateInfo, void *userData);
 extern void            Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
+
+#endif
 
 
 

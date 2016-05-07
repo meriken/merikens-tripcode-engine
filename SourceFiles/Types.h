@@ -108,6 +108,8 @@ struct Options {
 	BOOL enableGCNAssembler;
 };
 
+#ifdef ENABLE_CUDA
+
 struct CUDADeviceSearchThreadInfo {
 	int32_t        CUDADeviceIndex;
 	int32_t        subindex;
@@ -116,6 +118,10 @@ struct CUDADeviceSearchThreadInfo {
 	std::mutex     mutex;
 	uint64_t       timeLastUpdated;
 };
+
+#endif
+
+#ifdef ENABLE_OPENCL
 
 struct OpenCLDeviceSearchThreadInfo {
 	cl_device_id openCLDeviceID;
@@ -132,6 +138,8 @@ struct OpenCLDeviceSearchThreadInfo {
 	boost::process::child *child_process;
 	uint64_t     timeLastUpdated;
 };
+
+#endif
 
 #ifndef __CUDACC__
 
@@ -183,7 +191,7 @@ namespace mte {
 				return false;
 			data_name = arg_name;
 			std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>> converter(new std::codecvt_byname<wchar_t, char, std::mbstate_t>("cp" + std::to_string(GetACP())));
-			native_event_handle = OpenEvent(EVENT_ALL_ACCESS, false, converter.from_bytes(arg_name).data());
+			native_event_handle = OpenEventW(EVENT_ALL_ACCESS, false, converter.from_bytes(arg_name).data());
 			return is_open();
 		}
 

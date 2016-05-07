@@ -119,7 +119,7 @@ void TestNewCode()
                 ;
         functionSize = p - (unsigned char *)TestASM;
         code = (void (*)())VirtualAllocEx(GetCurrentProcess(), 0, functionSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE );
-        memcpy(code, TestASM, functionSize);
+		memcpy((void *)code, (void *)TestASM, functionSize);
         printf("functionSize = %d\n", functionSize);
 
         (*code)();

@@ -878,9 +878,9 @@ void ExpandRegexPattern(unsigned char *regexPattern, BOOL displayProgress)
 		++numProcessedStates;
 		if (++loopCount >= 100000 && displayProgress) {
 			// qsort(regexPatternArray, numRegexPattern, sizeof(regexPatternArray[0]), CompareRegexPattern);
-			sprintf(msg, "Expanding a regex pattern... (%ldM states; %ldM expanded patterns)",
-			    (int32_t)((int32_t)numProcessedStates / 1000000),
-			    (int32_t)((int32_t)numExpandedPatterns / 1000000));
+			sprintf(msg, "Expanding a regex pattern... (%dM states; %dM expanded patterns)",
+			    (int)(numProcessedStates / 1000000),
+			    (int)(numExpandedPatterns / 1000000));
 			printf("  %-77s", msg);
 			reset_cursor_pos(0);
 			loopCount = 0;

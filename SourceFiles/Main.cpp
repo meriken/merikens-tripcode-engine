@@ -98,9 +98,11 @@ mte::named_event termination_event;
 mte::named_event pause_event;
 
 // GPUs
-int32_t           CUDADeviceCount   = 0;
+int32_t           CUDADeviceCount = 0;
 int32_t           openCLDeviceCount = 0;
-cl_device_id *openCLDeviceIDArray = NULL;
+#ifdef ENABLE_OPENCL
+cl_device_id     *openCLDeviceIDArray = NULL;
+#endif
 int32_t           searchDevice = SEARCH_DEVICE_NIL;
 
 // Character tables
@@ -122,8 +124,8 @@ char base64CharTable[64] = {
 double       matchingProb,     numAverageTrialsForOneMatch;
 double       totalTime = 0;
 double       currentSpeed_thisProcess = 0, currentSpeed_thisProcess_GPU = 0, currentSpeed = 0, currentSpeed_GPU = 0, currentSpeed_CPU = 0, maximumSpeed = 0;
-uint32_t     numValidTripcodes = 0,     numDiscardedTripcodes = 0;
-uint32_t prevNumValidTripcodes = 0, prevNumDiscardedTripcodes = 0;
+unsigned int     numValidTripcodes = 0,     numDiscardedTripcodes = 0;
+unsigned int prevNumValidTripcodes = 0, prevNumDiscardedTripcodes = 0;
 double           totalNumGeneratedTripcodes = 0;
 double           totalNumGeneratedTripcodes_GPU = 0;
 double           totalNumGeneratedTripcodes_CPU = 0;
@@ -164,6 +166,7 @@ uint32_t     numGeneratedTripcodesByCPUInMillions;
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS                                                                 //
 ///////////////////////////////////////////////////////////////////////////////
+
 void SetPauseState(BOOL newPauseState)
 {
 	pause_state.store(newPauseState);
@@ -213,7 +216,7 @@ void sleep_for_milliseconds(uint32_t milliseconds)
 	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
-char *GetErrorMessage(int32_t errorCode)
+const char *GetErrorMessage(int32_t errorCode)
 {
 	switch (errorCode) {
     case ERROR_INVALID_TARGET_PATTERN: 
@@ -268,26 +271,26 @@ char *GetErrorMessage(int32_t errorCode)
 	}
 }
 
-#if _WIN32
+#if defined(_MSC_VER)
 
-// The other version causes strange errors on Windows.
+// The other version causes strange errors with VC++.
 unsigned char RandomByte()
 {
-	unsigned int randomValue;
+	unsigned int random_value;
 
-	rand_s(&randomValue);
-	return (unsigned char)(randomValue & 0x000000ff);
+	rand_s(&random_value);
+	return (unsigned char)(random_value & 0x000000ff);
 }
 
 #else
 
-std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned int> random_bytes_engine;
-spinlock random_byte_spinlock;
-
 unsigned char RandomByte()
 {
+	static std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned int> random_bytes_engine;
+	static spinlock random_byte_spinlock;
+	
 	random_byte_spinlock.lock();
-	unsigned char b = random_bytes_engine();
+	unsigned char b = random_bytes_engine() & 0xff;
 	random_byte_spinlock.unlock();
 	return b;
 }
@@ -314,7 +317,7 @@ void PrintUsage()
 
 void reset_cursor_pos(int n)
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 	CONSOLE_SCREEN_BUFFER_INFO scrnBufInfo;
 	COORD                      cursorPos;
 	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &scrnBufInfo))
@@ -333,7 +336,7 @@ void reset_cursor_pos(int n)
 #endif
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 
 void hide_cursor()
 {
@@ -599,6 +602,8 @@ void DisplayCopyrights()
     printf("\n");
 }
 
+#ifdef ENABLE_CUDA
+
 void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, char *status)
 {
 	cuda_device_search_thread_info_array_spinlock.lock();
@@ -606,6 +611,10 @@ void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, char *statu
 	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 	cuda_device_search_thread_info_array_spinlock.unlock();
 }
+
+#endif
+
+#ifdef ENABLE_OPENCL
 
 void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status)
 {
@@ -630,8 +639,11 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	opencl_device_search_thread_info_array_spinlock.unlock();
 }
 
+#endif
+
 void CheckSearchThreads()
 {
+#ifdef ENABLE_CUDA
 	cuda_device_search_thread_info_array_spinlock.lock();
 	for (int32_t index = 0; index < numCUDADeviceSearchThreads; ++index) {
 		struct CUDADeviceSearchThreadInfo *info = &CUDADeviceSearchThreadInfoArray[index];
@@ -646,7 +658,7 @@ void CheckSearchThreads()
 			auto native_handle = cuda_device_search_threads[index]->native_handle();
 			cuda_device_search_threads[index]->detach();
 			delete cuda_device_search_threads[index];
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
 			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -660,7 +672,9 @@ void CheckSearchThreads()
 		//*/
 	}
 	cuda_device_search_thread_info_array_spinlock.unlock();
+#endif
 
+#ifdef ENABLE_OPENCL
 	opencl_device_search_thread_info_array_spinlock.lock();
 	for (int32_t index = 0; index < numOpenCLDeviceSearchThreads; ++index) {
 		struct OpenCLDeviceSearchThreadInfo *info = &openCLDeviceSearchThreadInfoArray[index];
@@ -684,7 +698,7 @@ void CheckSearchThreads()
 				boost::process::terminate(*(info->child_process));
 				boost_process_spinlock.unlock();
 			}
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
 			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -705,19 +719,24 @@ void CheckSearchThreads()
 		//*/
 	}
 	opencl_device_search_thread_info_array_spinlock.unlock();
+#endif
 }
 
 void KeepSearchThreadsAlive()
 {
+#ifdef ENABLE_CUDA
 	cuda_device_search_thread_info_array_spinlock.lock();
 	for (int32_t index = 0; index < numCUDADeviceSearchThreads; ++index)
 		CUDADeviceSearchThreadInfoArray[index].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 	cuda_device_search_thread_info_array_spinlock.unlock();
+#endif
 
+#ifdef ENABLE_OPENCL
 	opencl_device_search_thread_info_array_spinlock.lock();
 	for (int32_t index = 0; index < numOpenCLDeviceSearchThreads; ++index)
 		openCLDeviceSearchThreadInfoArray[index].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 	opencl_device_search_thread_info_array_spinlock.unlock();
+#endif
 }
 
 void PrintStatus()
@@ -764,6 +783,7 @@ void PrintStatus()
 				minLenExpandedPattern,
 				(searchDevice == SEARCH_DEVICE_CPU) ? "." : ":");
 	}
+#ifdef ENABLE_CUDA
 	if (searchDevice != SEARCH_DEVICE_CPU && CUDADeviceSearchThreadInfoArray) {
 		cuda_device_search_thread_info_array_spinlock.lock();
 		if (numCUDADeviceSearchThreads == 1) {
@@ -774,6 +794,8 @@ void PrintStatus()
 		}
 		cuda_device_search_thread_info_array_spinlock.unlock();
 	}
+#endif
+#ifdef ENABLE_OPENCL
 	if (searchDevice != SEARCH_DEVICE_CPU && openCLDeviceSearchThreadInfoArray) {
 		opencl_device_search_thread_info_array_spinlock.lock();
 		if (numOpenCLDeviceSearchThreads == 1) {
@@ -789,12 +811,14 @@ void PrintStatus()
 		}
 		opencl_device_search_thread_info_array_spinlock.unlock();
 	}
+#endif
 
 	double currentSpeed_childProcesses = 0;
-	double averageSpeed_childProcesses = 0;
+	// double averageSpeed_childProcesses = 0;
 	double totalNumGeneratedTripcodes_childProcesses = 0;
 	uint32_t numDiscardedTripcodes_childProcesses = 0;
 	// printf("numOpenCLDeviceSearchThreads = %d\n", numOpenCLDeviceSearchThreads);
+#ifdef ENABLE_OPENCL
 	if (openCLDeviceSearchThreadInfoArray && openCLRunChildProcesses) {
 		opencl_device_search_thread_info_array_spinlock.lock();
 		for (int32_t i = 0; i < numOpenCLDeviceSearchThreads; ++i) {
@@ -802,12 +826,13 @@ void PrintStatus()
 			if (!(openCLDeviceSearchThreadInfoArray[i].runChildProcess))
 				continue;
 			currentSpeed_childProcesses               += openCLDeviceSearchThreadInfoArray[i].currentSpeed;
-			averageSpeed_childProcesses               += openCLDeviceSearchThreadInfoArray[i].averageSpeed;
+			// averageSpeed_childProcesses               += openCLDeviceSearchThreadInfoArray[i].averageSpeed;
 			totalNumGeneratedTripcodes_childProcesses += openCLDeviceSearchThreadInfoArray[i].totalNumGeneratedTripcodes;
 			numDiscardedTripcodes_childProcesses      += openCLDeviceSearchThreadInfoArray[i].numDiscardedTripcodes;
 		}
 		opencl_device_search_thread_info_array_spinlock.unlock();
 	}
+#endif
 
 	double averageSpeed;
 	double averageSpeed_GPU;
@@ -825,7 +850,7 @@ void PrintStatus()
 		uint32_t totalTimeMinutes = remainingSeconds / (          60); remainingSeconds -= totalTimeMinutes           * 60;
 		uint32_t totalTimeSeconds = remainingSeconds;
 		
-		sprintf(NEXT_LINE, "");
+		msg[lineCount++][0] = '\0';
 		sprintf(NEXT_LINE, "  %.3lfT tripcodes were generated in %dd %dh %dm %02ds at:",
 				(prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes_childProcesses) * 0.000000000001,
 				totalTimeDays,
@@ -869,12 +894,12 @@ void PrintStatus()
 				sprintf(NEXT_LINE, "  On average, it takes %.1lf seconds to find one match at this speed.", timeForOneMatch);			
 			}
 		}
-		sprintf(NEXT_LINE, "");
+		msg[lineCount++][0] = '\0';
 		if (numValidTripcodes <= 0) {
 			sprintf(NEXT_LINE, "  No matches were found yet.");
 		} else {
 			if (prevNumValidTripcodes > 0) {
-				sprintf(NEXT_LINE, "  %ld match%s found at %.2lf matches/h and %.2lfG tripcodes/match.",
+				sprintf(NEXT_LINE, "  %u match%s found at %.2lf matches/h and %.2lfG tripcodes/match.",
 						prevNumValidTripcodes,
 						(prevNumValidTripcodes == 1) ? "" : "es",
 						prevNumValidTripcodes / (totalTime / 3600),
@@ -909,7 +934,7 @@ void PrintStatus()
 		prevLineCount = lineCount;
 	} else {
 		if (totalTime > 0 && !searchForSpecialPatternsOnCPU) {
-			printf("[status],%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,%.1lf,%s%d%%,%.0lf,%ld,%d,%.0lf,%.0lf,%u,%.0f%%\n",
+			printf("[status],%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,%.1lf,%s%d%%,%.0lf,%u,%d,%.0lf,%.0lf,%u,%.0f%%\n",
 			       totalTime,
 				   currentSpeed_thisProcess     + currentSpeed_childProcesses,
 				   currentSpeed_thisProcess_GPU + currentSpeed_childProcesses,
@@ -926,7 +951,7 @@ void PrintStatus()
 				   prevNumDiscardedTripcodes,
 				   invalidTripcodeRatio * 100);
 		} else if (totalTime > 0) {
-			printf("[status],%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,-,-,%.0lf,%ld,%d,%.0lf,%.0lf,%u,%.0f%%\n",
+			printf("[status],%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,-,-,%.0lf,%u,%d,%.0lf,%.0lf,%u,%.0f%%\n",
 			       totalTime,
 				   currentSpeed_thisProcess     + currentSpeed_childProcesses,
 				   currentSpeed_thisProcess_GPU + currentSpeed_childProcesses,
@@ -969,6 +994,7 @@ void InitProcess()
 	SetConsoleCtrlHandler(ControlHandler, true);
 }
 
+#ifdef ENABLE_CUDA
 void ListCUDADevices()
 {
 	int32_t i;
@@ -981,7 +1007,9 @@ void ListCUDADevices()
 		printf("NVIDIA %s (CUDA)\n", CUDADeviceProperties.name); 
 	}
 }
+#endif
 
+#ifdef ENABLE_OPENCL
 void CountOpenCLDevices()
 {
     cl_int        errorCode;
@@ -1078,63 +1106,98 @@ void ListOpenCLDevices()
 		printf(" (OpenCL)\n");
 	}
 }
+#endif
 
 void ListGPUsAndExit()
 {
+#ifdef ENABLE_CUDA
 	if (!options.useOpenCLForCUDADevices)
 		ListCUDADevices();
+#endif
+#ifdef ENABLE_OPENCL
 	ListOpenCLDevices();
+#endif
 	exit(0);
 }
 
 void InitSearchDevices(BOOL displayDeviceInformation)
 {
-	int32_t i;
-	cudaDeviceProp CUDADeviceProperties;
-	
+#ifdef ENABLE_CUDA
 	if (options.useOpenCLForCUDADevices) {
 		CUDADeviceCount = 0;
 	} else {
 		cudaGetDeviceCount(&CUDADeviceCount);
 	}
+#endif
+#ifdef ENABLE_OPENCL
 	CountOpenCLDevices();
-	ERROR0(   options.GPUIndex != GPU_INDEX_ALL
-		   && (options.GPUIndex < 0 || CUDADeviceCount + openCLDeviceCount <= options.GPUIndex),
-			ERROR_INVALID_OPTION,
-			"An invalid device was specified.");
+#endif
+#if defined(ENABLE_CUDA) && defined(ENABLE_OPENCL)
+	ERROR0(options.GPUIndex != GPU_INDEX_ALL
+		&& (options.GPUIndex < 0 || CUDADeviceCount + openCLDeviceCount <= options.GPUIndex),
+		ERROR_INVALID_OPTION,
+		"An invalid device was specified.");
 	if (options.searchDevice == SEARCH_DEVICE_NIL) {
 		searchDevice = (CUDADeviceCount <= 0 && openCLDeviceCount <= 0) ? (SEARCH_DEVICE_CPU) : (SEARCH_DEVICE_GPU);
-	} else {
+	}
+	else {
 		searchDevice = options.searchDevice;
 	}
+#elif defined(ENABLE_CUDA)
+	ERROR0(options.GPUIndex != GPU_INDEX_ALL
+		&& (options.GPUIndex < 0 || CUDADeviceCount <= options.GPUIndex),
+		ERROR_INVALID_OPTION,
+		"An invalid device was specified.");
+	if (options.searchDevice == SEARCH_DEVICE_NIL) {
+		searchDevice = (CUDADeviceCount <= 0) ? (SEARCH_DEVICE_CPU) : (SEARCH_DEVICE_GPU);
+	}
+	else {
+		searchDevice = options.searchDevice;
+	}
+#elif defined(ENABLE_OPENCL)
+	ERROR0(options.GPUIndex != GPU_INDEX_ALL
+		&& (options.GPUIndex < 0 || openCLDeviceCount <= options.GPUIndex),
+		ERROR_INVALID_OPTION,
+		"An invalid device was specified.");
+	if (options.searchDevice == SEARCH_DEVICE_NIL) {
+		searchDevice = (openCLDeviceCount <= 0) ? (SEARCH_DEVICE_CPU) : (SEARCH_DEVICE_GPU);
+	}
+	else {
+		searchDevice = options.searchDevice;
+	}
+#else
+	if (options.searchDevice == SEARCH_DEVICE_NIL) {
+		searchDevice = SEARCH_DEVICE_CPU;
+	}
+	else {
+		searchDevice = options.searchDevice;
+	}
+#endif
 #ifdef DEBUG_USE_CPU_ONLY
 	searchDevice = SEARCH_DEVICE_CPU;
 #endif
 	
-#if FALSE
-	if (displayDeviceInformation) {
-		if (searchDevice == SEARCH_DEVICE_CPU) {
-			printf("CPU will be used as a search device.\n\n");
-		} else if (searchDevice == SEARCH_DEVICE_GPU && CUDADeviceCount + openCLDeviceCount <= 1 || options.GPUIndex != GPU_INDEX_ALL) {
-			printf("GPU will be used as a search device.\n\n");
-		} else if (searchDevice == SEARCH_DEVICE_GPU) {
-			printf("GPUs will be used as search devices.\n\n");
-		} else {
-			printf("Both GPU(s) and CPU will be used as search devices.\n\n");
-		}
-	}
-#endif
+#if defined(ENABLE_CUDA) && defined(ENABLE_OPENCL)
 	ERROR0((searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU) && CUDADeviceCount <= 0 && openCLDeviceCount <= 0,
-		   ERROR_INVALID_OPTION, "There is no GPU.");
-		
-	numCUDADeviceSearchThreads   = 0;
-	numOpenCLDeviceSearchThreads = 0;
-	numCPUSearchThreads          = 0;
+		ERROR_INVALID_OPTION, "There is no GPU.");
+#elif defined(ENABLE_CUDA)
+	ERROR0((searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU) && CUDADeviceCount <= 0,
+		ERROR_INVALID_OPTION, "There is no GPU.");
+#elif defined(ENABLE_OPENCL)
+	ERROR0((searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU) && openCLDeviceCount <= 0,
+		ERROR_INVALID_OPTION, "There is no GPU.");
+#else
+	ERROR0(searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU,
+		ERROR_INVALID_OPTION, "There is no GPU.");
+#endif
 
+#ifdef ENABLE_CUDA
+	numCUDADeviceSearchThreads = 0;
 	if (   (searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
 		&& CUDADeviceCount > 0
 		&& !options.useOpenCLForCUDADevices
 		&& (options.GPUIndex == GPU_INDEX_ALL || options.GPUIndex < CUDADeviceCount)) {
+		cudaDeviceProp CUDADeviceProperties;
 
 		if (displayDeviceInformation && CUDADeviceCount > 1 && options.GPUIndex == GPU_INDEX_ALL) {
 			printf("CUDA DEVICES\n");
@@ -1144,7 +1207,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			printf("CUDA DEVICE\n");
 			printf("===========\n");
 		}
-		for (i = ((options.GPUIndex == GPU_INDEX_ALL) ? 0               :  options.GPUIndex     );
+		for (int i = ((options.GPUIndex == GPU_INDEX_ALL) ? 0               :  options.GPUIndex     );
 		     i < ((options.GPUIndex == GPU_INDEX_ALL) ? CUDADeviceCount : (options.GPUIndex + 1));
 			 ++i) {
 			if (displayDeviceInformation) {
@@ -1165,8 +1228,11 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			numCUDADeviceSearchThreads += CUDA_NUM_THREADS_PER_DEVICE;
 		}
 	}
+#endif
 
-	if (   (searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
+#ifdef ENABLE_OPENCL
+	numOpenCLDeviceSearchThreads = 0;
+	if ((searchDevice == SEARCH_DEVICE_GPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
 		&& openCLDeviceCount > 0
 		&& (options.GPUIndex == GPU_INDEX_ALL || CUDADeviceCount <= options.GPUIndex)) {
 
@@ -1184,7 +1250,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 								  || options.openCLNumProcesses > 1;
 
 		// printf("openCLRunChildProcesses = %d\n", openCLRunChildProcesses);
-		for (i = ((options.GPUIndex == GPU_INDEX_ALL) ? CUDADeviceCount                     : (options.GPUIndex    ));
+		for (int i = ((options.GPUIndex == GPU_INDEX_ALL) ? CUDADeviceCount                     : (options.GPUIndex    ));
 		     i < ((options.GPUIndex == GPU_INDEX_ALL) ? CUDADeviceCount + openCLDeviceCount : (options.GPUIndex + 1));
 			 ++i) {
 			int32_t openCLDeviceIndex = i - CUDADeviceCount;
@@ -1227,7 +1293,9 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			}
 		}
 	}
+#endif
 
+	numCPUSearchThreads = 0;
 	if (searchDevice == SEARCH_DEVICE_CPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU) {
 		SYSTEM_INFO sysInfo;
 		GetSystemInfo(&sysInfo);
@@ -1269,11 +1337,15 @@ void ObtainOptions(int32_t argCount, char **arguments)
 	int32_t i;
 	
 	// Get the application path and directory.
-	// strcpy(applicationPath,      arguments[0]);
+#if defined(_MSC_VER)
 	_fullpath(applicationPath, arguments[0], sizeof(applicationPath));
+#else
+	// realpath(arguments[0], applicationPath);
+	strncpy(applicationPath, arguments[0], sizeof(applicationPath));
+#endif
 	strcpy(applicationDirectory, applicationPath);
 	for (i = strlen(applicationPath) - 1; i > 0; --i) {
-		if (applicationDirectory[i] == '\\')
+		if (applicationDirectory[i] == '\\' || applicationDirectory[i] == '/')
 			break;
 	}
 	if (i < 0)
@@ -1309,6 +1381,7 @@ void ObtainOptions(int32_t argCount, char **arguments)
 		} else if (strcmp(arguments[indexArg], "-d") == 0 && indexArg + 1 < argCount) {
 			options.GPUIndex = atoi(arguments[++indexArg]);
 
+#ifdef ENABLE_CUDA
 		} else if (strcmp(arguments[indexArg], "-x") == 0 && indexArg + 1 < argCount) {
 			options.CUDANumBlocksPerSM = atoi(arguments[++indexArg]);
 			ERROR1(options.CUDANumBlocksPerSM < CUDA_MIN_NUM_BLOCKS_PER_SM,
@@ -1317,7 +1390,9 @@ void ObtainOptions(int32_t argCount, char **arguments)
 			ERROR1(options.CUDANumBlocksPerSM > CUDA_MAX_NUM_BLOCKS_PER_SM,
 			       ERROR_INVALID_OPTION,
 				   "The number of blocks per SM cannot exceed %d.",    CUDA_MAX_NUM_BLOCKS_PER_SM);
+#endif
 
+#ifdef ENABLE_OPENCL
 		} else if (strcmp(arguments[indexArg], "-y") == 0 && indexArg + 1 < argCount) {
 			options.openCLNumWorkItemsPerCU = atoi(arguments[++indexArg]);
 			ERROR1(options.openCLNumWorkItemsPerCU < OPENCL_MIN_NUM_WORK_ITEMS_PER_CU,
@@ -1357,6 +1432,7 @@ void ObtainOptions(int32_t argCount, char **arguments)
 			ERROR1(options.openCLNumProcesses > OPENCL_MAX_NUM_PROCESSES_PER_AMD_GPU,
 			       ERROR_INVALID_OPTION,
 				   "The number of processes per AMD GPU cannot exceed %d.",    OPENCL_MAX_NUM_PROCESSES_PER_AMD_GPU);
+#endif
 
 		} else if (strcmp(arguments[indexArg], "-l") == 0 && indexArg + 1 < argCount) {
 			lenTripcode    = atoi(arguments[++indexArg]);
@@ -1423,8 +1499,10 @@ void ObtainOptions(int32_t argCount, char **arguments)
 		} else if (strcmp(arguments[indexArg], "--search-for-souren-on-cpu") == 0) {
 			options.searchForSourenOnCPU = TRUE;
 			
+#if defined(ENABLE_CUDA) && defined(ENABLE_OPENCL)
 		} else if (strcmp(arguments[indexArg], "--use-opencl-for-cuda-devices") == 0) {
 			options.useOpenCLForCUDADevices = TRUE;
+#endif
 
 		} else if (strcmp(arguments[indexArg], "--disable-avx") == 0) {
 			options.isAVXEnabled = FALSE;
@@ -1452,8 +1530,10 @@ void ObtainOptions(int32_t argCount, char **arguments)
 		} else if (strcmp(arguments[indexArg], "--disable-tripcode-checks") == 0) {
 			options.checkTripcodes = FALSE;
 
+#if defined(ENABLE_OPENCL)
 		} else if (strcmp(arguments[indexArg], "--disable-gcn-assembler") == 0) {
 			options.enableGCNAssembler = FALSE;
+#endif
 
 		} else if (   strcmp(arguments[indexArg], "--display-device-information") == 0
 			       || strcmp(arguments[indexArg], "--list-expanded-patterns"    ) == 0
@@ -1773,6 +1853,7 @@ void SetCharactersInTripcodeKeyForSHA1Tripcode(unsigned char *key)
 	}
 }
 
+#ifdef ENABLE_CUDA
 void StartCUDADeviceSearchThreads()
 {
 	int32_t    i;
@@ -1822,7 +1903,9 @@ void StartCUDADeviceSearchThreads()
 		}
 	}
 }
+#endif
 
+#ifdef ENABLE_OPENCL
 void StartOpenCLDeviceSearchThreads()
 {
 	int32_t          i, j;
@@ -1959,21 +2042,24 @@ void StartOpenCLDeviceSearchThreads()
 		}
 	}
 }
+#endif
 
 void StartGPUSearchThreads()
 {
+#ifdef ENABLE_CUDA
 	if (numCUDADeviceSearchThreads > 0)
 		StartCUDADeviceSearchThreads();
+#endif
+#ifdef ENABLE_OPENCL
 	if (numOpenCLDeviceSearchThreads > 0)
 		StartOpenCLDeviceSearchThreads();
+#endif
 }
 
 void StartCPUSearchThreads()
 {
 	ASSERT(numCPUSearchThreads > 0);
 
-	uint32_t winThreadID;
-	
 	if (cpu_search_threads)
 		delete [] cpu_search_threads;
 	ERROR0((cpu_search_threads = new (std::nothrow) std::thread *[numCPUSearchThreads]) == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
@@ -2020,12 +2106,12 @@ int32_t main(int32_t argc, char **argv)
 {
 	// Some versions of OpenCL.dll are buggy.
 	// /DELAYLOAD:"OpenCL.dll" is also necessary.
-#if _WIN64
+#if defined(_WIN64)
 	// ERROR0(LoadLibrary(L"OpenCL\\x64\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
-	SetDllDirectory(L"OpenCL\\x64");
-#elif _WIN32
+	SetDllDirectoryW(L"OpenCL\\x64");
+#elif defined(_WIN32)
 	// ERROR0(LoadLibrary(L"OpenCL\\x86\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
-	SetDllDirectory(L"OpenCL\\x86");
+	SetDllDirectoryW(L"OpenCL\\x86");
 #endif
 
 	BOOL   displayDeviceInformationAndExit = false;
