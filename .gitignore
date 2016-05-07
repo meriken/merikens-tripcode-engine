@@ -2,6 +2,9 @@ WindowsBinaries/OpenCL/*.cl
 WindowsBinaries/OpenCL/bin/*.asm
 VisualStudio/Win32
 VisualStudio/x64
+BoostPackages/boost_1_61_0_b1
+BoostPackages/include
+BoostPackages/lib
 Merikens*.exe
 Merikens*.pdb
 vc*.pdb
@@ -9,4 +12,6 @@ vc*.pdb
 *.suo
 *.opensdf
 tripcodes.txt
+*.o
+
 
