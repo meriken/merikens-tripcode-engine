@@ -261,7 +261,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 
 	boost_process_spinlock.lock();
 
-#ifdef _WINDOWS_
+#ifdef _WIN32
 	std::vector<std::wstring> args;
 	typedef std::codecvt_byname<wchar_t, char, std::mbstate_t> converter_type;
 	std::wstring_convert<converter_type> converter(new converter_type("cp" + std::to_string(GetACP())));

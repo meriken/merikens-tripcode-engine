@@ -48,12 +48,14 @@
 
 #define _CRT_RAND_S
 
+#ifdef _WIN32
 // For Win32
 #include <windows.h>
 #include <process.h>
 #include <tlhelp32.h>
 #include <conio.h>
 #include <ctype.h>
+#endif
 
 // Standard C++ libraries
 #include <cstdlib>
@@ -68,9 +70,6 @@
 #include <codecvt>
 
 // Boost
-#ifndef __CUDACC__
-#include <boost/interprocess/sync/windows/winapi_mutex_wrapper.hpp>
-#endif
 #include <boost/process.hpp> // Boost.Process 0.5
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics

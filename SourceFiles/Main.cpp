@@ -268,22 +268,32 @@ char *GetErrorMessage(int32_t errorCode)
 	}
 }
 
+#if _WIN32
+
+// The other version results in strange errors on Windows.
+unsigned char RandomByte()
+{
+	unsigned int randomValue;
+
+	rand_s(&randomValue);
+	return (unsigned char)(randomValue & 0x000000ff);
+}
+
+#else
+
 std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned int> random_bytes_engine;
 spinlock random_byte_spinlock;
 
 unsigned char RandomByte()
 {
-	uint32_t randomValue;
-
-	rand_s(&randomValue);
-	return (unsigned char)(randomValue & 0x000000ff);
-	/*
 	random_byte_spinlock.lock();
 	unsigned char b = random_bytes_engine();
 	random_byte_spinlock.unlock();
 	return b;
-	*/
 }
+
+#endif
+
 
 void ReleaseResources()
 {
@@ -304,7 +314,7 @@ void PrintUsage()
 
 void reset_cursor_pos(int n)
 {
-#ifdef _WINDOWS_
+#ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO scrnBufInfo;
 	COORD                      cursorPos;
 	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &scrnBufInfo))
@@ -323,7 +333,7 @@ void reset_cursor_pos(int n)
 #endif
 }
 
-#ifdef _WINDOWS_
+#ifdef _WIN32
 
 void hide_cursor()
 {
@@ -636,7 +646,7 @@ void CheckSearchThreads()
 			auto native_handle = cuda_device_search_threads[index]->native_handle();
 			cuda_device_search_threads[index]->detach();
 			delete cuda_device_search_threads[index];
-#ifdef _WINDOWS_
+#ifdef _WIN32
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
 			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -674,7 +684,7 @@ void CheckSearchThreads()
 				boost::process::terminate(*(info->child_process));
 				boost_process_spinlock.unlock();
 			}
-#ifdef _WINDOWS_
+#ifdef _WIN32
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
 			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -2010,10 +2020,10 @@ int32_t main(int32_t argc, char **argv)
 {
 	// Some versions of OpenCL.dll are buggy.
 	// /DELAYLOAD:"OpenCL.dll" is also necessary.
-#if _WIN32
-	SetDllDirectoryA("OpenCL\\x86");
-#elif _WIN64
-	SetDllDirectoryA("OpenCL\\x64");
+#if _WIN64
+	ERROR0(LoadLibrary(L"OpenCL\\x64\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
+#elif _WIN32
+	ERROR0(LoadLibrary(L"OpenCL\\x86\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
 #endif
 
 	BOOL   displayDeviceInformationAndExit = false;

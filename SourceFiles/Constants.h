@@ -82,6 +82,7 @@
 #define ERROR_SEARCH_THREAD_UNRESPONSIVE 22
 #define ERROR_UNKNOWN                23
 #define ERROR_GCN_ASSEMBLER          24
+#define ERROR_DLL                    25
 
 
 
