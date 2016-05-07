@@ -37,7 +37,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "MerikensTripcodeEngine.h"
-//#include <random>
+#include <random>
 
 
 
@@ -268,14 +268,21 @@ char *GetErrorMessage(int32_t errorCode)
 	}
 }
 
+std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned int> random_bytes_engine;
+spinlock random_byte_spinlock;
+
 unsigned char RandomByte()
 {
 	uint32_t randomValue;
 
 	rand_s(&randomValue);
 	return (unsigned char)(randomValue & 0x000000ff);
-	//static std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned int> random_bytes_engine;
-	//return random_bytes_engine();
+	/*
+	random_byte_spinlock.lock();
+	unsigned char b = random_bytes_engine();
+	random_byte_spinlock.unlock();
+	return b;
+	*/
 }
 
 void ReleaseResources()
