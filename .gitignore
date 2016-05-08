@@ -16,4 +16,11 @@ tripcodes.txt
 *.obj
 *.exe
 *.lnk
+*.bc
+*.ii
+*.s
+Cygwin/CLRadeonExtender
+Cygwin/OpenCL
+Cygwin/include
+Cygwin/libOpenCL.a
 

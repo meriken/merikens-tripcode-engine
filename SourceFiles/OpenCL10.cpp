@@ -726,7 +726,7 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *in
 #endif
 
 	//
-	char *nameKernelFunction;
+	const char *nameKernelFunction;
 	if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
 		nameKernelFunction = (numTripcodeChunk == 1)                              ? "FORWARD_MATCHING_1CHUNK" :
 		                     (numTripcodeChunk <= OPENCL_SIMPLE_SEARCH_THRESHOLD) ? "FORWARD_MATCHING_SIMPLE" :

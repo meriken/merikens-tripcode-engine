@@ -44,6 +44,7 @@
 #include "MerikensTripcodeEngine.h"
 #include <boost/iostreams/stream.hpp>
 #include <boost/locale.hpp>
+#include <boost/process.hpp> // Boost.Process 0.5
 
 
 
@@ -244,7 +245,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	// This thread may be restarted. See CheckSearchThreads().
 	double   prevTotalNumGeneratedTripcodes = info->totalNumGeneratedTripcodes;
 	uint32_t prevNumDiscardedTripcodes      = info->numDiscardedTripcodes;
-	UpdateOpenCLDeviceStatus_ChildProcess(info, "[process] Launching a child process...",  0, 0, prevTotalNumGeneratedTripcodes, prevNumDiscardedTripcodes, NULL);
+	UpdateOpenCLDeviceStatus_ChildProcess(info, "[process] Launching a child process...",  0, 0, prevTotalNumGeneratedTripcodes, prevNumDiscardedTripcodes);
 
 	size_t  numWorkItemsPerComputeUnit = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_COMPUTE_UNIT;
 	size_t  localWorkSize = OPENCL_SHA1_DEFAULT_NUM_WORK_ITEMS_PER_WORK_GROUP;
@@ -379,8 +380,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 													  currentSpeed, 
 													  averageSpeed, 
 													  prevTotalNumGeneratedTripcodes + totalNumGeneratedTripcodes, 
-													  prevNumDiscardedTripcodes      + numDiscardedTripcodes, 
-													  &child_process);
+													  prevNumDiscardedTripcodes      + numDiscardedTripcodes);
 			}
 		} else if (strncmp(line_buffer, "[error],", strlen("[error],")) == 0) {
 			int32_t   errorCode;

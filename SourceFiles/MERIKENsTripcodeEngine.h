@@ -54,7 +54,6 @@
 #include <process.h>
 #include <tlhelp32.h>
 #include <ctype.h>
-#define BOOST_USE_WINDOWS_H
 #endif
 
 #if (defined(_WIN32) || defined(_WIN64)) && !defined(__CYGWIN__)
@@ -69,12 +68,14 @@
 #if !defined(__CUDACC__)
 #include <thread>
 #endif
-// #include <mutex>
+#ifdef ENABLE_CUDA
+#include <mutex>
+#endif
 #include <codecvt>
 #include <locale>
 
 // Boost
-#include <boost/process.hpp> // Boost.Process 0.5
+#define BOOST_USE_WINDOWS_H
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 //#include <nmmintrin.h>
@@ -184,7 +185,7 @@ extern const char *GetErrorMessage(int32_t errorCode);
 //
 extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, char *status);
 extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status);
-extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, boost::process::child *child_process);
+extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes);
 
 //
 extern void show_cursor();

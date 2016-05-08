@@ -38,6 +38,7 @@
 
 #include "MerikensTripcodeEngine.h"
 #include <random>
+#include <climits>
 
 
 
@@ -626,7 +627,7 @@ void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *s
 	opencl_device_search_thread_info_array_spinlock.unlock();
 }
 
-void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes, boost::process::child *child_process)
+void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes)
 {
 	opencl_device_search_thread_info_array_spinlock.lock();
 	ASSERT(info->runChildProcess);
@@ -635,7 +636,6 @@ void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *
 	info->averageSpeed = averageSpeed;
 	info->totalNumGeneratedTripcodes = totalNumGeneratedTripcodes;
 	info->numDiscardedTripcodes = numDiscardedTripcodes;
-	info->child_process = child_process;
 	info->timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 	opencl_device_search_thread_info_array_spinlock.unlock();
 }
@@ -691,14 +691,8 @@ void CheckSearchThreads()
 			auto native_handle = opencl_device_search_threads[index]->native_handle();
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
-			
 			// Boost.Processs is happy with none of these lines below.
 #if 0
-			if (info->child_process) {
-				boost_process_spinlock.lock();
-				boost::process::terminate(*(info->child_process));
-				boost_process_spinlock.unlock();
-			}
 #if defined(_WIN32) || defined(_WIN64)
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
@@ -706,7 +700,6 @@ void CheckSearchThreads()
 			pthread_cancel(native_handle);
 #endif
 #endif
-			info->child_process = NULL;
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
 			++info->numRestarts;
@@ -1926,7 +1919,6 @@ void StartOpenCLDeviceSearchThreads()
 			openCLDeviceSearchThreadInfoArray[i].subindex        = -1;
 			openCLDeviceSearchThreadInfoArray[i].status[0]       = '\0';
 			openCLDeviceSearchThreadInfoArray[i].runChildProcess = openCLRunChildProcesses;
-			openCLDeviceSearchThreadInfoArray[i].child_process = NULL;
 			//
 			openCLDeviceSearchThreadInfoArray[i].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 			openCLDeviceSearchThreadInfoArray[i].currentSpeed               = 0;
@@ -1946,7 +1938,6 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
 					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = FALSE;
-					openCLDeviceSearchThreadInfoArray[i].child_process = NULL;
 					openCLDeviceSearchThreadInfoArray[i].numRestarts = 0;
 					openCLDeviceSearchThreadInfoArray[i].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 				}
@@ -1961,7 +1952,6 @@ void StartOpenCLDeviceSearchThreads()
 					openCLDeviceSearchThreadInfoArray[i].subindex       = j;
 					openCLDeviceSearchThreadInfoArray[i].status[0]      = '\0';
 					openCLDeviceSearchThreadInfoArray[i].runChildProcess = TRUE;
-					openCLDeviceSearchThreadInfoArray[i].child_process = NULL;
 					//
 					openCLDeviceSearchThreadInfoArray[i].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 					openCLDeviceSearchThreadInfoArray[i].currentSpeed               = 0;
@@ -1983,7 +1973,6 @@ void StartOpenCLDeviceSearchThreads()
 		openCLDeviceSearchThreadInfoArray[0].subindex        = -1;
 		openCLDeviceSearchThreadInfoArray[0].status[0]       = '\0';
 		openCLDeviceSearchThreadInfoArray[0].runChildProcess = openCLRunChildProcesses;
-		openCLDeviceSearchThreadInfoArray[0].child_process = NULL;
 		//
 		openCLDeviceSearchThreadInfoArray[0].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 		openCLDeviceSearchThreadInfoArray[0].currentSpeed               = 0;
@@ -2001,7 +1990,6 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].subindex        = j;
 				openCLDeviceSearchThreadInfoArray[j].status[0]       = '\0';
 				openCLDeviceSearchThreadInfoArray[j].runChildProcess = FALSE;
-				openCLDeviceSearchThreadInfoArray[j].child_process = NULL;
 				openCLDeviceSearchThreadInfoArray[j].timeLastUpdated = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 			}
 		} else {
@@ -2013,7 +2001,6 @@ void StartOpenCLDeviceSearchThreads()
 				openCLDeviceSearchThreadInfoArray[j].subindex       = j;
 				openCLDeviceSearchThreadInfoArray[j].status[0]      = '\0';
 				openCLDeviceSearchThreadInfoArray[j].runChildProcess = TRUE;
-				openCLDeviceSearchThreadInfoArray[j].child_process = NULL;
 				//
 				openCLDeviceSearchThreadInfoArray[j].deviceNo                   = CUDADeviceCount + openCLDeviceIDArrayIndex;
 				openCLDeviceSearchThreadInfoArray[j].currentSpeed               = 0;
