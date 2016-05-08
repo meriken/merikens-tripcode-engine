@@ -13,5 +13,7 @@ vc*.pdb
 *.opensdf
 tripcodes.txt
 *.o
-
+*.obj
+*.exe
+*.lnk
 

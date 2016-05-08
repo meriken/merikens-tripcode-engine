@@ -1024,7 +1024,7 @@ void LoadTargetPatterns(BOOL displayProgress)
 				++i;
 		
 			// Process a directive.
-			if (line[i] == '#' || line[i] == '\n' || line[i] == '\0') {
+			if (line[i] == '#' || line[i] == '\n' || line[i] == '\r' || line[i] == '\0') {
 				if (strncmp(line + i, "#ignore", strlen("#ignore")) == 0) {
 					++ignoreDirectiveCount;
 				} else if (strncmp(line + i, "#endignore", strlen("#endignore")) == 0) {
@@ -1041,7 +1041,7 @@ void LoadTargetPatterns(BOOL displayProgress)
 				continue;
 			while (line[i]) {
 				ERROR1(j >= MAX_LEN_TARGET_PATTERN, ERROR_PATTERN_TOO_LONG, "The target pattern `%s' is too long.", line);
-				if (line[i] == '\n' || line[i] == ' ' || line[i] == '\t' || line[i] == '#' || line[i] == '\0')
+				if (line[i] == '\n' || line[i] == '\r' || line[i] == ' ' || line[i] == '\t' || line[i] == '#' || line[i] == '\0')
 					break;	
 				targetPattern[j++] = line[i++];
 			}

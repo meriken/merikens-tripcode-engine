@@ -44,6 +44,25 @@
 // CPU SEARCH THREAD FOR 12 CHARACTER TRIPCODES                              //
 ///////////////////////////////////////////////////////////////////////////////
 
+#define VECTOR_SIZE 16
+#if defined (_MSC_VER)
+#define VECTOR_ALIGNMENT __declspec(align(16))
+#else
+#define VECTOR_ALIGNMENT __attribute__ ((aligned (16))) 
+#endif
+typedef union VECTOR_ALIGNMENT __sha1_vector {
+	__m128i m128i;
+	__int8 m128i_i8[16];
+	__int16 m128i_i16[8];
+	__int32 m128i_i32[4];
+	__int64 m128i_i64[2];
+	unsigned __int8 m128i_u8[16];
+	unsigned __int16 m128i_u16[8];
+	unsigned __int32 m128i_u32[4];
+	unsigned __int64 m128i_u64[2];
+} sha1_vector;
+#define VECTOR_ELEMENTS m128i_i32
+
 // Circular left rotation of 32-bit value 'val' left by 'bits' bits
 // (assumes that 'bits' is always within range from 0 to 32)
 // #define ROTL( bits, val ) \
@@ -295,7 +314,7 @@ static uint32_t SearchForTripcodesWithOptimization()
 		break;
 	}
 
-	__declspec(align(16)) __m128i PW[80], W0Shifted[23];
+	sha1_vector PW[80], W0Shifted[23];
 	unsigned char keyCharTable_FirstByte_local           [SIZE_KEY_CHAR_TABLE];
 	unsigned char keyCharTable_SecondByteAndOneByte_local[SIZE_KEY_CHAR_TABLE];
 
@@ -304,25 +323,25 @@ static uint32_t SearchForTripcodesWithOptimization()
 		keyCharTable_SecondByteAndOneByte_local[i] = keyCharTable_SecondByteAndOneByte[i];
 	}
 
-	PW[0]  = _mm_set1_epi32(0);
-	PW[1]  = _mm_set1_epi32((key[4] << 24) | (key[5] << 16) | (key[ 6] << 8) | key[ 7]);
-	PW[2]  = _mm_set1_epi32((key[8] << 24) | (key[9] << 16) | (key[10] << 8) | key[11]);
-	PW[3]  = _mm_set1_epi32(0x80000000);
-	PW[4]  = _mm_set1_epi32(0);
-	PW[5]  = _mm_set1_epi32(0);
-	PW[6]  = _mm_set1_epi32(0);
-	PW[7]  = _mm_set1_epi32(0);
-	PW[8]  = _mm_set1_epi32(0);
-	PW[9]  = _mm_set1_epi32(0);
-	PW[10] = _mm_set1_epi32(0);
-	PW[11] = _mm_set1_epi32(0);
-	PW[12] = _mm_set1_epi32(0);
-	PW[13] = _mm_set1_epi32(0);
-	PW[14] = _mm_set1_epi32(0);
-	PW[15] = _mm_set1_epi32(12 * 8);
-	PW[16] = ROTL(1, _mm_xor_si128(_mm_xor_si128(PW[16 - 3], PW[16 - 8]), PW[16 - 14]));
+	PW[0].m128i = _mm_set1_epi32(0);
+	PW[1].m128i = _mm_set1_epi32((key[4] << 24) | (key[5] << 16) | (key[6] << 8) | key[7]);
+	PW[2].m128i = _mm_set1_epi32((key[8] << 24) | (key[9] << 16) | (key[10] << 8) | key[11]);
+	PW[3].m128i = _mm_set1_epi32(0x80000000);
+	PW[4].m128i = _mm_set1_epi32(0);
+	PW[5].m128i = _mm_set1_epi32(0);
+	PW[6].m128i = _mm_set1_epi32(0);
+	PW[7].m128i = _mm_set1_epi32(0);
+	PW[8].m128i = _mm_set1_epi32(0);
+	PW[9].m128i = _mm_set1_epi32(0);
+	PW[10].m128i = _mm_set1_epi32(0);
+	PW[11].m128i = _mm_set1_epi32(0);
+	PW[12].m128i = _mm_set1_epi32(0);
+	PW[13].m128i = _mm_set1_epi32(0);
+	PW[14].m128i = _mm_set1_epi32(0);
+	PW[15].m128i = _mm_set1_epi32(12 * 8);
+	PW[16].m128i = ROTL(1, _mm_xor_si128(_mm_xor_si128(PW[16 - 3].m128i, PW[16 - 8].m128i), PW[16 - 14].m128i));
 	for (int32_t t = 17; t < 80; ++t)
-		PW[t] = ROTL(1, _mm_xor_si128(_mm_xor_si128(_mm_xor_si128(PW[(t) - 3], PW[(t) - 8]), PW[(t) - 14]), PW[(t) - 16]));
+		PW[t].m128i = ROTL(1, _mm_xor_si128(_mm_xor_si128(_mm_xor_si128(PW[(t)-3].m128i, PW[(t)-8].m128i), PW[(t)-14].m128i), PW[(t)-16].m128i));
 
 	for (int32_t indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
 		key[1] = keyCharTable_SecondByteAndOneByte_local[indexKey1];
@@ -333,7 +352,7 @@ static uint32_t SearchForTripcodesWithOptimization()
 			for (int32_t indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
 				key[3] = keyCharTable_SecondByteAndOneByte_local[indexKey3];
 
-				__declspec(align(16)) __m128i W0, ABC[3];
+				sha1_vector W0, ABC[3];
 				W0.m128i_u32[0] = (((key[0] & 0xfc) | 0x00) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
 				W0.m128i_u32[1] = (((key[0] & 0xfc) | 0x01) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
 				W0.m128i_u32[2] = (((key[0] & 0xfc) | 0x02) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
@@ -389,8 +408,8 @@ static uint32_t SearchForTripcodesWithOptimization_AVX2()
 		break;
 	}
 
-	__declspec(align(32)) struct {
-		__m128i lower, upper; 
+	VECTOR_ALIGNMENT struct {
+		__sha1_vector lower, upper;
 	} PW[80], W0Shifted[23], W0, ABC[3];
 	unsigned char keyCharTable_FirstByte_local           [SIZE_KEY_CHAR_TABLE];
 	unsigned char keyCharTable_SecondByteAndOneByte_local[SIZE_KEY_CHAR_TABLE];
@@ -400,25 +419,25 @@ static uint32_t SearchForTripcodesWithOptimization_AVX2()
 		keyCharTable_SecondByteAndOneByte_local[i] = keyCharTable_SecondByteAndOneByte[i];
 	}
 
-	PW[0].lower  = PW[0].upper  = _mm_set1_epi32(0);
-	PW[1].lower  = PW[1].upper  = _mm_set1_epi32((key[4] << 24) | (key[5] << 16) | (key[ 6] << 8) | key[ 7]);
-	PW[2].lower  = PW[2].upper  = _mm_set1_epi32((key[8] << 24) | (key[9] << 16) | (key[10] << 8) | key[11]);
-	PW[3].lower  = PW[3].upper  = _mm_set1_epi32(0x80000000);
-	PW[4].lower  = PW[4].upper  = _mm_set1_epi32(0);
-	PW[5].lower  = PW[5].upper  = _mm_set1_epi32(0);
-	PW[6].lower  = PW[6].upper  = _mm_set1_epi32(0);
-	PW[7].lower  = PW[7].upper  = _mm_set1_epi32(0);
-	PW[8].lower  = PW[8].upper  = _mm_set1_epi32(0);
-	PW[9].lower  = PW[9].upper  = _mm_set1_epi32(0);
-	PW[10].lower = PW[10].upper = _mm_set1_epi32(0);
-	PW[11].lower = PW[11].upper = _mm_set1_epi32(0);
-	PW[12].lower = PW[12].upper = _mm_set1_epi32(0);
-	PW[13].lower = PW[13].upper = _mm_set1_epi32(0);
-	PW[14].lower = PW[14].upper = _mm_set1_epi32(0);
-	PW[15].lower = PW[15].upper = _mm_set1_epi32(12 * 8);
-	PW[16].lower = PW[16].upper = ROTL(1, _mm_xor_si128(_mm_xor_si128(PW[16 - 3].lower, PW[16 - 8].lower), PW[16 - 14].lower));
+	PW[0].lower.m128i = PW[0].upper.m128i = _mm_set1_epi32(0);
+	PW[1].lower.m128i = PW[1].upper.m128i = _mm_set1_epi32((key[4] << 24) | (key[5] << 16) | (key[6] << 8) | key[7]);
+	PW[2].lower.m128i = PW[2].upper.m128i = _mm_set1_epi32((key[8] << 24) | (key[9] << 16) | (key[10] << 8) | key[11]);
+	PW[3].lower.m128i = PW[3].upper.m128i = _mm_set1_epi32(0x80000000);
+	PW[4].lower.m128i = PW[4].upper.m128i = _mm_set1_epi32(0);
+	PW[5].lower.m128i = PW[5].upper.m128i = _mm_set1_epi32(0);
+	PW[6].lower.m128i = PW[6].upper.m128i = _mm_set1_epi32(0);
+	PW[7].lower.m128i = PW[7].upper.m128i = _mm_set1_epi32(0);
+	PW[8].lower.m128i = PW[8].upper.m128i = _mm_set1_epi32(0);
+	PW[9].lower.m128i = PW[9].upper.m128i = _mm_set1_epi32(0);
+	PW[10].lower.m128i = PW[10].upper.m128i = _mm_set1_epi32(0);
+	PW[11].lower.m128i = PW[11].upper.m128i = _mm_set1_epi32(0);
+	PW[12].lower.m128i = PW[12].upper.m128i = _mm_set1_epi32(0);
+	PW[13].lower.m128i = PW[13].upper.m128i = _mm_set1_epi32(0);
+	PW[14].lower.m128i = PW[14].upper.m128i = _mm_set1_epi32(0);
+	PW[15].lower.m128i = PW[15].upper.m128i = _mm_set1_epi32(12 * 8);
+	PW[16].lower.m128i = PW[16].upper.m128i = ROTL(1, _mm_xor_si128(_mm_xor_si128(PW[16 - 3].lower.m128i, PW[16 - 8].lower.m128i), PW[16 - 14].lower.m128i));
 	for (int32_t t = 17; t < 80; ++t)
-		PW[t].lower = PW[t].upper = ROTL(1, _mm_xor_si128(_mm_xor_si128(_mm_xor_si128(PW[(t) - 3].lower, PW[(t) - 8].lower), PW[(t) - 14].lower), PW[(t) - 16].lower));
+		PW[t].lower.m128i = PW[t].upper.m128i = ROTL(1, _mm_xor_si128(_mm_xor_si128(_mm_xor_si128(PW[(t)-3].lower.m128i, PW[(t)-8].lower.m128i), PW[(t)-14].lower.m128i), PW[(t)-16].lower.m128i));
 
 	for (int32_t indexKey1 = 0; indexKey1 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey1) {
 		key[1] = keyCharTable_SecondByteAndOneByte_local[indexKey1];
@@ -499,7 +518,7 @@ static uint32_t SearchForTripcodesWithoutOptimization()
 	uint32_t   numGeneratedTripcodes = 0;
 	int32_t            pos, maxPos = (searchMode == SEARCH_MODE_FLEXIBLE) ? (lenTripcode - MIN_LEN_EXPANDED_PATTERN) : (0);
 	uint32_t   rawTripcodeArray[4][3];
-	__declspec(align(16)) __m128i W[80], ABC[3];
+	sha1_vector W[80], ABC[3];
 	
  	void           (*SHA1_GenerateTripcodes)(void *, void *, void *) = 
 		(options.isAVXEnabled && IsAVXSupported())
@@ -581,6 +600,8 @@ static uint32_t SearchForTripcodesWithoutOptimization()
 
 #endif
 
+#if _MSC_VER
+
 #include <stdint.h>
 #include <intrin.h>
 
@@ -636,6 +657,15 @@ int32_t IsAVX2Supported()
  
     return the_4th_gen_features_available;
 }
+
+#else
+
+int32_t IsAVX2Supported()
+{
+	return __builtin_cpu_supports("avx2");
+}
+
+#endif
 
 void Thread_SearchForSHA1TripcodesOnCPU()
 {

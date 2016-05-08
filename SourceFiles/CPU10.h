@@ -1035,7 +1035,7 @@ void CPU_DES_MAIN_LOOP()
 	for (p = base; strcmp(p, "THIS_IS_THE_END_OF_THE_FUNCTION") != 0; ++p)
 		++functionSize;
 	context.crypt25 = (void (*)(void *))VirtualAllocEx(GetCurrentProcess(), 0, functionSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE );
-	memcpy(context.crypt25, base, functionSize);
+	memcpy((void *)context.crypt25, base, functionSize);
 #endif
 
 	for (int32_t i = 0; i < 0x40; ++i)

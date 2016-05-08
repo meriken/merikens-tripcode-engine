@@ -47,8 +47,23 @@
 #define USE_ASSEMBLY_FUNCTION
 
 #define VECTOR_SIZE 32
-typedef __declspec(align(VECTOR_SIZE)) struct { uint32_t elements[8]; } DES_Vector;
-#define VECTOR_ELEMENTS elements
+#if defined (_MSC_VER)
+#define VECTOR_ALIGNMENT __declspec(align(32))
+#else
+#define VECTOR_ALIGNMENT __attribute__ ((aligned (32))) 
+#endif
+typedef union VECTOR_ALIGNMENT __DES_Vector {
+	__int8 m128i_i8[32];
+	__int16 m128i_i16[16];
+	__int32 m128i_i32[8];
+	__int64 m128i_i64[4];
+	unsigned __int8 m128i_u8[32];
+	unsigned __int16 m128i_u16[16];
+	unsigned __int32 m128i_u32[8];
+	unsigned __int64 m128i_u64[4];
+} DES_Vector;
+#define VECTOR_ELEMENTS m128i_i32
+
 #define CPU_DES_MAIN_LOOP CPU_DES_MainLoop_AVX2
 
 #include "CPU10.h"

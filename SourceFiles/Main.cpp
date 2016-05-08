@@ -317,7 +317,7 @@ void PrintUsage()
 
 void reset_cursor_pos(int n)
 {
-#if defined(_WIN32) || defined(_WIN64)
+#if (defined(_WIN32) || defined(_WIN64)) && !(__CYGWIN__)
 	CONSOLE_SCREEN_BUFFER_INFO scrnBufInfo;
 	COORD                      cursorPos;
 	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &scrnBufInfo))
@@ -328,9 +328,10 @@ void reset_cursor_pos(int n)
 		: 0;
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursorPos);
 #else
-	if (n >= 0) {
+	std::cout << "\n\033[1A";
+	if (n > 0) {
 		std::cout << "\033[" << n << "B";
-	} else {
+	} else if (n < 0) {
 		std::cout << "\033[" << -n << "A";
 	}
 #endif
