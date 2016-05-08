@@ -54,6 +54,7 @@
 #include <process.h>
 #include <tlhelp32.h>
 #include <ctype.h>
+#define BOOST_USE_WINDOWS_H
 #endif
 
 #if (defined(_WIN32) || defined(_WIN64)) && !defined(__CYGWIN__)
@@ -65,10 +66,10 @@
 #include <iostream>
 #include <atomic>
 #include <chrono>
-#ifndef __CUDACC__
+#if !defined(__CUDACC__)
 #include <thread>
 #endif
-#include <mutex>
+// #include <mutex>
 #include <codecvt>
 #include <locale>
 
@@ -76,8 +77,8 @@
 #include <boost/process.hpp> // Boost.Process 0.5
 
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
-#include <nmmintrin.h>
-#include <smmintrin.h>
+//#include <nmmintrin.h>
+//#include <smmintrin.h>
 #include <intrin.h>
 #include <emmintrin.h> 
 #include <xmmintrin.h>

@@ -190,6 +190,7 @@
     <ClCompile Include="..\SourceFiles\OpenCL10.cpp" />
     <ClCompile Include="..\SourceFiles\OpenCL12.cpp" />
     <ClCompile Include="..\SourceFiles\Patterns.cpp" />
+    <ClCompile Include="..\SourceFiles\UtilityFunctions.cpp" />
     <ClCompile Include="..\SourceFiles\Verification10.cpp" />
     <ClCompile Include="..\SourceFiles\VerificationDuplicates.cpp" />
     <ClCompile Include="..\SourceFiles\Verification12.cpp" />

@@ -13,6 +13,7 @@
     <ClCompile Include="..\SourceFiles\VerificationDuplicates.cpp" />
     <ClCompile Include="..\SourceFiles\Verification12.cpp" />
     <ClCompile Include="..\SourceFiles\Main.cpp" />
+    <ClCompile Include="..\SourceFiles\UtilityFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\SourceFiles\CPU10.h" />

@@ -147,70 +147,28 @@ class spinlock {
 	std::atomic_flag flag;
 
 public:
-	spinlock()
-	{
-		flag.clear();
-	}
-
-	void lock()
-	{
-		while (flag.test_and_set(std::memory_order_acquire))
-			std::this_thread::yield();
-	}
-
-	void unlock()
-	{
-		flag.clear(std::memory_order_release);
-	}
+	spinlock();
+	void lock();
+	void unlock();
 };
 
 namespace mte {
 	class named_event {
 		std::string data_name;
-		HANDLE native_event_handle;
+		/* HANDLE */ void *native_event_handle;
 
 	public:
-		named_event() : native_event_handle(NULL)
-		{
-		}
-
-		~named_event()
-		{
-			if (native_event_handle)
-				CloseHandle(native_event_handle);
-		}
-
-		bool is_open()
-		{
-			return (native_event_handle != NULL && native_event_handle != INVALID_HANDLE_VALUE);
-		}
-
-		bool open_or_create(const char *arg_name)
-		{
-			if (is_open())
-				return false;
-			data_name = arg_name;
-			std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>> converter(new std::codecvt_byname<wchar_t, char, std::mbstate_t>("cp" + std::to_string(GetACP())));
-			native_event_handle = OpenEventW(EVENT_ALL_ACCESS, false, converter.from_bytes(arg_name).data());
-			return is_open();
-		}
-
-		void wait() 
-		{ 
-			if (is_open())
-				WaitForSingleObject(native_event_handle, INFINITE);
-		}
-
-		bool poll() 
-		{ 
-			return is_open() && WaitForSingleObject(native_event_handle, 0) == WAIT_OBJECT_0;
-		}
-		
-		std::string name() 
-		{
-			return data_name; 
-		}
+		named_event();
+		~named_event();
+		bool is_open();
+		bool open_or_create(const char *arg_name);
+		void wait();
+		bool poll();
+		std::string name();
 	};
 }
 
 #endif
+
+
+

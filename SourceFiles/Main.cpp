@@ -2103,7 +2103,7 @@ void ListExpandedPatterns()
 		printf("%d: `%s' @ %d\n", i, expandedPatternArray[i].c, expandedPatternArray[i].pos);
 }	
 
-int32_t main(int32_t argc, char **argv)
+int main(int argc, char **argv)
 {
 	// Some versions of OpenCL.dll are buggy.
 	// /DELAYLOAD:"OpenCL.dll" is also necessary.
