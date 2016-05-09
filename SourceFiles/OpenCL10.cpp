@@ -401,7 +401,7 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 			}
 		}
 	}
-	delete textSection;
+	delete[] textSection;
 
 	if (innerELFFile) {
 		ERROR0(!writer.save_inner_elf_file(ELFFilePath), ERROR_OPENCL, "elfio failed.");

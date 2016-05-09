@@ -25,6 +25,7 @@ set(SOURCES
 SET(GCC_COVERAGE_COMPILE_FLAGS "-std=c++11 -fno-access-control -Wall -Wno-deprecated-declarations")
 SET(MTE_COMPILE_FLAGS "-DENGLISH_VERSION -DENABLE_OPENCL")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} ${MTE_COMPILE_FLAGS}")
+#SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} --enable-auto-import" )
 
 find_program(YASM_EXE NAMES yasm)
 function(assemble_yasm_files out_var)
@@ -60,4 +61,4 @@ link_directories("../BoostPackages/lib/Cygwin64" "/cygdrive/c/Program\ Files\ (x
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_executable(MerikensTripcodeEngine ${SOURCES} ${YASM_FILES})
-set_target_properties(MerikensTripcodeEngine PROPERTIES LINKER_LANGUAGE CXX)
+

@@ -229,8 +229,7 @@ static void DES_RewriteCrypt25(DES_Context *context)
 		-1
 	};
 	unsigned char *p = (unsigned char *)(context->crypt25);
-	unsigned char instructionBytes[3];
-
+	
 	// Rewrite "movdqa/vmovdqa/movaps xmm*, [rbx + 0xffffffff]" based on context->ExpansionFunction[].
 	for (int32_t i = 0; rewriteTable[i] >= 0; ++i) {
 		if (context->useAVX) {

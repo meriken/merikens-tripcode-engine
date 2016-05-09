@@ -513,7 +513,7 @@ void ProcessNextRegexPattern()
 			
 		} else if (   strlen((char *)pattern.remaining) > lenNextToken
 				   && pattern.remaining[lenNextToken] == '{'          ) {
-			int32_t n, m, lenCurrentToken;
+			int32_t n = 0, m = 0, lenCurrentToken;
 			if (strlen((char *)pattern.remaining) >= lenNextToken + 3
 				&& isdigit(pattern.remaining[lenNextToken + 1])
 				&& pattern.remaining[lenNextToken + 1] >= '1'        

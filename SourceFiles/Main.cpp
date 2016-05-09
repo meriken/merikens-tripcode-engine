@@ -162,6 +162,10 @@ uint32_t     numGeneratedTripcodesByGPUInMillions;
 uint32_t     numGeneratedTripcodes_CPU;
 uint32_t     numGeneratedTripcodesByCPUInMillions;
 
+//
+static std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned int> random_bytes_engine(std::random_device{}());
+static spinlock random_byte_spinlock;
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -272,32 +276,13 @@ const char *GetErrorMessage(int32_t errorCode)
 	}
 }
 
-#if defined(_MSC_VER)
-
-// The other version causes strange errors with VC++.
 unsigned char RandomByte()
 {
-	unsigned int random_value;
-
-	rand_s(&random_value);
-	return (unsigned char)(random_value & 0x000000ff);
-}
-
-#else
-
-unsigned char RandomByte()
-{
-	static std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned int> random_bytes_engine;
-	static spinlock random_byte_spinlock;
-	
 	random_byte_spinlock.lock();
 	unsigned char b = random_bytes_engine() & 0xff;
 	random_byte_spinlock.unlock();
 	return b;
 }
-
-#endif
-
 
 void ReleaseResources()
 {
