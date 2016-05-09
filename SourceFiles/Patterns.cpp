@@ -53,8 +53,8 @@ uint32_t        *tripcodeChunkArray       = NULL;
 uint32_t         numTripcodeChunk         = 0;
 uint32_t         sizeTripcodeChunkArray   = 0;
 struct RegexPattern *regexPatternArray        = NULL;
-int32_t                  sizeRegexPatternArray    = 0;
-int32_t                  numRegexPattern          = 0;
+uint32_t                  sizeRegexPatternArray    = 0;
+uint32_t                  numRegexPattern          = 0;
 unsigned char        chunkBitmap[CHUNK_BITMAP_SIZE];
 unsigned char        mediumChunkBitmap[MEDIUM_CHUNK_BITMAP_SIZE];
 unsigned char        smallChunkBitmap[SMALL_CHUNK_BITMAP_SIZE];
@@ -225,13 +225,13 @@ BOOL CreateTripcodeChunk(unsigned char *tripcode, uint32_t *tripcodeChunk, BOOL 
 	return TRUE;
 }
 
-void AddNewExpandedPattern(unsigned char *s, unsigned char pos)
+void AddNewExpandedPattern(unsigned char *s, int32_t pos)
 {
 #ifdef DEBUG_REGEX
 	printf("AddNewExpandedPattern(): s = `%s', pos = %d\n", s, pos);
 #endif
 	ASSERT(pos                     <  lenTripcode);
-	ASSERT(pos + strlen((char *)s) <= lenTripcode);
+	ASSERT(pos + strlen((char *)s) <= (size_t)lenTripcode);
 	EXPAND_ARRAY_IF_NECESSARY(ExpandedPattern, expandedPatternArray, sizeExpandedPatternArray, numExpandedPatterns);
 	strncpy((char *)&(expandedPatternArray[numExpandedPatterns].c[0]),
 	        (char *)s,

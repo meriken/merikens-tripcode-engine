@@ -51,7 +51,7 @@
 // OPENCL SEARCH THREAD FOR 12 CHARACTER TRIPCODES                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-char *ConvertOpenCLErrorCodeToString(cl_int openCLError)
+const char *ConvertOpenCLErrorCodeToString(cl_int openCLError)
 {
 	switch (openCLError) {
         case CL_SUCCESS:                         return "CL_SUCCESS";
@@ -112,19 +112,19 @@ void __stdcall OnOpenCLError(const char *errorInfo, const void *privateInfo, siz
 
 
 struct {
-	char   *vendor;
-	char   *name;
+	const char   *vendor;
+	const char   *name;
 	int32_t     numCU;
-	char   *productName;
+	const char   *productName;
 
-	char   *sourceFile_SHA1;
+	const char   *sourceFile_SHA1;
 	size_t  numWorkItemsPerComputeUnit_SHA1;
 	size_t  localWorkSize_SHA1;
 
-	char   *sourceFile_DES;
+	const char   *sourceFile_DES;
 	size_t  numWorkItemsPerComputeUnit_DES;
 	size_t  localWorkSize_DES;
-	char   *buildOptions_DES;
+	const char   *buildOptions_DES;
 } static deviceSettingsArray[] = {
 	{OPENCL_VENDOR_AMD,    "Cedar",                      2, "Radeon HD 5450",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
 	{OPENCL_VENDOR_AMD,    "Redwood",                    4, "Radeon HD 5550",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
@@ -179,7 +179,7 @@ struct {
 
 
  
-char *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numComputeUnits)
+const char *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numComputeUnits)
 {
 	for (int32_t i = 0; deviceSettingsArray[i].vendor != NULL; ++i) {
 		if (   (   strcmp(deviceSettingsArray[i].vendor, vendor) == 0
@@ -269,11 +269,11 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	sprintf(commandLine,
 		"\"%s\" --output-for-redirection --disable-tripcode-checks -l %d -g -d %d -y %d -z %d -a %d -b 1",
 		childProcessPath,
-		lenTripcode,
-		info->deviceNo,
-		numWorkItemsPerComputeUnit,
-		localWorkSize,
-		options.openCLNumThreads);
+		(int)lenTripcode,
+		(int)info->deviceNo,
+		(int)numWorkItemsPerComputeUnit,
+		(int)localWorkSize,
+		(int)options.openCLNumThreads);
 	for (int32_t patternFileIndex = 0; patternFileIndex < numPatternFiles; ++patternFileIndex) {
 		strcat(commandLine, " -f ");
 		strcat(commandLine, patternFilePathArray[patternFileIndex]);
@@ -342,7 +342,8 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 	MultiByteToWideChar(CP_ACP, 0, commandLine, -1, commandLineWC, MAX_LEN_COMMAND_LINE);
 	ERROR0(!CreateProcessW(NULL, commandLineWC, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInfo), ERROR_CHILD_PROCESS, "CreateProcess");
 	hChildProcess = processInfo.hProcess;
-	UpdateOpenCLDeviceStatus_ChildProcess(info, "[process] Started child process.", 0, 0, 0, 0);
+	strcpy(status, "[process] Started child process.");
+	UpdateOpenCLDeviceStatus_ChildProcess(info, status, 0, 0, 0, 0);
 
 	// Close pipe handles.
 	ERROR0(!CloseHandle(processInfo.hThread), ERROR_CHILD_PROCESS, "CloseHandle");
@@ -393,7 +394,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		else if (strncmp(lpBuffer, "[status],", strlen("[status],")) == 0) {
 			double       currentSpeed, averageSpeed, totalNumGeneratedTripcodes;
 			uint32_t numDiscardedTripcodes;
-			char *delimiter = ",";
+			const char *delimiter = ",";
 			char *currentToken = strtok(lpBuffer, delimiter);                                                                                           //     "[status]"
 			BOOL isGood = (currentToken != NULL);
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          //     totalTime,
@@ -413,8 +414,8 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 				sprintf(status,
 					"[process] %.1lfM TPS, %d WI/CU, %d WI/WG, Restarts: %u",
 					averageSpeed / 1000000,
-					numWorkItemsPerComputeUnit,
-					localWorkSize,
+					(int)numWorkItemsPerComputeUnit,
+					(int)localWorkSize,
 					info->numRestarts);
 				UpdateOpenCLDeviceStatus_ChildProcess(info,
 					status,
@@ -426,7 +427,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		}
 		else if (strncmp(lpBuffer, "[error],", strlen("[error],")) == 0) {
 			int32_t   errorCode;
-			char *delimiter = ",";
+			const char *delimiter = ",";
 			char *currentToken = strtok(lpBuffer, delimiter); // "[error]"
 			BOOL isGood = (currentToken != NULL);
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL) && 1 == sscanf(currentToken, "%d", &errorCode);
@@ -569,7 +570,7 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		} else if (strncmp(line_buffer, "[status],", strlen("[status],")) == 0) {
 			double       currentSpeed, averageSpeed, totalNumGeneratedTripcodes;
 			uint32_t numDiscardedTripcodes;
-			char *delimiter = ",";
+			const char *delimiter = ",";
 			char *currentToken = strtok(line_buffer, delimiter);                                                                                           //     "[status]"
 			BOOL isGood = (currentToken != NULL);
 			currentToken = strtok(NULL, delimiter); isGood = isGood && (currentToken != NULL);                                                          //     totalTime,
@@ -789,7 +790,7 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *i
 		}
 		OPENCL_ERROR(openCLError);
 	}
-	char *nameKernelFunction;
+	const char *nameKernelFunction;
 	if (searchMode == SEARCH_MODE_FORWARD_MATCHING) {
 		nameKernelFunction = "OpenCL_SHA1_PerformSearching_ForwardMatching";
 	} else if (searchMode == SEARCH_MODE_BACKWARD_MATCHING) {
@@ -925,9 +926,9 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *i
 		sprintf(status,
 			    "[thread] %.1lfM TPS, %d WI, %d WI/CU, %d WI/WG",
 				averageSpeed / 1000000,
-				globalWorkSize,
-				numWorkItemsPerComputeUnit,
-				localWorkSize);
+				(int)globalWorkSize,
+				(int)numWorkItemsPerComputeUnit,
+				(int)localWorkSize);
 		UpdateOpenCLDeviceStatus(info, status);
 	}
  

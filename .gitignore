@@ -19,8 +19,6 @@ tripcodes.txt
 *.bc
 *.ii
 *.s
-Cygwin/CLRadeonExtender
-Cygwin/OpenCL
-Cygwin/include
-Cygwin/libOpenCL.a
-
+CMake/*Build
+CMake/*build
+*~

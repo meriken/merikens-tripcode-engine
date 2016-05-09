@@ -183,9 +183,9 @@ extern BOOL GetTerminationState();
 extern const char *GetErrorMessage(int32_t errorCode);
 
 //
-extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, char *status);
-extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status);
-extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes);
+extern void UpdateCUDADeviceStatus  (struct CUDADeviceSearchThreadInfo   *info, const char *status);
+extern void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, const char *status);
+extern void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, const char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes);
 
 //
 extern void show_cursor();
@@ -220,8 +220,8 @@ extern uint32_t    *tripcodeChunkArray;
 extern uint32_t     numTripcodeChunk;
 extern uint32_t     sizeTripcodeChunkArray;
 extern RegexPattern    *regexPatternArray;
-extern int32_t              sizeRegexPatternArray;
-extern int32_t              numRegexPattern;
+extern uint32_t              sizeRegexPatternArray;
+extern uint32_t              numRegexPattern;
 extern BOOL             searchForSpecialPatternsOnCPU;
 
 
@@ -264,9 +264,9 @@ extern "C" void DES_Crypt25_x86_AVX2        (void *context);
 
 #ifdef ENABLE_OPENCL
 
-extern char           *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numComputeUnits);
+extern const char     *GetProductNameForOpenCLDevice(char *vendor, char *name, cl_uint numComputeUnits);
 extern void            GetParametersForOpenCLDevice(cl_device_id deviceID, char *sourceFile, size_t *numWorkItemsPerComputeUnit, size_t *localWorkSize, char *options);
-extern char           *ConvertOpenCLErrorCodeToString(cl_int openCLError);
+extern const char     *ConvertOpenCLErrorCodeToString(cl_int openCLError);
 extern void __stdcall  OnOpenCLError(const char *errorInfo, const void *privateInfo, size_t sizePrivateInfo, void *userData);
 extern void            Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info);
 

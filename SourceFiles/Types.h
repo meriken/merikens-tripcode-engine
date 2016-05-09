@@ -48,7 +48,7 @@ struct TripcodeKeyPair {
 };
 
 struct ExpandedPattern {
-	unsigned char pos;
+	int32_t pos;
 	unsigned char c[MAX_LEN_EXPANDED_PATTERN + 1];
 };
 

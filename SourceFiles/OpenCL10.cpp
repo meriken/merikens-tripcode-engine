@@ -198,7 +198,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 		openCLError = clGetProgramInfo(*program, CL_PROGRAM_BINARIES, sizeof(unsigned char *) * numDevices, binaryArray, NULL);
 		OPENCL_ERROR(openCLError);
 		FILE   *binaryFile;
-		if (binaryFile = fopen(binaryFilePath, "wb")) {
+		if ((binaryFile = fopen(binaryFilePath, "wb"))) {
 			fwrite(binaryArray[0], sizeof(unsigned char), binarySizeArray[0], binaryFile);
 			fclose(binaryFile);
 		}
@@ -412,7 +412,7 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 
 static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction, char *dummyKernelBinaryFilePath)
 {
-	static char *registerMap[64] = {
+	static const char *registerMap[64] = {
 		"%v118",
 		"%v65",
 		"%v68",
@@ -498,7 +498,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	FILE   *sourceFile;
 	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	sprintf(sourceFileFullPath, "%s\\%s", applicationDirectory, sourceFilePath);
-	if (sourceFile = fopen(sourceFileFullPath, "w")) {
+	if ((sourceFile = fopen(sourceFileFullPath, "w"))) {
 		for (int32_t i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
 			fprintf(sourceFile, "DB_EF%02d = %s\n", i, registerMap[expansionFunction[i]]);
 
@@ -908,9 +908,9 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *in
 		sprintf(status,
 			    "[thread] %.1lfM TPS, %d WI, %d WI/CU, %d WI/WG",
 				averageSpeed / 1000000,
-				globalWorkSize,
-				numWorkItemsPerComputeUnit,
-				localWorkSize);
+				(int)globalWorkSize,
+				(int)numWorkItemsPerComputeUnit,
+				(int)localWorkSize);
 		UpdateOpenCLDeviceStatus(info, status);
 	}
  

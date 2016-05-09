@@ -719,8 +719,12 @@ static uint32_t SearchForTripcodes(DES_Context *context)
 				if (key[6] & ((0x1 << 5))) context->keys[47].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
 				if (key[6] & ((0x1 << 6))) context->keys[48].VECTOR_ELEMENTS[tripcodeIndexUpper] = 0xffffffff;
 
+#ifdef _MSC_VER
 #pragma unroll
 				for (int32_t tripcodeIndexLower = 0; tripcodeIndexLower < 32; ++tripcodeIndexLower) {
+#else
+				for (int32_t tripcodeIndexLower = 0; tripcodeIndexLower < 32; ++tripcodeIndexLower) {
+#endif
 					key[7] = tableForKey7[(int32_t)randomByteKey7 + tripcodeIndexLower];
 					if (key[7] & ((0x1 << 0))) context->keys[49].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);
 					if (key[7] & ((0x1 << 1))) context->keys[50].VECTOR_ELEMENTS[tripcodeIndexUpper] |= (0x1 << tripcodeIndexLower);

@@ -606,7 +606,7 @@ void DisplayCopyrights()
 
 #ifdef ENABLE_CUDA
 
-void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, char *status)
+void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, const char *status)
 {
 	cuda_device_search_thread_info_array_spinlock.lock();
 	strcpy(info->status, status);
@@ -618,7 +618,7 @@ void UpdateCUDADeviceStatus(struct CUDADeviceSearchThreadInfo *info, char *statu
 
 #ifdef ENABLE_OPENCL
 
-void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *status)
+void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, const char *status)
 {
 	opencl_device_search_thread_info_array_spinlock.lock();
 	ASSERT(!info->runChildProcess);
@@ -627,7 +627,7 @@ void UpdateOpenCLDeviceStatus(struct OpenCLDeviceSearchThreadInfo *info, char *s
 	opencl_device_search_thread_info_array_spinlock.unlock();
 }
 
-void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes)
+void UpdateOpenCLDeviceStatus_ChildProcess(struct OpenCLDeviceSearchThreadInfo *info, const char *status, double currentSpeed, double averageSpeed, double totalNumGeneratedTripcodes, uint32_t numDiscardedTripcodes)
 {
 	opencl_device_search_thread_info_array_spinlock.lock();
 	ASSERT(info->runChildProcess);
@@ -688,7 +688,7 @@ void CheckSearchThreads()
 			ERROR0(!info->runChildProcess, ERROR_SEARCH_THREAD_UNRESPONSIVE, "Search thread became unresponsive.");
 
 			strcpy(info->status, "[process] Restarting search thread...");
-			auto native_handle = opencl_device_search_threads[index]->native_handle();
+			// auto native_handle = opencl_device_search_threads[index]->native_handle();
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
 			// Boost.Processs is happy with none of these lines below.
@@ -703,8 +703,6 @@ void CheckSearchThreads()
 			info->currentSpeed = 0;
 			info->averageSpeed = 0;
 			++info->numRestarts;
-
-			uint32_t winThreadID;
 			opencl_device_search_threads[index] = new std::thread((lenTripcode == 10) 
 																	       ? Thread_SearchForDESTripcodesOnOpenCLDevice
 													                       : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
@@ -1024,7 +1022,7 @@ void CountOpenCLDevices()
 
 	int32_t openCLDeviceIDArrayIndex = 0;
 	for (int32_t pass = 0; pass <= 1; ++pass) {
-		for (int32_t platformIndex = 0; platformIndex < numPlatforms; ++platformIndex) {
+		for (cl_uint platformIndex = 0; platformIndex < numPlatforms; ++platformIndex) {
 			// Skip CUDA devices.
 			char platformVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 			errorCode = clGetPlatformInfo(platforms[platformIndex], CL_PLATFORM_VENDOR, sizeof(platformVendor), platformVendor, NULL);
@@ -1047,7 +1045,7 @@ void CountOpenCLDevices()
 			errorCode = clGetDeviceIDs(platforms[platformIndex], CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_ACCELERATOR, deviceCount, devices, &deviceCount);
 			if (errorCode != CL_DEVICE_NOT_FOUND) {
 				OPENCL_ERROR(errorCode);
-				for(int32_t deviceIndex = 0; deviceIndex < deviceCount; ++deviceIndex) {
+				for (cl_uint deviceIndex = 0; deviceIndex < deviceCount; ++deviceIndex) {
 					if (pass == 0) {
 						++openCLDeviceCount;
 					} else {
@@ -1068,9 +1066,6 @@ void CountOpenCLDevices()
 
 void ListOpenCLDevices()
 {
-    cl_int  errorCode;
-    cl_uint numPlatforms;
-	cl_uint deviceCount;
 	char    deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 	char    deviceName  [LEN_LINE_BUFFER_FOR_SCREEN];
 	cl_uint numComputeUnits;
@@ -1091,7 +1086,7 @@ void ListOpenCLDevices()
 		} else {
 			printf("%s ", deviceVendor);
 		}
-		char *productName = GetProductNameForOpenCLDevice(deviceVendor, deviceName, numComputeUnits);
+		const char *productName = GetProductNameForOpenCLDevice(deviceVendor, deviceName, numComputeUnits);
 		if (productName) {
 			printf("%s", productName);
 		} else {
@@ -1264,7 +1259,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			OPENCL_ERROR(clGetDeviceInfo(openCLDeviceIDArray[openCLDeviceIndex], CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(clockFrequency),   &clockFrequency,   NULL));
 			OPENCL_ERROR(clGetDeviceInfo(openCLDeviceIDArray[openCLDeviceIndex], CL_DEVICE_MAX_COMPUTE_UNITS,   sizeof(numComputeUnits),  &numComputeUnits,  NULL));
 			OPENCL_ERROR(clGetDeviceInfo(openCLDeviceIDArray[openCLDeviceIndex], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxWorkGroupSize), &maxWorkGroupSize, NULL));
-			char *productName = GetProductNameForOpenCLDevice(deviceVendor, deviceName, numComputeUnits);
+			const char *productName = GetProductNameForOpenCLDevice(deviceVendor, deviceName, numComputeUnits);
 			if (displayDeviceInformation) {
 				printf(    "  Vendor:                   %s\n",        deviceVendor);
 				if (productName) {
@@ -1303,7 +1298,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 										  ? (numCPUSearchThreads - numCUDADeviceSearchThreads - numOpenCLDeviceSearchThreads)
 										  : 0;
 		} else {
-			numCPUSearchThreads = (options.numCPUSearchThreads < sysInfo.dwNumberOfProcessors) ? options.numCPUSearchThreads : sysInfo.dwNumberOfProcessors;
+			numCPUSearchThreads = (options.numCPUSearchThreads < (int32_t)sysInfo.dwNumberOfProcessors) ? options.numCPUSearchThreads : sysInfo.dwNumberOfProcessors;
 		}
 #endif
 		if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU && numCPUSearchThreads <= 0) {
@@ -1902,9 +1897,8 @@ void StartCUDADeviceSearchThreads()
 #ifdef ENABLE_OPENCL
 void StartOpenCLDeviceSearchThreads()
 {
-	int32_t          i, j;
-	uint32_t winThreadID;
-	char         deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
+	int32_t i, j;
+	char    deviceVendor[LEN_LINE_BUFFER_FOR_SCREEN];
 	
 	ASSERT(numOpenCLDeviceSearchThreads > 0);
 
@@ -2065,8 +2059,8 @@ void StartCPUSearchThreads()
 
 int32_t GetParentProcessID()
 {
-	int32_t processID = GetCurrentProcessId();
-	int32_t parentProcessID = -1;
+	DWORD processID = GetCurrentProcessId();
+	DWORD parentProcessID = 0xffffffff;
 	HANDLE hSnapProcess = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	PROCESSENTRY32 processEntry = {0};
 	processEntry.dwSize = sizeof(PROCESSENTRY32);
@@ -2086,8 +2080,8 @@ int32_t GetParentProcessID()
 
 void ListExpandedPatterns()
 {
-	for (int32_t i = 0; i < numExpandedPatterns; ++i)
-		printf("%d: `%s' @ %d\n", i, expandedPatternArray[i].c, expandedPatternArray[i].pos);
+	for (uint32_t i = 0; i < numExpandedPatterns; ++i)
+		printf("%u: `%s' @ %d\n", i, expandedPatternArray[i].c, expandedPatternArray[i].pos);
 }	
 
 int main(int argc, char **argv)

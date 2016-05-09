@@ -65,8 +65,7 @@ typedef union VECTOR_ALIGNMENT __sha1_vector {
 
 // Circular left rotation of 32-bit value 'val' left by 'bits' bits
 // (assumes that 'bits' is always within range from 0 to 32)
-// #define ROTL( bits, val ) \
-//        ( ( ( val ) << ( bits ) ) | ( ( val ) >> ( 32 - ( bits ) ) ) )
+// #define ROTL( bits, val ) ( ( ( val ) << ( bits ) ) | ( ( val ) >> ( 32 - ( bits ) ) ) )
 #define ROTL(bits, val) _mm_or_si128(_mm_slli_epi32((val), (bits)), _mm_srli_epi32((val), 32 - (bits)))
 
 inline void ConvertRaw12CharTripcodeIntoDisplayFormat(uint32_t *rawTripcodeArray, unsigned char *tripcode)

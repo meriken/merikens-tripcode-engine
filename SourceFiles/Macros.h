@@ -54,14 +54,16 @@
 			_getch();                                            \
 			show_cursor();                                         \
 		}                                                         \
-		ExitProcess(1);                                           \
+		exit(1);                                           \
 	}                                                             \
 	
 #define ERROR1(cond, code, msg, arg1)                     \
 	if ((cond) && !GetErrorState()) {                                           \
 		SetErrorState(); \
 		if (options.redirection) {                        \
-			fprintf(stderr, "%d,%s\n", (code), (arg1));   \
+			char _msg[256];                               \
+			sprintf(_msg, msg, (arg1));   \
+			fprintf(stderr, "%d,%s\n", (code), _msg);   \
 			fflush(stderr);                               \
 			printf("[error],%d\n", (code));                      \
 			fflush(stdout);                                       \
@@ -75,7 +77,7 @@
 			_getch();                                    \
 			show_cursor();                                 \
 		}                                                 \
-		ExitProcess(1);                                   \
+		exit(1);                                   \
 	}                                                     \
 
 #define CUDA_ERROR(error)                                                                     \
@@ -90,7 +92,8 @@
 				fflush(stdout);                                                               \
 			} else {                                                                          \
 				reset_cursor_pos(prevLineCount);                                                \
-				char *p = __FILE__, *file_name = p;                                           \
+				const char *p = __FILE__;                                           \
+				const char *file_name = p;                                           \
 				for (; *p; ++p)                                                               \
 				    if (*p == '\\' || *p == '/')                                              \
 						file_name = p + 1;                                                    \
@@ -99,7 +102,7 @@
 				_getch();                                                                     \
 				show_cursor();                                                                 \
 			}                                                                                 \
-			ExitProcess(1);                                                                   \
+			exit(1);                                                                   \
 		}                                                                                     \
 	}                                                                                         \
 
@@ -115,7 +118,8 @@
 				fflush(stdout);                                                                    \
 			} else {                                                                               \
 				reset_cursor_pos(prevLineCount);                                                     \
-				char *p = __FILE__, *file_name = p;                                           \
+				const char *p = __FILE__;                                           \
+				const char *file_name = p;                                           \
 				for (; *p; ++p)                                                               \
 				    if (*p == '\\' || *p == '/')                                              \
 						file_name = p + 1;                                                    \
@@ -124,7 +128,7 @@
 				_getch();                                                                          \
 				show_cursor();                                                                      \
 			}                                                                                      \
-			ExitProcess(1);                                                                        \
+			exit(1);                                                                        \
 		}                                                                                          \
 	}                                                                                              \
 
@@ -142,7 +146,7 @@
 			_getch();                                                                                  \
 			show_cursor();                                                                               \
 		}                                                                                               \
-		ExitProcess(1);                                                                                 \
+		exit(1);                                                                                 \
 	}                                                                                                   \
 
 // for 1-byte characters
