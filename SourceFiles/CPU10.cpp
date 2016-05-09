@@ -169,6 +169,37 @@ const unsigned char expansionTable[48] = {
 // THREAD                                                                    //
 ///////////////////////////////////////////////////////////////////////////////
 
+void DES_CreateExpansionFunction(char *saltString, unsigned char *expansionFunction)
+{
+	unsigned char saltChar1 = '.', saltChar2 = '.';
+	int32_t salt;
+	int32_t mask;
+	int32_t src, dst;
+
+	if (saltString[0]) {
+		saltChar1 = saltString[0];
+		if (saltString[1])
+			saltChar2 = saltString[1];
+	}
+	salt = charToIndexTableForDES[saltChar1]
+		| (charToIndexTableForDES[saltChar2] << 6);
+
+	mask = 1;
+	for (dst = 0; dst < 48; dst++) {
+		if (dst == 24) mask = 1;
+
+		if (salt & mask) {
+			if (dst < 24) src = dst + 24; else src = dst - 24;
+		}
+		else src = dst;
+
+		expansionFunction[dst] = expansionTable[src];
+		expansionFunction[dst + 48] = expansionTable[src] + 32;
+
+		mask <<= 1;
+	}
+}
+
 extern void CPU_DES_MainLoop_AVX2();
 
 void Thread_SearchForDESTripcodesOnCPU()

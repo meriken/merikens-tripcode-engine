@@ -177,36 +177,6 @@ DES_CONSTANT_QUALIFIERS unsigned char keySchedule[DES_SIZE_KEY_SCHEDULE] = {
 	 9, 51, 21, 30,  1, 23, 36,  3, 14, 24, 44, 15, 16,  0, 49, 28,
 };
 
-void DES_CreateExpansionFunction(char *saltString, unsigned char *expansionFunction)
-{
-	unsigned char saltChar1 = '.', saltChar2 = '.';
-	DES_ARCH_WORD salt;
-	DES_ARCH_WORD mask;
-	int32_t src, dst;
-
-	if (saltString[0]) {
-		saltChar1 = saltString[0];
-		if (saltString[1])
-			saltChar2 = saltString[1];
-	}
-	salt =    charToIndexTableForDES[saltChar1]
-	       | (charToIndexTableForDES[saltChar2] << 6);
-
-	mask = 1;
-	for (dst = 0; dst < 48; dst++) {
-		if (dst == 24) mask = 1;
-
-		if (salt & mask) {
-			if (dst < 24) src = dst + 24; else src = dst - 24;
-		} else src = dst;
-
-		expansionFunction[dst     ] = expansionTable[src];
-		expansionFunction[dst + 48] = expansionTable[src] + 32;
-
-		mask <<= 1;
-	}
-}
-
 #include "CUDA10_S-boxes.h"
 
 #define CLEAR_BLOCK_8(i)                                                             \
