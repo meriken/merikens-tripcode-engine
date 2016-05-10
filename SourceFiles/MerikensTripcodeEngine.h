@@ -78,6 +78,15 @@ typedef int BOOL;
 #include <codecvt>
 #include <locale>
 
+// Standard C libraries
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+#include <string.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#endif
+
 // Boost
 #define BOOST_USE_WINDOWS_H
 
