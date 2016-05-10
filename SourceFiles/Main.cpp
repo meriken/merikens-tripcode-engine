@@ -1416,19 +1416,17 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 
 	numCPUSearchThreads = 0;
 	if (searchDevice == SEARCH_DEVICE_CPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU) {
-		SYSTEM_INFO sysInfo;
-		GetSystemInfo(&sysInfo);
 #ifdef DEBUG_ONE_CPU_SEARCH_THREAD
 		numCPUSearchThreads = 1;
 #else
+		numCPUSearchThreads = std::thread::hardware_concurrency();;
 		if (options.numCPUSearchThreads == NUM_CPU_SEARCH_THREADS_NIL) { 
-			numCPUSearchThreads = sysInfo.dwNumberOfProcessors;
 			if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
 				numCPUSearchThreads = (numCPUSearchThreads > numCUDADeviceSearchThreads + numOpenCLDeviceSearchThreads)
 										  ? (numCPUSearchThreads - numCUDADeviceSearchThreads - numOpenCLDeviceSearchThreads)
 										  : 0;
 		} else {
-			numCPUSearchThreads = (options.numCPUSearchThreads < (int32_t)sysInfo.dwNumberOfProcessors) ? options.numCPUSearchThreads : sysInfo.dwNumberOfProcessors;
+			numCPUSearchThreads = (options.numCPUSearchThreads < numCPUSearchThreads) ? options.numCPUSearchThreads : numCPUSearchThreads;
 		}
 #endif
 		if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU && numCPUSearchThreads <= 0) {
