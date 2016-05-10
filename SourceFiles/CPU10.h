@@ -281,7 +281,7 @@ static void DES_RewriteCrypt25(DES_Context *context)
 		}
 		// printf("offset = %d\n", (unsigned char *)p - (unsigned char *)(context->crypt25));
 		if (rewriteTable[i] != SKIP)
-			*(__int32 *)p = context->expansionFunction[rewriteTable[i]] * 8;
+			*(int32_t *)p = context->expansionFunction[rewriteTable[i]] * 8;
 		p += 4;
 	}
 }
@@ -363,7 +363,7 @@ static void DES_RewriteCrypt25_x64_AVX2(DES_Context *context)
 		p+= 4;
 
 		if (rewriteTable[i] != SKIP)
-			*(__int32 *)p = context->expansionFunction[rewriteTable[i]] * (VECTOR_SIZE / 2);
+			*(int32_t *)p = context->expansionFunction[rewriteTable[i]] * (VECTOR_SIZE / 2);
 		p += 4;
 	}
 }

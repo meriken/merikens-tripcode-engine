@@ -1073,6 +1073,8 @@ void PrintStatus()
 #undef NEXT_LINE
 }
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+
 BOOL WINAPI ControlHandler(_In_  DWORD dwCtrlType)
 {
 	switch (dwCtrlType) {
@@ -1089,10 +1091,29 @@ BOOL WINAPI ControlHandler(_In_  DWORD dwCtrlType)
 	}
 }
 
+#else
+
+void control_handler(int s)
+{
+	SetTerminationState();
+}
+
+#endif
+
 void InitProcess()
 {
 	hide_cursor();
+#if defined(_WIN32) || defined(__CYGWIN__)
 	SetConsoleCtrlHandler(ControlHandler, true);
+#else
+	struct sigaction sigint_handler;
+
+	sigint_handler.sa_handler = control_handler;
+	sigemptyset(&sigint_handler.sa_mask);
+	sigint_handler.sa_flags = 0;
+
+	sigaction(SIGINT, &sigint_handler, NULL);
+#endif
 }
 
 #ifdef ENABLE_CUDA

@@ -53,12 +53,12 @@
 typedef union VECTOR_ALIGNMENT __DES_Vector {
 	__int8 m128i_i8[32];
 	__int16 m128i_i16[16];
-	__int32 m128i_i32[8];
-	__int64 m128i_i64[4];
-	unsigned __int8 m128i_u8[32];
-	unsigned __int16 m128i_u16[16];
-	unsigned __int32 m128i_u32[8];
-	unsigned __int64 m128i_u64[4];
+	int32_t m128i_i32[8];
+	int64_t m128i_i64[4];
+	uint8_t m128i_u8[32];
+	uint16_t m128i_u16[16];
+	uint32_t m128i_u32[8];
+	uint64_t m128i_u64[4];
 } DES_Vector;
 #define VECTOR_ELEMENTS m128i_i32
 

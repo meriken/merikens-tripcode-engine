@@ -249,8 +249,8 @@ extern void TestNewCode();
 extern     void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int32_t keyScheduleIndexBase);
 extern     void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int32_t keyScheduleIndexBase);
 
-extern "C" void CPU_DES_SBoxes1_asm_x64(void *context, __int64 keyScheduleIndexBase);
-extern "C" void CPU_DES_SBoxes2_asm_x64(void *context, __int64 keyScheduleIndexBase);
+extern "C" void CPU_DES_SBoxes1_asm_x64(void *context, int64_t keyScheduleIndexBase);
+extern "C" void CPU_DES_SBoxes2_asm_x64(void *context, int64_t keyScheduleIndexBase);
 
 #ifdef _M_X64
 extern "C" void DES_Crypt25_x64_SSE2        (void *context);
