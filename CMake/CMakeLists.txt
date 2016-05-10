@@ -36,31 +36,6 @@ endif()
 
 
 
-set(CORE_SOURCES
-	../SourceFiles/Main.cpp
-	../SourceFiles/Patterns.cpp
-	../SourceFiles/Testing.cpp
-	../SourceFiles/Verification10.cpp
-	../SourceFiles/Verification12.cpp
-	../SourceFiles/VerificationDuplicates.cpp
-	../SourceFiles/UtilityFunctions.cpp)
-if (USE_YASM)
-	file(GLOB CPU_SOURCES
-		"../SourceFiles/CPU10_yasm.cpp"
-		"../SourceFiles/CPU10_AVX2.cpp"
-		"../SourceFiles/CPU12_yasm.cpp")
-else()
-	file(GLOB CPU_SOURCES
-		"../SourceFiles/CPU10_SSE2Intrinsics.cpp"
-		"../SourceFiles/CPU12_SSE2Intrinsics.cpp")
-endif()
-set(SOURCES
-	${CORE_SOURCES}
-	${CPU_SOURCES}
-	${OPENCL_SOURCES})
-
-
-
 set(YASM_FILES)
 find_program(YASM_EXE NAMES yasm)
 if((UNIX AND NOT CYGWIN) OR (NOT YASM_EXE))
@@ -95,6 +70,31 @@ if(USE_YASM)
 	CPU12_x64_SSE2.asm
 	CPU12_x64_SSE2_Nehalem.asm)
 endif()
+
+
+
+set(CORE_SOURCES
+	../SourceFiles/Main.cpp
+	../SourceFiles/Patterns.cpp
+	../SourceFiles/Testing.cpp
+	../SourceFiles/Verification10.cpp
+	../SourceFiles/Verification12.cpp
+	../SourceFiles/VerificationDuplicates.cpp
+	../SourceFiles/UtilityFunctions.cpp)
+if (USE_YASM)
+	file(GLOB CPU_SOURCES
+		"../SourceFiles/CPU10_yasm.cpp"
+		"../SourceFiles/CPU10_AVX2.cpp"
+		"../SourceFiles/CPU12_yasm.cpp")
+else()
+	file(GLOB CPU_SOURCES
+		"../SourceFiles/CPU10_SSE2Intrinsics.cpp"
+		"../SourceFiles/CPU12_SSE2Intrinsics.cpp")
+endif()
+set(SOURCES
+	${CORE_SOURCES}
+	${CPU_SOURCES}
+	${OPENCL_SOURCES})
 
 
 
