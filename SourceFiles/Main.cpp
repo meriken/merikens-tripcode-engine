@@ -1413,11 +1413,11 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 		if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU && numCPUSearchThreads <= 0) {
 			searchDevice = SEARCH_DEVICE_GPU;
 		} else 	if (displayDeviceInformation) {
-			int32_t results[4];
-			__cpuid(results, 1);
-
 			printf("CPU\n");
 			printf("===\n");
+#if defined(_MSC_VER) || defined(__CYGWIN__)
+			int32_t results[4];
+			__cpuid(results, 1);
 #ifdef USE_YASM
 			if (IsCPUBasedOnNehalemMicroarchitecture()) {
 				printf("  Processor Info:           0x%06x (Nehalem)\n", results[0]);
@@ -1426,6 +1426,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			}
 #else
 			printf("  Processor Info:           0x%06x\n", results[0]);
+#endif
 #endif
 			printf("  Number of Logical Cores:  %d\n", sysInfo.dwNumberOfProcessors);
 			printf("  Number of Search Threads: %d\n", numCPUSearchThreads);
@@ -2170,6 +2171,7 @@ void StartCPUSearchThreads()
 	}
 }
 
+#if defined(_WIN32) || defined(__CYGWIN__)
 int32_t GetParentProcessID()
 {
 	DWORD processID = GetCurrentProcessId();
@@ -2190,6 +2192,7 @@ int32_t GetParentProcessID()
 	CloseHandle(hSnapProcess);
 	return parentProcessID;
 }
+#endif
 
 void ListExpandedPatterns()
 {
@@ -2267,11 +2270,15 @@ int main(int argc, char **argv)
 		StartGPUSearchThreads();
 	if (searchDevice == SEARCH_DEVICE_CPU || searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
 		StartCPUSearchThreads();
+#if defined(_WIN32) || defined(__CYGWIN__)
 	HANDLE parentProcess = OpenProcess(SYNCHRONIZE, FALSE, GetParentProcessID());
+#endif
 	while (!UpdateTerminationState()) {
+#if defined(_WIN32) || defined(__CYGWIN__)
 		// Break the main loop if necessary.
 		if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
 			break;
+#endif
 
 		// Wait for the duration of STATUS_UPDATE_INTERVAL.
 		for (int32_t i = 0; i < NUM_CHECKS_PER_INTERVAL; ++i) {
@@ -2283,9 +2290,11 @@ int main(int argc, char **argv)
 			if (UpdateTerminationState())
 				break;
 
+#if defined(_WIN32) || defined(__CYGWIN__)
 			// Break the loop if the parent process has already quit.
 			if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
 				break;
+#endif
 
 			sleep_for_milliseconds((uint32_t)(STATUS_UPDATE_INTERVAL * 1000 / NUM_CHECKS_PER_INTERVAL));
 		}
@@ -2300,8 +2309,10 @@ int main(int argc, char **argv)
 				break;
 
 			// Break the loop if the parent process has already quit.
+#if defined(_WIN32) || defined(__CYGWIN__)
 			if (options.redirection && WaitForSingleObject(parentProcess, 0) != WAIT_TIMEOUT)
 				break;
+#endif
 
 			KeepSearchThreadsAlive();
 			sleep_for_milliseconds(PAUSE_INTERVAL);
@@ -2319,8 +2330,10 @@ int main(int argc, char **argv)
 			printf("\a");
 	}
 
+#if defined(_WIN32) || defined(__CYGWIN__)
 	// Close handles.
 	CloseHandle(parentProcess);
+#endif
 
 	// Terminate search threads.
 	SetTerminationState();
@@ -2330,6 +2343,7 @@ int main(int argc, char **argv)
 	do {
 		sleep_for_milliseconds(100);
 		allThreadsHaveExited = TRUE;
+#if defined(_WIN32) || defined(__CYGWIN__)
 		for (int32_t i = 0; i < numCUDADeviceSearchThreads; ++i) {
 			if (WaitForSingleObject(cuda_device_search_threads[i]->native_handle(), 0) != WAIT_OBJECT_0) {
 				allThreadsHaveExited = FALSE;
@@ -2348,6 +2362,7 @@ int main(int argc, char **argv)
 				break;
 			}
 		}
+#endif
 		currentTime = TIME_SINCE_EPOCH_IN_MILLISECONDS;
 		deltaTime = currentTime - startingTime;
 	} while (deltaTime < 10 * 1000 && !allThreadsHaveExited);	

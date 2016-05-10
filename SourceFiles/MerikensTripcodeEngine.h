@@ -48,7 +48,7 @@
 
 #define _CRT_RAND_S
 
-#if defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__)
+#if defined(_WIN32) || defined(__CYGWIN__)
 // For Win32
 #include <windows.h>
 #include <process.h>
@@ -56,7 +56,7 @@
 #include <ctype.h>
 #endif
 
-#if (defined(_WIN32) || defined(_WIN64)) && !defined(__CYGWIN__)
+#if defined(_WIN32) && !defined(__CYGWIN__)
 #include <conio.h>
 #endif
 
@@ -80,7 +80,11 @@
 // For MMX/SSE/SSE2/SSSE3 Intrinsics
 //#include <nmmintrin.h>
 //#include <smmintrin.h>
+#if defined(_MSC_VER) || defined(__CYGWIN__)
 #include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
 #include <emmintrin.h> 
 #include <xmmintrin.h>
 #include <mmintrin.h>     

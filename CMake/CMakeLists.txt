@@ -3,6 +3,28 @@ project(MerikensTripcodeEngine CXX)
 
 option(USE_YASM "USE_YASM" ON)
 
+
+
+##########
+# OpenCL #
+##########
+
+option(ENABLE_OPENCL "ENABLE_OPENCL" ON)
+if (${ENABLE_OPENCL})
+    file(GLOB OPENCL_SOURCES
+        "../SourceFiles/OpenCL*.cpp")
+    set(OPENCL_LINK_LIBRARIES
+        OpenCL)
+    set(OPENCL_INCLUDE_DIR
+        "/cygdrive/c/Program\ Files\ (x86)/AMD\ APP\ SDK/3.0/include")
+    set(OPENCL_LINK_DIR
+        "/cygdrive/c/Program\ Files\ (x86)/AMD\ APP\ SDK/3.0/lib/x86_64")
+    set(MTE_COMPILE_FLAGS ${MTE_COMPILE_FLAGS}
+        -DENABLE_OPENCL)
+endif()
+
+
+
 set(CORE_SOURCES
 	../SourceFiles/Main.cpp
 	../SourceFiles/Patterns.cpp
@@ -21,8 +43,6 @@ else()
 		"../SourceFiles/CPU10_SSE2Intrinsics.cpp"
 		"../SourceFiles/CPU12_SSE2Intrinsics.cpp")
 endif()
-file(GLOB OPENCL_SOURCES
-	"../SourceFiles/OpenCL*.cpp")
 set(SOURCES
 	${CORE_SOURCES}
 	${CPU_SOURCES}
@@ -60,12 +80,15 @@ assemble_yasm_files(YASM_FILES
 	CPU12_x64_SSE2_Nehalem.asm)
 endif()
 
-LINK_LIBRARIES(OpenCL boost_system)
-include_directories("../SourceFiles" "../BoostPackages/include" "/cygdrive/c/Program\ Files\ (x86)/AMD\ APP\ SDK/3.0/include")
-link_directories("../BoostPackages/lib/Cygwin64" "/cygdrive/c/Program\ Files\ (x86)/AMD\ APP\ SDK/3.0/lib/x86_64")
+LINK_LIBRARIES(${OPENCL_LINK_LIBRARIES} boost_system)
+include_directories(
+	"../SourceFiles"
+	"../BoostPackages/include"
+	${OPENCL_INCLUDE_DIR})
+link_directories("../BoostPackages/lib/Cygwin64" ${OPENCL_LINK_DIR})
 
 SET(GCC_COVERAGE_COMPILE_FLAGS "-std=c++11 -fno-access-control -Wall -Wno-deprecated-declarations -O3")
-SET(MTE_COMPILE_FLAGS "${MTE_COMPILE_FLAGS} -DENGLISH_VERSION -DENABLE_OPENCL")
+SET(MTE_COMPILE_FLAGS "${MTE_COMPILE_FLAGS} -DENGLISH_VERSION")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} ${MTE_COMPILE_FLAGS}")
 #SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} --enable-auto-import" )
 
