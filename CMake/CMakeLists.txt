@@ -82,10 +82,14 @@ endif()
 
 LINK_LIBRARIES(${OPENCL_LINK_LIBRARIES} boost_system)
 include_directories(
-	"../SourceFiles"
-	"../BoostPackages/include"
-	${OPENCL_INCLUDE_DIR})
-link_directories("../BoostPackages/lib/Cygwin64" ${OPENCL_LINK_DIR})
+    "../SourceFiles"
+    "../BoostPackages/include"
+    "../BoostPackages/boost_1_61_0_b1/"
+    ${OPENCL_INCLUDE_DIR})
+link_directories(
+    "../BoostPackages/lib/Cygwin64"
+    "../BoostPackages/boost_1_61_0_b1/stage/lib/"
+    ${OPENCL_LINK_DIR})
 
 SET(GCC_COVERAGE_COMPILE_FLAGS "-std=c++11 -fno-access-control -Wall -Wno-deprecated-declarations -O3")
 SET(MTE_COMPILE_FLAGS "${MTE_COMPILE_FLAGS} -DENGLISH_VERSION")
