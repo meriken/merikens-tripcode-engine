@@ -1419,7 +1419,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 #ifdef DEBUG_ONE_CPU_SEARCH_THREAD
 		numCPUSearchThreads = 1;
 #else
-		numCPUSearchThreads = std::thread::hardware_concurrency();;
+		numCPUSearchThreads = std::thread::hardware_concurrency();
 		if (options.numCPUSearchThreads == NUM_CPU_SEARCH_THREADS_NIL) { 
 			if (searchDevice == SEARCH_DEVICE_GPU_AND_CPU)
 				numCPUSearchThreads = (numCPUSearchThreads > numCUDADeviceSearchThreads + numOpenCLDeviceSearchThreads)
@@ -1447,7 +1447,7 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 			printf("  Processor Info:           0x%06x\n", results[0]);
 #endif
 #endif
-			printf("  Number of Logical Cores:  %d\n", sysInfo.dwNumberOfProcessors);
+			printf("  Number of Logical Cores:  %d\n", std::thread::hardware_concurrency());
 			printf("  Number of Search Threads: %d\n", numCPUSearchThreads);
 			printf("\n");
 		}
