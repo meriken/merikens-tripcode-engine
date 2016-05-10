@@ -206,6 +206,8 @@ static unsigned char finalPermutationTable[] = {
 // INITIALIZATION                                                            //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef USE_YASM
+
 static void DES_RewriteCrypt25(DES_Context *context)
 {
 	// Rewrite the assembly function.
@@ -283,6 +285,7 @@ static void DES_RewriteCrypt25(DES_Context *context)
 		p += 4;
 	}
 }
+
 static void DES_RewriteCrypt25_x64_AVX2(DES_Context *context)
 {
 	// Rewrite the assembly function.
@@ -365,6 +368,8 @@ static void DES_RewriteCrypt25_x64_AVX2(DES_Context *context)
 	}
 }
 
+#endif
+
 static void DES_SetSalt(DES_Context *context, int32_t salt)
 {
 	int32_t mask;
@@ -381,7 +386,7 @@ static void DES_SetSalt(DES_Context *context, int32_t salt)
 		context->expansionFunction[dst     ] = expansionTable[src];
 		context->expansionFunction[dst + 48] = expansionTable[src] + 32;
 
-#ifdef USE_ASSEMBLY_FUNCTION
+#ifdef USE_YASM
 		// Multiply the values for the assembly version of DES_Crypt25().
 		context->expansionFunction[dst     ] *= 2;
 		context->expansionFunction[dst + 48] *= 2;
@@ -390,7 +395,7 @@ static void DES_SetSalt(DES_Context *context, int32_t salt)
 		mask <<= 1;
 	}
 
-#ifdef USE_ASSEMBLY_FUNCTION
+#ifdef USE_YASM
 	if (context->useAVX2) {
 		DES_RewriteCrypt25_x64_AVX2(context);
 	} else {
@@ -406,7 +411,7 @@ static void DES_SetSalt(DES_Context *context, int32_t salt)
 // CRYPT                                                                     //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef USE_ASSEMBLY_FUNCTION
+#ifndef USE_YASM
 
 static void DES_Crypt25_SSE2Intrinsics(DES_Context *context)
 {
@@ -417,13 +422,13 @@ static void DES_Crypt25_SSE2Intrinsics(DES_Context *context)
 	iterations = 25;
 
 start:
-	CPU_DES_SBoxes1_SSE2Intrinsics(context->expansionFunction, context->expandedKeySchedule, context->dataBlocks, keyScheduleIndexBase);
+	CPU_DES_SBoxes1_SSE2Intrinsics(context->expansionFunction, reinterpret_cast<__m128i *>(context->expandedKeySchedule), reinterpret_cast<__m128i *>(context->dataBlocks), keyScheduleIndexBase);
 
 	if (roundsAndSwapped == 0x100)
 		goto next;
 
 swap:
-	CPU_DES_SBoxes2_SSE2Intrinsics(context->expansionFunction, context->expandedKeySchedule, context->dataBlocks, keyScheduleIndexBase);
+	CPU_DES_SBoxes2_SSE2Intrinsics(context->expansionFunction, reinterpret_cast<__m128i *>(context->expandedKeySchedule), reinterpret_cast<__m128i *>(context->dataBlocks), keyScheduleIndexBase);
 
 	keyScheduleIndexBase += 96;
 
@@ -456,7 +461,7 @@ static void DES_Crypt(DES_Context *context)
 			context->dataBlocks[i].VECTOR_ELEMENTS[j] = 0;
 	}
 
-#ifdef USE_ASSEMBLY_FUNCTION
+#ifdef USE_YASM
  	(*(context->crypt25))(context);
 #else
 	DES_Crypt25_SSE2Intrinsics(context);
@@ -1002,6 +1007,7 @@ skip_final_permutation:
 	return numGeneratedTripcodes;
 }
 
+#ifdef USE_YASM
 static char *GetCrypt25Address(DES_Context *context)
 {
 #ifdef _M_X64
@@ -1016,6 +1022,7 @@ static char *GetCrypt25Address(DES_Context *context)
 				                                             DES_Crypt25_x86_SSE2          );
 #endif
 }
+#endif
 
 void CPU_DES_MAIN_LOOP()
 {
@@ -1026,11 +1033,11 @@ void CPU_DES_MAIN_LOOP()
 		context.keyCharTable_SecondByte[i] = keyCharTable_SecondByte[i];
 	}
 	
+#ifdef USE_YASM
 	context.useAVX2 = options.isAVX2Enabled && IsAVX2Supported();
 	context.useAVX  = !context.useAVX2 && options.isAVXEnabled && IsAVXSupported();
 	// printf("context.useAVX = %d\n", context.useAVX);
 
-#ifdef USE_ASSEMBLY_FUNCTION
 	// Prepare a copy of DES_Crypt25_*() for thread-safe rewrites.
 	char *base = GetCrypt25Address(&context);
 	char *p;

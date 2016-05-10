@@ -1,4 +1,4 @@
-// Meriken's Tripcode Engine
+﻿// Meriken's Tripcode Engine
 // Copyright (c) 2011-2016 /Meriken/. <meriken.ygch.net@gmail.com>
 //
 // The initial versions of this software were based on:
@@ -41,44 +41,49 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// NATIVE CODES                                                              //
+// BITSLICE DES                                                              //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef DEBUG_TEST_NEW_CODE
+#define VECTOR_SIZE 16
+#if defined (_MSC_VER)
+#define VECTOR_ALIGNMENT __declspec(align(16))
+#else
+#define VECTOR_ALIGNMENT __attribute__ ((aligned (16))) 
+#endif
+typedef union VECTOR_ALIGNMENT __DES_Vector {
+	__m128i m128i;
+	__int8 m128i_i8[16];
+	__int16 m128i_i16[8];
+	__int32 m128i_i32[4];
+	__int64 m128i_i64[2];
+	unsigned __int8 m128i_u8[16];
+	unsigned __int16 m128i_u16[8];
+	unsigned __int32 m128i_u32[4];
+	unsigned __int64 m128i_u64[2];
+} DES_Vector;
+#define VECTOR_ELEMENTS m128i_i32
 
-extern "C" void TestASM();
+#define CPU_DES_MAIN_LOOP CPU_DES_MainLoop
 
-void TestNewCode()
+#include "CPU10.h"
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// THREAD                                                                    //
+///////////////////////////////////////////////////////////////////////////////
+
+extern void CPU_DES_MainLoop_AVX2();
+
+void Thread_SearchForDESTripcodesOnCPU()
 {
 #ifdef USE_YASM
-	unsigned char *p = (unsigned char *)TestASM;
-        int32_t i;
-        void (*code)();
-        int32_t functionSize;
-
-        for (; strcmp((char *)p, "THIS_IS_THE_END_OF_THE_FUNCTION") != 0; ++p)
-                ;
-        functionSize = p - (unsigned char *)TestASM;
-        code = (void (*)())VirtualAllocEx(GetCurrentProcess(), 0, functionSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE );
-		memcpy((void *)code, (void *)TestASM, functionSize);
-        printf("functionSize = %d\n", functionSize);
-
-        (*code)();
-
-        printf("\n");
-                        
-        for (i = 0, p = (unsigned char *)TestASM; i < functionSize; ++i, ++p) {
-                if (i % 16 == 0)
-                        printf("%02x", i);
-                printf(" %02x", *p);
-                if (i % 16 == 16 - 1)
-                        printf("\n");
-        }
+	if (options.isAVX2Enabled && IsAVX2Supported()) {
+		CPU_DES_MainLoop_AVX2();
+	} else {
+		CPU_DES_MainLoop();
+	}
+#else
+	CPU_DES_MainLoop();
 #endif
-
-		printf("\nHit return key to exit.\n");
-        getchar();
-        exit(0);
 }
-
-#endif // DEBUG_TEST_NEW_CODE

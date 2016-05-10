@@ -53,6 +53,13 @@
 // SHA-1 HASH GENERATION WITH CPU                                            //
 ///////////////////////////////////////////////////////////////////////////////
 
+#define VECTOR_SIZE 16
+#if defined (_MSC_VER)
+#define VECTOR_ALIGNMENT __declspec(align(16))
+#else
+#define VECTOR_ALIGNMENT __attribute__ ((aligned (16))) 
+#endif
+
 // Circular left rotation of 32-bit value 'val' left by 'bits' bits
 // (assumes that 'bits' is always within range from 0 to 32)
 // #define ROTL( bits, val ) \
@@ -70,17 +77,17 @@
 #define f4  f2
 
 // Initial hash values (see p. 14 of FIPS 180-3)
-__declspec(align(16)) __m128i H0 = _mm_set1_epi32(0x67452301);
-__declspec(align(16)) __m128i H1 = _mm_set1_epi32(0xefcdab89);
-__declspec(align(16)) __m128i H2 = _mm_set1_epi32(0x98badcfe);
-__declspec(align(16)) __m128i H3 = _mm_set1_epi32(0x10325476);
-__declspec(align(16)) __m128i H4 = _mm_set1_epi32(0xc3d2e1f0);
+VECTOR_ALIGNMENT __m128i H0 = _mm_set1_epi32(0x67452301);
+VECTOR_ALIGNMENT __m128i H1 = _mm_set1_epi32(0xefcdab89);
+VECTOR_ALIGNMENT __m128i H2 = _mm_set1_epi32(0x98badcfe);
+VECTOR_ALIGNMENT __m128i H3 = _mm_set1_epi32(0x10325476);
+VECTOR_ALIGNMENT __m128i H4 = _mm_set1_epi32(0xc3d2e1f0);
 
 // Constants required for hash calculation (see p. 11 of FIPS 180-3)
-__declspec(align(16)) __m128i K0 = _mm_set1_epi32(0x5a827999);
-__declspec(align(16)) __m128i K1 = _mm_set1_epi32(0x6ed9eba1);
-__declspec(align(16)) __m128i K2 = _mm_set1_epi32(0x8f1bbcdc);
-__declspec(align(16)) __m128i K3 = _mm_set1_epi32(0xca62c1d6);
+VECTOR_ALIGNMENT __m128i K0 = _mm_set1_epi32(0x5a827999);
+VECTOR_ALIGNMENT __m128i K1 = _mm_set1_epi32(0x6ed9eba1);
+VECTOR_ALIGNMENT __m128i K2 = _mm_set1_epi32(0x8f1bbcdc);
+VECTOR_ALIGNMENT __m128i K3 = _mm_set1_epi32(0xca62c1d6);
 
 
 
@@ -320,7 +327,7 @@ static uint32_t SearchForTripcodesWithMaximumOptimization()
 		break;
 	}
 
-	__declspec(align(16)) __m128i PW[80];
+	VECTOR_ALIGNMENT __m128i PW[80];
 	PW[0]  = _mm_set1_epi32(0);
 	PW[1]  = _mm_set1_epi32((key[4] << 24) | (key[5] << 16) | (key[ 6] << 8) | key[ 7]);
 	PW[2]  = _mm_set1_epi32((key[8] << 24) | (key[9] << 16) | (key[10] << 8) | key[11]);
@@ -350,45 +357,51 @@ static uint32_t SearchForTripcodesWithMaximumOptimization()
 			for (int32_t indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
 				key[3] = keyCharTable_SecondByteAndOneByte[indexKey3];
 				
-				__declspec(align(16)) __m128i A = H0;
-				__declspec(align(16)) __m128i B = H1;
-				__declspec(align(16)) __m128i C = H2;
-				__declspec(align(16)) __m128i D = H3;
-				__declspec(align(16)) __m128i E = H4;
-				__declspec(align(16)) __m128i tmp;
-				__declspec(align(16)) __m128i W0;
-	
-				W0.m128i_u32[0] = (((key[0] & 0xfc) | 0x00) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
-				W0.m128i_u32[1] = (((key[0] & 0xfc) | 0x01) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
-				W0.m128i_u32[2] = (((key[0] & 0xfc) | 0x02) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
-				W0.m128i_u32[3] = (((key[0] & 0xfc) | 0x03) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+				VECTOR_ALIGNMENT __m128i A = H0;
+				VECTOR_ALIGNMENT __m128i B = H1;
+				VECTOR_ALIGNMENT __m128i C = H2;
+				VECTOR_ALIGNMENT __m128i D = H3;
+				VECTOR_ALIGNMENT __m128i E = H4;
+				VECTOR_ALIGNMENT __m128i tmp;
+				VECTOR_ALIGNMENT __m128i W0;
 
-				__declspec(align(16)) __m128i W0_1 = ROTL(1,  W0);
-				__declspec(align(16)) __m128i W0_2 = ROTL(2,  W0);
-				__declspec(align(16)) __m128i W0_3 = ROTL(3,  W0);
-				__declspec(align(16)) __m128i W0_4 = ROTL(4,  W0);
-				__declspec(align(16)) __m128i W0_5 = ROTL(5,  W0);
-				__declspec(align(16)) __m128i W0_6 = ROTL(6,  W0);
-				__declspec(align(16)) __m128i W0_7 = ROTL(7,  W0);
-				__declspec(align(16)) __m128i W0_8 = ROTL(8,  W0);
-				__declspec(align(16)) __m128i W0_9 = ROTL(9,  W0);
-				__declspec(align(16)) __m128i W010 = ROTL(10, W0);
-				__declspec(align(16)) __m128i W011 = ROTL(11, W0);
-				__declspec(align(16)) __m128i W012 = ROTL(12, W0);
-				__declspec(align(16)) __m128i W013 = ROTL(13, W0);
-				__declspec(align(16)) __m128i W014 = ROTL(14, W0);
-				__declspec(align(16)) __m128i W015 = ROTL(15, W0);
-				__declspec(align(16)) __m128i W016 = ROTL(16, W0);
-				__declspec(align(16)) __m128i W017 = ROTL(17, W0);
-				__declspec(align(16)) __m128i W018 = ROTL(18, W0);
-				__declspec(align(16)) __m128i W019 = ROTL(19, W0);
-				__declspec(align(16)) __m128i W020 = ROTL(20, W0);
-				__declspec(align(16)) __m128i W021 = ROTL(21, W0);
-				__declspec(align(16)) __m128i W022 = ROTL(22, W0);
-				__declspec(align(16)) __m128i W0_6___W0_4        = XOR(W0_6,        W0_4);
-				__declspec(align(16)) __m128i W0_6___W0_4___W0_7 = XOR(W0_6___W0_4, W0_7);
-				__declspec(align(16)) __m128i W0_8___W0_4        = XOR(W0_8,        W0_4);
-				__declspec(align(16)) __m128i W0_8___W012        = XOR(W0_8,        W012);
+				union {
+					__m128i v;
+					int a[4];
+				} converter;
+
+				converter.a[0] = (((key[0] & 0xfc) | 0x00) << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+				converter.a[1] = (((key[0] & 0xfc) | 0x01) << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+				converter.a[2] = (((key[0] & 0xfc) | 0x02) << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+				converter.a[3] = (((key[0] & 0xfc) | 0x03) << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+				W0 = converter.v;
+
+				VECTOR_ALIGNMENT __m128i W0_1 = ROTL(1, W0);
+				VECTOR_ALIGNMENT __m128i W0_2 = ROTL(2,  W0);
+				VECTOR_ALIGNMENT __m128i W0_3 = ROTL(3,  W0);
+				VECTOR_ALIGNMENT __m128i W0_4 = ROTL(4,  W0);
+				VECTOR_ALIGNMENT __m128i W0_5 = ROTL(5,  W0);
+				VECTOR_ALIGNMENT __m128i W0_6 = ROTL(6,  W0);
+				VECTOR_ALIGNMENT __m128i W0_7 = ROTL(7,  W0);
+				VECTOR_ALIGNMENT __m128i W0_8 = ROTL(8,  W0);
+				VECTOR_ALIGNMENT __m128i W0_9 = ROTL(9,  W0);
+				VECTOR_ALIGNMENT __m128i W010 = ROTL(10, W0);
+				VECTOR_ALIGNMENT __m128i W011 = ROTL(11, W0);
+				VECTOR_ALIGNMENT __m128i W012 = ROTL(12, W0);
+				VECTOR_ALIGNMENT __m128i W013 = ROTL(13, W0);
+				VECTOR_ALIGNMENT __m128i W014 = ROTL(14, W0);
+				VECTOR_ALIGNMENT __m128i W015 = ROTL(15, W0);
+				VECTOR_ALIGNMENT __m128i W016 = ROTL(16, W0);
+				VECTOR_ALIGNMENT __m128i W017 = ROTL(17, W0);
+				VECTOR_ALIGNMENT __m128i W018 = ROTL(18, W0);
+				VECTOR_ALIGNMENT __m128i W019 = ROTL(19, W0);
+				VECTOR_ALIGNMENT __m128i W020 = ROTL(20, W0);
+				VECTOR_ALIGNMENT __m128i W021 = ROTL(21, W0);
+				VECTOR_ALIGNMENT __m128i W022 = ROTL(22, W0);
+				VECTOR_ALIGNMENT __m128i W0_6___W0_4        = XOR(W0_6,        W0_4);
+				VECTOR_ALIGNMENT __m128i W0_6___W0_4___W0_7 = XOR(W0_6___W0_4, W0_7);
+				VECTOR_ALIGNMENT __m128i W0_8___W0_4        = XOR(W0_8,        W0_4);
+				VECTOR_ALIGNMENT __m128i W0_8___W012        = XOR(W0_8,        W012);
 
 				ROUND_00_TO_19(0,  W0);
 				ROUND_00_TO_19(1,  PW[1]);
@@ -475,21 +488,21 @@ static uint32_t SearchForTripcodesWithMaximumOptimization()
 				ROUND_60_TO_79(78, XOR(XOR(XOR(XOR(XOR(PW[78], W0_7), W0_8), W015), W018), W020));
 				ROUND_60_TO_79(79, XOR(XOR(PW[79], W0_8), W022));
 	
-				rawTripcodeArray[0][0] = _mm_add_epi32(A, H0).m128i_u32[0];
-				rawTripcodeArray[0][1] = _mm_add_epi32(B, H1).m128i_u32[0];
-				rawTripcodeArray[0][2] = _mm_add_epi32(C, H2).m128i_u32[0];
+				converter.v = _mm_add_epi32(A, H0); rawTripcodeArray[0][0] = converter.a[0];
+				converter.v = _mm_add_epi32(B, H1); rawTripcodeArray[0][1] = converter.a[0];
+				converter.v = _mm_add_epi32(C, H2); rawTripcodeArray[0][2] = converter.a[0];
 
-				rawTripcodeArray[1][0] = _mm_add_epi32(A, H0).m128i_u32[1];
-				rawTripcodeArray[1][1] = _mm_add_epi32(B, H1).m128i_u32[1];
-				rawTripcodeArray[1][2] = _mm_add_epi32(C, H2).m128i_u32[1];
+				converter.v = _mm_add_epi32(A, H0); rawTripcodeArray[1][0] = converter.a[1];
+				converter.v = _mm_add_epi32(B, H1); rawTripcodeArray[1][1] = converter.a[1];
+				converter.v = _mm_add_epi32(C, H2); rawTripcodeArray[1][2] = converter.a[1];
 
-				rawTripcodeArray[2][0] = _mm_add_epi32(A, H0).m128i_u32[2];
-				rawTripcodeArray[2][1] = _mm_add_epi32(B, H1).m128i_u32[2];
-				rawTripcodeArray[2][2] = _mm_add_epi32(C, H2).m128i_u32[2];
+				converter.v = _mm_add_epi32(A, H0); rawTripcodeArray[2][0] = converter.a[2];
+				converter.v = _mm_add_epi32(B, H1); rawTripcodeArray[2][1] = converter.a[2];
+				converter.v = _mm_add_epi32(C, H2); rawTripcodeArray[2][2] = converter.a[2];
 
-				rawTripcodeArray[3][0] = _mm_add_epi32(A, H0).m128i_u32[3];
-				rawTripcodeArray[3][1] = _mm_add_epi32(B, H1).m128i_u32[3];
-				rawTripcodeArray[3][2] = _mm_add_epi32(C, H2).m128i_u32[3];
+				converter.v = _mm_add_epi32(A, H0); rawTripcodeArray[3][0] = converter.a[3];
+				converter.v = _mm_add_epi32(B, H1); rawTripcodeArray[3][1] = converter.a[3];
+				converter.v = _mm_add_epi32(C, H2); rawTripcodeArray[3][2] = converter.a[3];
 
 				numGeneratedTripcodes += 4;
 			
@@ -500,6 +513,8 @@ static uint32_t SearchForTripcodesWithMaximumOptimization()
 
 	return numGeneratedTripcodes;
 }
+
+#if 0
 
 #undef  ROUND_00_TO_15
 #define ROUND_00_TO_15(t)                                                                                  \
@@ -575,7 +590,7 @@ static uint32_t SearchForTripcodesWithOptimization()
 		break;
 	}
 
-	__declspec(align(16)) __m128i PW[80];
+	VECTOR_ALIGNMENT __m128i PW[80];
 	PW[0]  = _mm_set1_epi32(0);
 	PW[1]  = _mm_set1_epi32((key[4] << 24) | (key[5] << 16) | (key[ 6] << 8) | key[ 7]);
 	PW[2]  = _mm_set1_epi32((key[8] << 24) | (key[9] << 16) | (key[10] << 8) | key[11]);
@@ -605,18 +620,24 @@ static uint32_t SearchForTripcodesWithOptimization()
 			for (int32_t indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
 				key[3] = keyCharTable_SecondByteAndOneByte[indexKey3];
 				
-				__declspec(align(16)) __m128i A = H0;
-				__declspec(align(16)) __m128i B = H1;
-				__declspec(align(16)) __m128i C = H2;
-				__declspec(align(16)) __m128i D = H3;
-				__declspec(align(16)) __m128i E = H4;
-				__declspec(align(16)) __m128i tmp;
-				__declspec(align(16)) __m128i W[80];
+				VECTOR_ALIGNMENT __m128i A = H0;
+				VECTOR_ALIGNMENT __m128i B = H1;
+				VECTOR_ALIGNMENT __m128i C = H2;
+				VECTOR_ALIGNMENT __m128i D = H3;
+				VECTOR_ALIGNMENT __m128i E = H4;
+				VECTOR_ALIGNMENT __m128i tmp;
+				VECTOR_ALIGNMENT __m128i W[80];
 	
-				W[0].m128i_u32[0] = (((key[0] & 0xfc) | 0x00) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
-				W[0].m128i_u32[1] = (((key[0] & 0xfc) | 0x01) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
-				W[0].m128i_u32[2] = (((key[0] & 0xfc) | 0x02) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
-				W[0].m128i_u32[3] = (((key[0] & 0xfc) | 0x03) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
+				union {
+					__m128i v;
+					int a[4];
+				} converter;
+
+				converter.a[0] = (((key[0] & 0xfc) | 0x00) << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+				converter.a[1] = (((key[0] & 0xfc) | 0x01) << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+				converter.a[2] = (((key[0] & 0xfc) | 0x02) << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+				converter.a[3] = (((key[0] & 0xfc) | 0x03) << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+				W[0] = converter.v;
 				W[1]  = PW[1];
 				W[2]  = PW[2];
 				W[3]  = PW[3];
@@ -633,32 +654,32 @@ static uint32_t SearchForTripcodesWithOptimization()
 				W[14] = _mm_set1_epi32(0);
 				W[15] = PW[15];
 
-				__declspec(align(16)) __m128i W0_1 = ROTL(1,  W[0]);
-				__declspec(align(16)) __m128i W0_2 = ROTL(2,  W[0]);
-				__declspec(align(16)) __m128i W0_3 = ROTL(3,  W[0]);
-				__declspec(align(16)) __m128i W0_4 = ROTL(4,  W[0]);
-				__declspec(align(16)) __m128i W0_5 = ROTL(5,  W[0]);
-				__declspec(align(16)) __m128i W0_6 = ROTL(6,  W[0]);
-				__declspec(align(16)) __m128i W0_7 = ROTL(7,  W[0]);
-				__declspec(align(16)) __m128i W0_8 = ROTL(8,  W[0]);
-				__declspec(align(16)) __m128i W0_9 = ROTL(9,  W[0]);
-				__declspec(align(16)) __m128i W010 = ROTL(10, W[0]);
-				__declspec(align(16)) __m128i W011 = ROTL(11, W[0]);
-				__declspec(align(16)) __m128i W012 = ROTL(12, W[0]);
-				__declspec(align(16)) __m128i W013 = ROTL(13, W[0]);
-				__declspec(align(16)) __m128i W014 = ROTL(14, W[0]);
-				__declspec(align(16)) __m128i W015 = ROTL(15, W[0]);
-				__declspec(align(16)) __m128i W016 = ROTL(16, W[0]);
-				__declspec(align(16)) __m128i W017 = ROTL(17, W[0]);
-				__declspec(align(16)) __m128i W018 = ROTL(18, W[0]);
-				__declspec(align(16)) __m128i W019 = ROTL(19, W[0]);
-				__declspec(align(16)) __m128i W020 = ROTL(20, W[0]);
-				__declspec(align(16)) __m128i W021 = ROTL(21, W[0]);
-				__declspec(align(16)) __m128i W022 = ROTL(22, W[0]);
-				__declspec(align(16)) __m128i W0_6___W0_4        = _mm_xor_si128(W0_6,        W0_4);
-				__declspec(align(16)) __m128i W0_6___W0_4___W0_7 = _mm_xor_si128(W0_6___W0_4, W0_7);
-				__declspec(align(16)) __m128i W0_8___W0_4        = _mm_xor_si128(W0_8,        W0_4);
-				__declspec(align(16)) __m128i W0_8___W012        = _mm_xor_si128(W0_8,        W012);
+				VECTOR_ALIGNMENT __m128i W0_1 = ROTL(1,  W[0]);
+				VECTOR_ALIGNMENT __m128i W0_2 = ROTL(2,  W[0]);
+				VECTOR_ALIGNMENT __m128i W0_3 = ROTL(3,  W[0]);
+				VECTOR_ALIGNMENT __m128i W0_4 = ROTL(4,  W[0]);
+				VECTOR_ALIGNMENT __m128i W0_5 = ROTL(5,  W[0]);
+				VECTOR_ALIGNMENT __m128i W0_6 = ROTL(6,  W[0]);
+				VECTOR_ALIGNMENT __m128i W0_7 = ROTL(7,  W[0]);
+				VECTOR_ALIGNMENT __m128i W0_8 = ROTL(8,  W[0]);
+				VECTOR_ALIGNMENT __m128i W0_9 = ROTL(9,  W[0]);
+				VECTOR_ALIGNMENT __m128i W010 = ROTL(10, W[0]);
+				VECTOR_ALIGNMENT __m128i W011 = ROTL(11, W[0]);
+				VECTOR_ALIGNMENT __m128i W012 = ROTL(12, W[0]);
+				VECTOR_ALIGNMENT __m128i W013 = ROTL(13, W[0]);
+				VECTOR_ALIGNMENT __m128i W014 = ROTL(14, W[0]);
+				VECTOR_ALIGNMENT __m128i W015 = ROTL(15, W[0]);
+				VECTOR_ALIGNMENT __m128i W016 = ROTL(16, W[0]);
+				VECTOR_ALIGNMENT __m128i W017 = ROTL(17, W[0]);
+				VECTOR_ALIGNMENT __m128i W018 = ROTL(18, W[0]);
+				VECTOR_ALIGNMENT __m128i W019 = ROTL(19, W[0]);
+				VECTOR_ALIGNMENT __m128i W020 = ROTL(20, W[0]);
+				VECTOR_ALIGNMENT __m128i W021 = ROTL(21, W[0]);
+				VECTOR_ALIGNMENT __m128i W022 = ROTL(22, W[0]);
+				VECTOR_ALIGNMENT __m128i W0_6___W0_4        = _mm_xor_si128(W0_6,        W0_4);
+				VECTOR_ALIGNMENT __m128i W0_6___W0_4___W0_7 = _mm_xor_si128(W0_6___W0_4, W0_7);
+				VECTOR_ALIGNMENT __m128i W0_8___W0_4        = _mm_xor_si128(W0_8,        W0_4);
+				VECTOR_ALIGNMENT __m128i W0_8___W012        = _mm_xor_si128(W0_8,        W012);
 
 				W[16] = _mm_xor_si128(PW[16], W0_1);
 				W[17] = PW[17];
@@ -746,22 +767,22 @@ static uint32_t SearchForTripcodesWithOptimization()
 				ROUND_60_TO_79(65); ROUND_60_TO_79(66); ROUND_60_TO_79(67); ROUND_60_TO_79(68); ROUND_60_TO_79(69);
 				ROUND_60_TO_79(70); ROUND_60_TO_79(71); ROUND_60_TO_79(72); ROUND_60_TO_79(73); ROUND_60_TO_79(74);
 				ROUND_60_TO_79(75); ROUND_60_TO_79(76); ROUND_60_TO_79(77); ROUND_60_TO_79(78); ROUND_60_TO_79(79);
-	
-				rawTripcodeArray[0][0] = _mm_add_epi32(A, H0).m128i_u32[0];
-				rawTripcodeArray[0][1] = _mm_add_epi32(B, H1).m128i_u32[0];
-				rawTripcodeArray[0][2] = _mm_add_epi32(C, H2).m128i_u32[0];
 
-				rawTripcodeArray[1][0] = _mm_add_epi32(A, H0).m128i_u32[1];
-				rawTripcodeArray[1][1] = _mm_add_epi32(B, H1).m128i_u32[1];
-				rawTripcodeArray[1][2] = _mm_add_epi32(C, H2).m128i_u32[1];
+				converter.v = _mm_add_epi32(A, H0); rawTripcodeArray[0][0] = converter.a[0];
+				converter.v = _mm_add_epi32(B, H1); rawTripcodeArray[0][1] = converter.a[0];
+				converter.v = _mm_add_epi32(C, H2); rawTripcodeArray[0][2] = converter.a[0];
 
-				rawTripcodeArray[2][0] = _mm_add_epi32(A, H0).m128i_u32[2];
-				rawTripcodeArray[2][1] = _mm_add_epi32(B, H1).m128i_u32[2];
-				rawTripcodeArray[2][2] = _mm_add_epi32(C, H2).m128i_u32[2];
+				converter.v = _mm_add_epi32(A, H0); rawTripcodeArray[1][0] = converter.a[1];
+				converter.v = _mm_add_epi32(B, H1); rawTripcodeArray[1][1] = converter.a[1];
+				converter.v = _mm_add_epi32(C, H2); rawTripcodeArray[1][2] = converter.a[1];
 
-				rawTripcodeArray[3][0] = _mm_add_epi32(A, H0).m128i_u32[3];
-				rawTripcodeArray[3][1] = _mm_add_epi32(B, H1).m128i_u32[3];
-				rawTripcodeArray[3][2] = _mm_add_epi32(C, H2).m128i_u32[3];
+				converter.v = _mm_add_epi32(A, H0); rawTripcodeArray[2][0] = converter.a[2];
+				converter.v = _mm_add_epi32(B, H1); rawTripcodeArray[2][1] = converter.a[2];
+				converter.v = _mm_add_epi32(C, H2); rawTripcodeArray[2][2] = converter.a[2];
+
+				converter.v = _mm_add_epi32(A, H0); rawTripcodeArray[3][0] = converter.a[3];
+				converter.v = _mm_add_epi32(B, H1); rawTripcodeArray[3][1] = converter.a[3];
+				converter.v = _mm_add_epi32(C, H2); rawTripcodeArray[3][2] = converter.a[3];
 
 				numGeneratedTripcodes += 4;
 			
@@ -850,13 +871,13 @@ static uint32_t SearchForTripcodesWithoutOptimization()
 			for (int32_t indexKey3 = 0; indexKey3 <= CPU_SHA1_MAX_INDEX_FOR_KEYS; ++indexKey3) {
 				key[3] = keyCharTable_SecondByteAndOneByte[indexKey3];
 				
-				__declspec(align(16)) __m128i A = H0;
-				__declspec(align(16)) __m128i B = H1;
-				__declspec(align(16)) __m128i C = H2;
-				__declspec(align(16)) __m128i D = H3;
-				__declspec(align(16)) __m128i E = H4;
-				__declspec(align(16)) __m128i tmp;
-				__declspec(align(16)) __m128i W[80];
+				VECTOR_ALIGNMENT __m128i A = H0;
+				VECTOR_ALIGNMENT __m128i B = H1;
+				VECTOR_ALIGNMENT __m128i C = H2;
+				VECTOR_ALIGNMENT __m128i D = H3;
+				VECTOR_ALIGNMENT __m128i E = H4;
+				VECTOR_ALIGNMENT __m128i tmp;
+				VECTOR_ALIGNMENT __m128i W[80];
 	
 				W[0].m128i_u32[0] = (((key[0] & 0xfc) | 0x00) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
 				W[0].m128i_u32[1] = (((key[0] & 0xfc) | 0x01) << 24) | (key[1] << 16) | (key[ 2] << 8) | key[ 3];
@@ -926,17 +947,16 @@ static uint32_t SearchForTripcodesWithoutOptimization()
 	return numGeneratedTripcodes;
 }
 
-void Thread_SearchForSHA1TripcodesOnCPU(LPVOID threadParams)
+#endif
+
+void Thread_SearchForSHA1TripcodesOnCPU()
 {
 	while (!GetTerminationState()) {
 		while (GetPauseState() && !GetTerminationState())
 			sleep_for_milliseconds(PAUSE_INTERVAL);
 
 		uint32_t numGeneratedTripcodes;
-		numGeneratedTripcodes = (options.SHA1OptimizationForCPU == 0) ? SearchForTripcodesWithoutOptimization() :
-		                        (options.SHA1OptimizationForCPU == 1) ? SearchForTripcodesWithOptimization() :
-		                                                                SearchForTripcodesWithMaximumOptimization();
+		numGeneratedTripcodes = SearchForTripcodesWithMaximumOptimization();
 		AddToNumGeneratedTripcodesByCPU(numGeneratedTripcodes);
 	}
-	return 0;
 }

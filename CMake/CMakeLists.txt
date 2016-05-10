@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(MerikensTripcodeEngine CXX)
 
+option(USE_YASM "USE_YASM" ON)
+
 set(CORE_SOURCES
 	../SourceFiles/Main.cpp
 	../SourceFiles/Patterns.cpp
@@ -9,25 +11,27 @@ set(CORE_SOURCES
 	../SourceFiles/Verification12.cpp
 	../SourceFiles/VerificationDuplicates.cpp
 	../SourceFiles/UtilityFunctions.cpp)
-file(GLOB CPU_SOURCES
-	"../SourceFiles/CPU10.cpp"
-	"../SourceFiles/CPU10_AVX2.cpp"
-	"../SourceFiles/CPU12.cpp")
-#file(GLOB ASSEMBLY_SOURCES "../SourceFiles/CPU*_x64_*.asm")
+if (${USE_YASM})
+	file(GLOB CPU_SOURCES
+		"../SourceFiles/CPU10_yasm.cpp"
+		"../SourceFiles/CPU10_AVX2.cpp"
+		"../SourceFiles/CPU12_yasm.cpp")
+else()
+	file(GLOB CPU_SOURCES
+		"../SourceFiles/CPU10_SSE2Intrinsics.cpp"
+		"../SourceFiles/CPU12_SSE2Intrinsics.cpp")
+endif()
 file(GLOB OPENCL_SOURCES
 	"../SourceFiles/OpenCL*.cpp")
 set(SOURCES
 	${CORE_SOURCES}
 	${CPU_SOURCES}
-	${ASSEMBLY_SOURCES}
 	${OPENCL_SOURCES})
 
-SET(GCC_COVERAGE_COMPILE_FLAGS "-std=c++11 -fno-access-control -Wall -Wno-deprecated-declarations")
-SET(MTE_COMPILE_FLAGS "-DENGLISH_VERSION -DENABLE_OPENCL")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} ${MTE_COMPILE_FLAGS}")
-#SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} --enable-auto-import" )
-
+set(YASM_FILES)
 find_program(YASM_EXE NAMES yasm)
+if (USE_YASM)
+set(MTE_COMPILE_FLAGS "${MTE_COMPILE_FLAGS} -DUSE_YASM")
 function(assemble_yasm_files out_var)
 	set(result)
 	foreach(in_f ${ARGN})
@@ -54,10 +58,16 @@ assemble_yasm_files(YASM_FILES
 	CPU12_x64_AVX2.asm
 	CPU12_x64_SSE2.asm
 	CPU12_x64_SSE2_Nehalem.asm)
+endif()
 
 LINK_LIBRARIES(OpenCL boost_system)
 include_directories("../SourceFiles" "../BoostPackages/include" "/cygdrive/c/Program\ Files\ (x86)/AMD\ APP\ SDK/3.0/include")
 link_directories("../BoostPackages/lib/Cygwin64" "/cygdrive/c/Program\ Files\ (x86)/AMD\ APP\ SDK/3.0/lib/x86_64")
+
+SET(GCC_COVERAGE_COMPILE_FLAGS "-std=c++11 -fno-access-control -Wall -Wno-deprecated-declarations -O3")
+SET(MTE_COMPILE_FLAGS "${MTE_COMPILE_FLAGS} -DENGLISH_VERSION -DENABLE_OPENCL")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} ${MTE_COMPILE_FLAGS}")
+#SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} --enable-auto-import" )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_executable(MerikensTripcodeEngine ${SOURCES} ${YASM_FILES})

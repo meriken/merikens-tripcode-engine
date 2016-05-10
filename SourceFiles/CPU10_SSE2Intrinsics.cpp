@@ -36,24 +36,34 @@
 // INCLUDE FILE(S)                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-// #include "MerikensTripcodeEngine.h"
-
-// For MMX/SSE/SSE2/SSSE3 Intrinsics
-#include <nmmintrin.h>
-#include <smmintrin.h>
-#include <intrin.h>
-#include <emmintrin.h> 
-#include <xmmintrin.h>
-#include <mmintrin.h>
-
-#include <stdio.h>
-#include <stdlib.h>
+#include "MerikensTripcodeEngine.h"
 
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // BITSLICE DES                                                              //
 ///////////////////////////////////////////////////////////////////////////////
+
+#define VECTOR_SIZE 16
+#if defined (_MSC_VER)
+#define VECTOR_ALIGNMENT __declspec(align(16))
+#else
+#define VECTOR_ALIGNMENT __attribute__ ((aligned (16))) 
+#endif
+typedef union VECTOR_ALIGNMENT __DES_Vector {
+	__m128i m128i;
+	__int8 m128i_i8[16];
+	__int16 m128i_i16[8];
+	__int32 m128i_i32[4];
+	__int64 m128i_i64[2];
+	unsigned __int8 m128i_u8[16];
+	unsigned __int16 m128i_u16[8];
+	unsigned __int32 m128i_u32[4];
+	unsigned __int64 m128i_u64[2];
+} DES_Vector;
+#define VECTOR_ELEMENTS m128i_i32
+
+#define CPU_DES_MAIN_LOOP CPU_DES_MainLoop
 
 // Bitslice DES S-boxes for x86 with MMX/SSE2/AVX and for typical RISC
 // architectures.  These use AND, OR, XOR, NOT, and AND-NOT gates.
@@ -585,32 +595,32 @@ void CPU_DES_SBoxes1_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *e
 	vtype var0;
 	vtype var1;
 	vtype var2;
-	vtype var3; 
-	vtype var4; 
-	vtype var5; 
-	vtype var6; 
-	vtype var7; 
-	vtype var8; 
-	vtype var9; 
-	vtype var10; 
-	vtype var11; 
-	vtype var12; 
-	vtype var13; 
-	vtype var14; 
-	vtype var15; 
-	vtype var16; 
-	vtype var17; 
-	vtype var18; 
-	vtype pnot = _mm_set1_epi8(0xff); 
+	vtype var3;
+	vtype var4;
+	vtype var5;
+	vtype var6;
+	vtype var7;
+	vtype var8;
+	vtype var9;
+	vtype var10;
+	vtype var11;
+	vtype var12;
+	vtype var13;
+	vtype var14;
+	vtype var15;
+	vtype var16;
+	vtype var17;
+	vtype var18;
+	vtype pnot = _mm_set1_epi8(0xff);
 
-	s1(x( 0),     x( 1),     x( 2),     x( 3),     x( 4),     x( 5),     z(40), z(48), z(54), z(62));
-	s2(x( 6),     x( 7),     x( 8),     x( 9),     x(10),     x(11),     z(44), z(59), z(33), z(49));
-	s3(y( 7, 12), y( 8, 13), y( 9, 14), y(10, 15), y(11, 16), y(12, 17), z(55), z(47), z(61), z(37));
+	s1(x(0), x(1), x(2), x(3), x(4), x(5), z(40), z(48), z(54), z(62));
+	s2(x(6), x(7), x(8), x(9), x(10), x(11), z(44), z(59), z(33), z(49));
+	s3(y(7, 12), y(8, 13), y(9, 14), y(10, 15), y(11, 16), y(12, 17), z(55), z(47), z(61), z(37));
 	s4(y(11, 18), y(12, 19), y(13, 20), y(14, 21), y(15, 22), y(16, 23), z(57), z(51), z(41), z(32));
-	s5(x(24),     x(25),     x(26),     x(27),     x(28),     x(29),     z(39), z(45), z(56), z(34));
-	s6(x(30),     x(31),     x(32),     x(33),     x(34),     x(35),     z(35), z(60), z(42), z(50));
-	s7(y(23, 36), y(24, 37), y(25, 38),	y(26, 39), y(27, 40), y(28, 41), z(63), z(43), z(53), z(38));
-	s8(y(27, 42), y(28, 43), y(29, 44), y(30, 45), y(31, 46), y( 0, 47), z(36), z(58), z(46), z(52));
+	s5(x(24), x(25), x(26), x(27), x(28), x(29), z(39), z(45), z(56), z(34));
+	s6(x(30), x(31), x(32), x(33), x(34), x(35), z(35), z(60), z(42), z(50));
+	s7(y(23, 36), y(24, 37), y(25, 38), y(26, 39), y(27, 40), y(28, 41), z(63), z(43), z(53), z(38));
+	s8(y(27, 42), y(28, 43), y(29, 44), y(30, 45), y(31, 46), y(0, 47), z(36), z(58), z(46), z(52));
 }
 
 void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *expandedKeySchedule, __m128i *dataBlocks, int32_t keyScheduleIndexBase)
@@ -618,30 +628,43 @@ void CPU_DES_SBoxes2_SSE2Intrinsics(unsigned char *expansionFunction, __m128i *e
 	vtype var0;
 	vtype var1;
 	vtype var2;
-	vtype var3; 
-	vtype var4; 
-	vtype var5; 
-	vtype var6; 
-	vtype var7; 
-	vtype var8; 
-	vtype var9; 
-	vtype var10; 
-	vtype var11; 
-	vtype var12; 
-	vtype var13; 
-	vtype var14; 
-	vtype var15; 
-	vtype var16; 
-	vtype var17; 
-	vtype var18; 
-	vtype pnot = _mm_set1_epi8(0xff); 
+	vtype var3;
+	vtype var4;
+	vtype var5;
+	vtype var6;
+	vtype var7;
+	vtype var8;
+	vtype var9;
+	vtype var10;
+	vtype var11;
+	vtype var12;
+	vtype var13;
+	vtype var14;
+	vtype var15;
+	vtype var16;
+	vtype var17;
+	vtype var18;
+	vtype pnot = _mm_set1_epi8(0xff);
 
-	s1(x(48),     x(49),     x(50),     x(51),     x(52),     x(53),     z( 8), z(16), z(22), z(30));
-	s2(x(54),     x(55),     x(56),     x(57),     x(58),     x(59),     z(12), z(27), z( 1), z(17));
-	s3(y(39, 60), y(40, 61), y(41, 62), y(42, 63), y(43, 64), y(44, 65), z(23), z(15), z(29), z( 5));
-	s4(y(43, 66), y(44, 67), y(45, 68), y(46, 69), y(47, 70), y(48, 71), z(25), z(19), z( 9), z( 0));
-	s5(x(72),     x(73),     x(74),     x(75),     x(76),     x(77),     z( 7), z(13), z(24), z( 2));
-	s6(x(78),     x(79),     x(80),     x(81),     x(82),     x(83),     z( 3), z(28), z(10), z(18));
-	s7(y(55, 84), y(56, 85), y(57, 86), y(58, 87), y(59, 88), y(60, 89), z(31), z(11), z(21), z( 6));
-	s8(y(59, 90), y(60, 91), y(61, 92), y(62, 93), y(63, 94), y(32, 95), z( 4), z(26), z(14), z(20));
+	s1(x(48), x(49), x(50), x(51), x(52), x(53), z(8), z(16), z(22), z(30));
+	s2(x(54), x(55), x(56), x(57), x(58), x(59), z(12), z(27), z(1), z(17));
+	s3(y(39, 60), y(40, 61), y(41, 62), y(42, 63), y(43, 64), y(44, 65), z(23), z(15), z(29), z(5));
+	s4(y(43, 66), y(44, 67), y(45, 68), y(46, 69), y(47, 70), y(48, 71), z(25), z(19), z(9), z(0));
+	s5(x(72), x(73), x(74), x(75), x(76), x(77), z(7), z(13), z(24), z(2));
+	s6(x(78), x(79), x(80), x(81), x(82), x(83), z(3), z(28), z(10), z(18));
+	s7(y(55, 84), y(56, 85), y(57, 86), y(58, 87), y(59, 88), y(60, 89), z(31), z(11), z(21), z(6));
+	s8(y(59, 90), y(60, 91), y(61, 92), y(62, 93), y(63, 94), y(32, 95), z(4), z(26), z(14), z(20));
+}
+
+#include "CPU10.h"
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// THREAD                                                                    //
+///////////////////////////////////////////////////////////////////////////////
+
+void Thread_SearchForDESTripcodesOnCPU()
+{
+	CPU_DES_MainLoop();
 }

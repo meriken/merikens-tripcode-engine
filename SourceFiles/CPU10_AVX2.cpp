@@ -44,8 +44,6 @@
 // BITSLICE DES                                                              //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define USE_ASSEMBLY_FUNCTION
-
 #define VECTOR_SIZE 32
 #if defined (_MSC_VER)
 #define VECTOR_ALIGNMENT __declspec(align(32))
