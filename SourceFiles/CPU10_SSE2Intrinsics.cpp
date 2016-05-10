@@ -52,8 +52,8 @@
 #endif
 typedef union VECTOR_ALIGNMENT __DES_Vector {
 	__m128i m128i;
-	__int8 m128i_i8[16];
-	__int16 m128i_i16[8];
+	int8_t m128i_i8[16];
+	int16_t m128i_i16[8];
 	int32_t m128i_i32[4];
 	int64_t m128i_i64[2];
 	uint8_t m128i_u8[16];
