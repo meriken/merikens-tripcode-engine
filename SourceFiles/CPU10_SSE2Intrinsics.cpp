@@ -87,7 +87,7 @@ typedef union VECTOR_ALIGNMENT __DES_Vector {
 //
 // The effort has been sponsored by Rapid7: http://www.rapid7.com
 
-typedef __declspec(align(16)) __m128i vtype;
+typedef VECTOR_ALIGNMENT __m128i vtype;
 
 #define DES_VECTOR_XOR_FUNC           _mm_xor_si128
 
