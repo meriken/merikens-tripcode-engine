@@ -18,6 +18,8 @@ void spinlock::unlock()
 	flag.clear(std::memory_order_release);
 }
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+
 namespace mte {
 	named_event::named_event() : native_event_handle(NULL)
 	{
@@ -61,3 +63,40 @@ namespace mte {
 	}
 }
 
+#else
+
+namespace mte {
+	named_event::named_event()
+	{
+	}
+
+	named_event::~named_event()
+	{
+	}
+
+	bool named_event::is_open()
+	{
+		return false;
+	}
+
+	bool named_event::open_or_create(const char *arg_name)
+	{
+		return false;
+	}
+
+	void named_event::wait()
+	{
+	}
+
+	bool named_event::poll()
+	{
+		return false;
+	}
+
+	std::string named_event::name()
+	{
+		return data_name;
+	}
+}
+
+#endif
