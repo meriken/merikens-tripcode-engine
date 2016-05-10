@@ -54,6 +54,10 @@
 #include <process.h>
 #include <tlhelp32.h>
 #include <ctype.h>
+#else
+typedef int BOOL;
+#define TRUE 0
+#define FALSE 1
 #endif
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
