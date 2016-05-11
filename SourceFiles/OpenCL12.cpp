@@ -126,53 +126,53 @@ struct {
 	size_t  localWorkSize_DES;
 	const char   *buildOptions_DES;
 } static deviceSettingsArray[] = {
-	{OPENCL_VENDOR_AMD,    "Cedar",                      2, "Radeon HD 5450",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Redwood",                    4, "Radeon HD 5550",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Redwood",                    5, "Radeon HD 5570/5670",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Juniper",                    9, "Radeon HD 5750",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Juniper",                   10, "Radeon HD 5770",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Cypress",                   14, "Radeon HD 5830",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Cypress",                   18, "Radeon HD 5850",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Cypress",                   20, "Radeon HD 5870",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 5120,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Hemlock",                   -1, "Radeon HD 5970",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 5120,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Cedar",                      2, "Radeon HD 5450",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Redwood",                    4, "Radeon HD 5550",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Redwood",                    5, "Radeon HD 5570/5670",    "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Juniper",                    9, "Radeon HD 5750",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Juniper",                   10, "Radeon HD 5770",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Cypress",                   14, "Radeon HD 5830",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Cypress",                   18, "Radeon HD 5850",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Cypress",                   20, "Radeon HD 5870",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 5120,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Hemlock",                   -1, "Radeon HD 5970",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 5120,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl",  512, 64, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    "Saymour",                    2, "Radeon HD 6400M Series", "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Caicos",                     2, "Radeon HD 6450",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Turks",                      6, "Radeon HD 6570/6670",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Whistler",                   6, "Radeon HD 6700M Series", "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Barts",                     10, "Radeon HD 6790",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Barts",                     12, "Radeon HD 6850",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Barts",                     14, "Radeon HD 6870",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Blackcomb",                 12, "Radeon HD 6950M",        "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Cayman",                    22, "Radeon HD 6950",         "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Cayman",                    -1, "Radeon HD 6970/6990",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Saymour",                    2, "Radeon HD 6400M Series", "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Caicos",                     2, "Radeon HD 6450",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Turks",                      6, "Radeon HD 6570/6670",    "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Whistler",                   6, "Radeon HD 6700M Series", "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Barts",                     10, "Radeon HD 6790",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Barts",                     12, "Radeon HD 6850",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Barts",                     14, "Radeon HD 6870",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Blackcomb",                 12, "Radeon HD 6950M",        "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 1024, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Cayman",                    22, "Radeon HD 6950",         "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl",  512, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Cayman",                    -1, "Radeon HD 6970/6990",    "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl",  512, 64, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Verde",                      8, "Radeon HD 7750",         "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Verde",                     10, "Radeon HD 7770",         "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  16, "Radeon HD 7850",         "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Pitcairn",                  20, "Radeon HD 7870",         "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    28, "Radeon HD 7950",         "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Tahiti",                    32, "Radeon HD 7970/7990",    "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl", 1024, 128, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290/390",         "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X/295X2/390X", "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  640, 256, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    40, "Radeon R9 290/390",         "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl",  640, 256, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Hawaii",                    44, "Radeon R9 290X/295X2/390X", "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl",  640, 256, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Zacate",                    -1, "E/G-series",             "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Llano",                     -1, "A8/A6/A4/E2-series",     "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Hondo",                     -1, "Z-series",               "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Brazos",                    -1, "E2-series",              "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Trinity",                   -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Devastator",                -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
-	{OPENCL_VENDOR_AMD,    "Richland",                  -1, "A10/A8/A6/A4-series",    "OpenCL\\OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Desna",                     -1, "Z-series",               "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Ontario",                   -1, "C/G-series",             "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Zacate",                    -1, "E/G-series",             "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Llano",                     -1, "A8/A6/A4/E2-series",     "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Hondo",                     -1, "Z-series",               "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Brazos",                    -1, "E2-series",              "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Trinity",                   -1, "A10/A8/A6/A4-series",    "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Devastator",                -1, "A10/A8/A6/A4-series",    "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    "Richland",                  -1, "A10/A8/A6/A4-series",    "OpenCL/OpenCL12_AMD_pre-GCN.cl", 2560,  64, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10.cl",  512, 256, "-O5 -cl-mad-enable"},
+	{OPENCL_VENDOR_AMD,    NULL,                        -1, NULL,                     "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10.cl",  512, 256, "-O5 -cl-mad-enable"},
 
-	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10_AMD_pre-GCN.cl",  512, 64, "-cl-nv-opt-level=3"},
+	{OPENCL_VENDOR_NVIDIA, NULL,                        -1, NULL,                     "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10_AMD_pre-GCN.cl",  512, 64, "-cl-nv-opt-level=3"},
 
-	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 2500", -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, ""},
-	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 4000", -1, NULL,                     "OpenCL\\OpenCL12.cl",              512, 256, "OpenCL\\OpenCL10_AMD_pre-GCN.cl", 2048, 64, ""},
+	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 2500", -1, NULL,                     "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, ""},
+	{OPENCL_VENDOR_INTEL,  "Intel(R) HD Graphics 4000", -1, NULL,                     "OpenCL/OpenCL12.cl",              512, 256, "OpenCL/OpenCL10_AMD_pre-GCN.cl", 2048, 64, ""},
 
 	{NULL}
 };
@@ -625,11 +625,11 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
-	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(binaryFilePath, "%s/OpenCL/bin/OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	
 	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *sourceFile;
-	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN.asm", applicationDirectory);
+	sprintf(sourceFilePath, "%s/OpenCL/bin/OpenCL12GCN.asm", applicationDirectory);
 	
 	int driverMajorVersion;
 	int driverMinorVersion;
@@ -638,7 +638,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	sprintf(assemblerCommand, 
-		    "cmd /C \"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"\"",
+		    "cmd /C \"\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"\"",
 			applicationDirectory,
 			"amd",
 			deviceName,
@@ -756,7 +756,7 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *i
     char   *sourceCode;
     size_t  sizeSourceCode;
 	strcpy(sourceFilePath, applicationDirectory);
-	strcat(sourceFilePath, "\\");
+	strcat(sourceFilePath, "/");
 	strcat(sourceFilePath, sourceFileName);
     sourceFile = fopen(sourceFilePath, "r");
     ERROR0(!sourceFile, ERROR_OPENCL, "Failed to load an OpenCL source file.");
@@ -823,7 +823,7 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *i
 	OPENCL_ERROR(openCLError);
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
-	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(binaryFilePath, "%s/OpenCL/bin/OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	if (binaryFile = fopen(binaryFilePath, "wb")) {
 		fwrite(binaryArray[0], sizeof(unsigned char), binarySizeArray[0], binaryFile);
 		fclose(binaryFile);
@@ -832,9 +832,9 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *i
 	for(int32_t i = 0; i < numDevices; ++i)
 		free(binaryArray[i]);
 	free(binaryArray);
-	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.asm", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(sourceFilePath, "%s/OpenCL/bin/OpenCL12GCN_%02x%02x%02x%02x.asm", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
-	sprintf(assemblerCommand, "cmd /C \"\"%s\\CLRadeonExtender\\clrxdisasm\" -m -d -c -f \"%s\" > \"%s\"\"", applicationDirectory, binaryFilePath, sourceFilePath);
+	sprintf(assemblerCommand, "cmd /C \"\"%s/CLRadeonExtender/clrxdisasm\" -m -d -c -f \"%s\" > \"%s\"\"", applicationDirectory, binaryFilePath, sourceFilePath);
 	system(assemblerCommand);
 	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
 	system(assemblerCommand);

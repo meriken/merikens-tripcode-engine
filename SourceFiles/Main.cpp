@@ -2224,11 +2224,11 @@ int main(int argc, char **argv)
 	// Some versions of OpenCL.dll are buggy.
 	// /DELAYLOAD:"OpenCL.dll" is also necessary.
 #if defined(_WIN64)
-	// ERROR0(LoadLibrary(L"OpenCL\\x64\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
-	SetDllDirectoryW(L"OpenCL\\x64");
+	// ERROR0(LoadLibrary(L"OpenCL/x64/OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
+	SetDllDirectoryW(L"OpenCL/x64");
 #elif defined(_WIN32)
-	// ERROR0(LoadLibrary(L"OpenCL\\x86\\OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
-	SetDllDirectoryW(L"OpenCL\\x86");
+	// ERROR0(LoadLibrary(L"OpenCL/x86/OpenCL.dll") == NULL, ERROR_DLL, "Failed to load OpenCL.dll");
+	SetDllDirectoryW(L"OpenCL/x86");
 #endif
 
 	BOOL   displayDeviceInformationAndExit = false;

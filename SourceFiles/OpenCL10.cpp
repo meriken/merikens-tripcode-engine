@@ -82,7 +82,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	/*
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
-	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
+	sprintf(binaryFilePath, "%s/OpenCL/bin/OpenCL10GCN.bin", applicationDirectory);
 	if (binaryFile = fopen(binaryFilePath, "rb")) {
 		fseek(binaryFile, 0L, SEEK_END);
 		size_t binarySize = ftell(binaryFile);
@@ -109,7 +109,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	char   *sourceCode;
 	size_t  sizeSourceCode;
 	strcpy(sourceFilePath, applicationDirectory);
-	strcat(sourceFilePath, "\\");
+	strcat(sourceFilePath, "/");
 	strcat(sourceFilePath, sourceFileName);
 	sourceFile = fopen(sourceFilePath, "r");
 	ERROR0(!sourceFile, ERROR_OPENCL, "Failed to load an OpenCL source file.");
@@ -490,14 +490,14 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	char    asssemblerOutputFilePath[MAX_LEN_FILE_PATH + 1];
 	char    assemblerOutputFileFullPath[MAX_LEN_FILE_PATH + 1];
-	sprintf(asssemblerOutputFilePath, "OpenCL\\bin\\OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
-	sprintf(assemblerOutputFileFullPath, "%s\\%s", applicationDirectory, asssemblerOutputFilePath);
+	sprintf(asssemblerOutputFilePath, "OpenCL/bin/OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(assemblerOutputFileFullPath, "%s/%s", applicationDirectory, asssemblerOutputFilePath);
 
 	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
 	char    sourceFileFullPath[MAX_LEN_FILE_PATH + 1];
 	FILE   *sourceFile;
-	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
-	sprintf(sourceFileFullPath, "%s\\%s", applicationDirectory, sourceFilePath);
+	sprintf(sourceFilePath, "OpenCL/bin/OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(sourceFileFullPath, "%s/%s", applicationDirectory, sourceFilePath);
 	if ((sourceFile = fopen(sourceFileFullPath, "w"))) {
 		for (int32_t i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
 			fprintf(sourceFile, "DB_EF%02d = %s\n", i, registerMap[expansionFunction[i]]);
@@ -527,13 +527,13 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	if (dummyKernelBinaryFilePath) {
-		sprintf(assemblerCommand, "type \"%s\\OpenCL\\bin\\OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
+		sprintf(assemblerCommand, "type \"%s/OpenCL/bin/OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
 	} else {
-		sprintf(assemblerCommand, "type \"%s\\OpenCL\\bin\\OpenCL10GCN.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
+		sprintf(assemblerCommand, "type \"%s/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
 	}
 	system(assemblerCommand);
 	sprintf(assemblerCommand, 
-		    "cmd /C \"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"\"",
+		    "cmd /C \"\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"\"",
 			applicationDirectory,
 			dummyKernelBinaryFilePath                     ? "rawcode" : 
 			strncmp(deviceVersion, "OpenCL 1.2", 10) == 0 ? "amd"     :
@@ -561,9 +561,9 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 
 	if (dummyKernelBinaryFilePath) {
 		char    innerELFFilePath[MAX_LEN_FILE_PATH + 1];
-		sprintf(innerELFFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_InnerELF_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+		sprintf(innerELFFilePath, "%s/OpenCL/bin/OpenCL10GCN_InnerELF_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 		char    GCNCodeFilePath[MAX_LEN_FILE_PATH + 1];
-		sprintf(GCNCodeFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_GCNCode_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+		sprintf(GCNCodeFilePath, "%s/OpenCL/bin/OpenCL10GCN_GCNCode_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 
 		//sprintf(assemblerCommand, "cmd /C \"copy \"%s\" \"%s.original\"\"", dummyKernelBinaryFilePath, dummyKernelBinaryFilePath);
 		//system(assemblerCommand);
@@ -793,7 +793,7 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *in
 #endif
 			if (false && enableGCNAssembler && isDriverOpenCL20Compatible) {
 				char    dummyKernelBinaryFilePath[MAX_LEN_FILE_PATH + 1];
-				sprintf(dummyKernelBinaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
+				sprintf(dummyKernelBinaryFilePath, "%s/OpenCL/bin/OpenCL10GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, dummyKernelBinaryFilePath);
 				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, dummyKernelBinaryFilePath);
 			} else if (enableGCNAssembler) {
@@ -801,7 +801,7 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *in
 			} else {
 				char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 				FILE   *binaryFile;
-				sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL10GCN.bin", applicationDirectory);
+				sprintf(binaryFilePath, "%s/OpenCL/bin/OpenCL10GCN.bin", applicationDirectory);
 				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, binaryFilePath);
 			}
 			UpdateOpenCLDeviceStatus(info, "[thread] Creating an OpenCL kernel...");
