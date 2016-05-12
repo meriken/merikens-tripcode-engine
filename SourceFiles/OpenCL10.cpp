@@ -412,6 +412,8 @@ static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSec
 
 static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction, char *dummyKernelBinaryFilePath)
 {
+	gcn_assembler_spinlock.lock();
+
 	static const char *registerMap[64] = {
 		"%v118",
 		"%v65",
@@ -480,8 +482,6 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	};
 	cl_int         openCLError;
 
-	system_command_spinlock.lock();
-
 	// Create an expansion function based on the salt.
 	unsigned char  salt[2];
 	salt[0] = CONVERT_CHAR_FOR_SALT(keyChar1);
@@ -527,13 +527,13 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	if (dummyKernelBinaryFilePath) {
-		sprintf(assemblerCommand, "type \"%s/OpenCL/bin/OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
+		sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
 	} else {
-		sprintf(assemblerCommand, "type \"%s/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\"", applicationDirectory, sourceFileFullPath);
+		sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
 	}
-	system(assemblerCommand);
+	execute_system_command(assemblerCommand);
 	sprintf(assemblerCommand, 
-		    "cmd /C \"\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"\"",
+		    "\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
 			applicationDirectory,
 			dummyKernelBinaryFilePath                     ? "rawcode" : 
 			strncmp(deviceVersion, "OpenCL 1.2", 10) == 0 ? "amd"     :
@@ -555,9 +555,9 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 			driverMinorVersion, 
 			assemblerOutputFileFullPath,
 			sourceFileFullPath);
-	ERROR0(system(assemblerCommand) != 0, ERROR_GCN_ASSEMBLER, "Failed to assemble GCN kernel.");
-	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", sourceFileFullPath);
-	system(assemblerCommand);
+	ERROR0(execute_system_command(assemblerCommand) != 0, ERROR_GCN_ASSEMBLER, "Failed to assemble GCN kernel.");
+	sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, sourceFileFullPath);
+	execute_system_command(assemblerCommand);
 
 	if (dummyKernelBinaryFilePath) {
 		char    innerELFFilePath[MAX_LEN_FILE_PATH + 1];
@@ -565,13 +565,13 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		char    GCNCodeFilePath[MAX_LEN_FILE_PATH + 1];
 		sprintf(GCNCodeFilePath, "%s/OpenCL/bin/OpenCL10GCN_GCNCode_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 
-		//sprintf(assemblerCommand, "cmd /C \"copy \"%s\" \"%s.original\"\"", dummyKernelBinaryFilePath, dummyKernelBinaryFilePath);
-		//system(assemblerCommand);
+		//sprintf(assemblerCommand, "%s \"%s\" \"%s.original\"", COPY_COMMAND, dummyKernelBinaryFilePath, dummyKernelBinaryFilePath);
+		//execute_system_command(assemblerCommand);
 		
 		ExtractTextSectionInELFFileIntoFile(dummyKernelBinaryFilePath, innerELFFilePath);
 
-		//sprintf(assemblerCommand, "cmd /C \"copy \"%s\" \"%s.original\"\"", innerELFFilePath, innerELFFilePath);
-		//system(assemblerCommand);
+		//sprintf(assemblerCommand, "%s \"%s\" \"%s.original\"", COPY_COMMAND, innerELFFilePath, innerELFFilePath);
+		//execute_system_command(assemblerCommand);
 
 		//ExtractTextSectionInELFFileIntoFile(innerELFFilePath, GCNCodeFilePath);
 		//ReplaceTextSectionInELFFileWithFile(innerELFFilePath, GCNCodeFilePath, TRUE);
@@ -579,8 +579,8 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		ReplaceTextSectionInELFFileWithFile(innerELFFilePath, assemblerOutputFileFullPath, TRUE);
 		ReplaceTextSectionInELFFileWithFile(dummyKernelBinaryFilePath, innerELFFilePath, FALSE);
 		
-		sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", innerELFFilePath);
-		system(assemblerCommand);
+		sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, innerELFFilePath);
+		execute_system_command(assemblerCommand);
 	}
 
 	FILE   *binaryFile = fopen(assemblerOutputFileFullPath, "rb");
@@ -605,15 +605,15 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		
 	free(binary);
 
-	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", assemblerOutputFileFullPath);
-	system(assemblerCommand);
+	sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, assemblerOutputFileFullPath);
+	execute_system_command(assemblerCommand);
 
 	if (dummyKernelBinaryFilePath) {
-		sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", dummyKernelBinaryFilePath);
-		system(assemblerCommand);
+		sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, dummyKernelBinaryFilePath);
+		execute_system_command(assemblerCommand);
 	}
 
-	system_command_spinlock.unlock();
+	gcn_assembler_spinlock.unlock();
 }
 
 void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)

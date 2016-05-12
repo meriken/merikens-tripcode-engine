@@ -619,9 +619,9 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 
 static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion)
 {
+	gcn_assembler_spinlock.lock();
+
 	cl_int         openCLError;
-	
-	system_command_spinlock.lock();
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
@@ -638,7 +638,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 	sprintf(assemblerCommand, 
-		    "cmd /C \"\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"\"",
+		    "\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
 			applicationDirectory,
 			"amd",
 			deviceName,
@@ -659,7 +659,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 			driverMinorVersion, 
 			binaryFilePath,
 			sourceFilePath);
-	ERROR0(system(assemblerCommand) != 0, ERROR_GCN_ASSEMBLER, "Failed to assemble GCN kernel.");
+	ERROR0(execute_system_command(assemblerCommand) != 0, ERROR_GCN_ASSEMBLER, "Failed to assemble GCN kernel.");
 
 	binaryFile = fopen(binaryFilePath, "rb");
 	ERROR0(   binaryFile == NULL
@@ -683,10 +683,10 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		
 	free(binary);
 	
-	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
-	system(assemblerCommand);
+	sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, binaryFilePath);
+	execute_system_command(assemblerCommand);
 
-	system_command_spinlock.unlock();
+	gcn_assembler_spinlock.unlock();
 }
 
 void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
@@ -834,10 +834,10 @@ void Thread_SearchForSHA1TripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *i
 	free(binaryArray);
 	sprintf(sourceFilePath, "%s/OpenCL/bin/OpenCL12GCN_%02x%02x%02x%02x.asm", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
-	sprintf(assemblerCommand, "cmd /C \"\"%s/CLRadeonExtender/clrxdisasm\" -m -d -c -f \"%s\" > \"%s\"\"", applicationDirectory, binaryFilePath, sourceFilePath);
-	system(assemblerCommand);
-	sprintf(assemblerCommand, "cmd /C \"del \"%s\"\"", binaryFilePath);
-	system(assemblerCommand);
+	sprintf(assemblerCommand, "\"%s/CLRadeonExtender/clrxdisasm\" -m -d -c -f \"%s\" > \"%s\"", applicationDirectory, binaryFilePath, sourceFilePath);
+	execute_system_command(assemblerCommand);
+	sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, binaryFilePath);
+	execute_system_command(assemblerCommand);
 #endif
 
 	// Create memory blocks for CPU.

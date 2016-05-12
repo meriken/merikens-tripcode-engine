@@ -54,11 +54,17 @@
 #include <process.h>
 #include <tlhelp32.h>
 #include <ctype.h>
+#define COPY_COMMAND "copy"
+#define DELETE_COMMAND "del"
+#define TYPE_COMMAND "type"
 #else
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 #define __stdcall
+#define COPY_COMMAND "cp"
+#define DELETE_COMMAND "rm"
+#define TYPE_COMMAND "cat"
 #endif
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
@@ -176,7 +182,7 @@ extern int32_t searchDevice;
 
 // For multi-threading
 #ifndef __CUDACC__
-extern spinlock system_command_spinlock;
+extern spinlock gcn_assembler_spinlock;
 extern spinlock boost_process_spinlock;
 extern mte::named_event termination_event;
 extern mte::named_event pause_event;
@@ -217,6 +223,7 @@ extern void   ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char 
 // Others
 extern BOOL IsFirstByteSJIS(unsigned char ch);
 extern void sleep_for_milliseconds(uint32_t milliseconds);
+extern int execute_system_command(const char *command);
 
 
 

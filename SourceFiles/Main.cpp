@@ -150,12 +150,13 @@ std::thread                              **opencl_device_search_threads = NULL;
 int32_t                                  numCPUSearchThreads               = 0;
 std::thread                              **cpu_search_threads = NULL;
 BOOL                                 openCLRunChildProcesses = FALSE;
-spinlock num_generated_tripcodes_spinlock;
-spinlock process_tripcode_pair_spinlock;
-spinlock current_state_spinlock;
-spinlock cuda_device_search_thread_info_array_spinlock;
-spinlock opencl_device_search_thread_info_array_spinlock;
-spinlock system_command_spinlock;
+static spinlock num_generated_tripcodes_spinlock;
+static spinlock process_tripcode_pair_spinlock;
+static spinlock current_state_spinlock;
+static spinlock cuda_device_search_thread_info_array_spinlock;
+static spinlock opencl_device_search_thread_info_array_spinlock;
+static spinlock system_command_spinlock;
+spinlock gcn_assembler_spinlock;
 spinlock boost_process_spinlock;
 uint32_t     numGeneratedTripcodes_GPU;
 uint32_t     numGeneratedTripcodesByGPUInMillions;
@@ -264,6 +265,27 @@ const unsigned char expansionTable[48] = {
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS                                                                 //
 ///////////////////////////////////////////////////////////////////////////////
+
+int execute_system_command(const char *command)
+{
+	int ret;
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+	std::string wrapped_command;
+	wrapped_command = "cmd /C \"";
+	wrapped_command += command;
+	wrapped_command += "\"";
+	system_command_spinlock.lock();
+	ret = system(wrapped_command.data());
+	system_command_spinlock.unlock();
+#else
+	system_command_spinlock.lock();
+	ret = system(command);
+	system_command_spinlock.unlock();
+#endif
+
+	return ret;
+}
 
 void DES_CreateExpansionFunction(char *saltString, unsigned char *expansionFunction)
 {
