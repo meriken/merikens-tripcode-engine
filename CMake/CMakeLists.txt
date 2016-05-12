@@ -1,6 +1,16 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 2.8.0)
 project(MerikensTripcodeEngine CXX)
 
+# ./bootstrap.sh 
+# sudo apt-get install libbz2-dev python2.7-dev 
+# ./b2 link=static runtime-link=static -j 8
+# cd ../../CMake/
+# mkdir Build
+# cd Build
+# sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+
+# sudo apt-get update && sudo apt-get install gcc-5 g++-5
+# cmake -DCMAKE_CXX_COMPILER=g++-5 ..
 
 
 ###########
@@ -17,6 +27,7 @@ option(ENABLE_OPENCL "ENABLE_OPENCL" ON)
 ##########
 
 set(CYGWIN_AMD_APP_SDK_DIR "/cygdrive/c/Program\ Files\ (x86)/AMD\ APP\ SDK/3.0")
+set(UNIX_AMD_APP_SDK_DIR "/opt/AMDAPPSDK-3.0")
 if(ENABLE_OPENCL AND CYGWIN AND EXISTS ${CYGWIN_AMD_APP_SDK_DIR})
     set(OPENCL_LINK_LIBRARIES
         OpenCL)
@@ -24,6 +35,13 @@ if(ENABLE_OPENCL AND CYGWIN AND EXISTS ${CYGWIN_AMD_APP_SDK_DIR})
         "${CYGWIN_AMD_APP_SDK_DIR}/include")
     set(OPENCL_LINK_DIR
         "${CYGWIN_AMD_APP_SDK_DIR}/lib/x86_64")
+elseif(ENABLE_OPENCL AND UNIX AND EXISTS ${UNIX_AMD_APP_SDK_DIR})
+    set(OPENCL_LINK_LIBRARIES
+        OpenCL)
+    set(OPENCL_INCLUDE_DIR
+        "${UNIX_AMD_APP_SDK_DIR}/include")
+    set(OPENCL_LINK_DIR
+        "${UNIX_AMD_APP_SDK_DIR}/lib/x86_64")
 else()
     set(ENABLE_OPENCL FALSE)
 endif()
@@ -98,7 +116,7 @@ set(SOURCES
 
 
 
-LINK_LIBRARIES(${OPENCL_LINK_LIBRARIES} boost_system)
+LINK_LIBRARIES(${OPENCL_LINK_LIBRARIES} boost_system boost_iostreams)
 include_directories(
     "../SourceFiles"
     "../BoostPackages/include"
@@ -106,14 +124,14 @@ include_directories(
     ${OPENCL_INCLUDE_DIR})
 link_directories(
     "../BoostPackages/lib/Cygwin64"
-    "../BoostPackages/boost_1_61_0_b1/stage/lib/"
+    "${CMAKE_SOURCE_DIR}/../BoostPackages/boost_1_61_0_b1/stage/lib/"
     ${OPENCL_LINK_DIR})
 
 
 
-if(UNIX)
+if(UNIX AND NOT CYGWIN)
     SET(GCC_COVERAGE_COMPILE_FLAGS "${GCC_COVERAGE_COMPILE_FLAGS} -pthread")
-endif(UNIX)
+endif()
 if(CYGWIN)
     SET(GCC_COVERAGE_COMPILE_FLAGS "${GCC_COVERAGE_COMPILE_FLAGS} -fno-access-control")
 endif(CYGWIN)
@@ -124,4 +142,5 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} ${MTE_COMP
 
 #set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_executable(MerikensTripcodeEngine ${SOURCES} ${YASM_FILES})
-
+set_target_properties(MerikensTripcodeEngine PROPERTIES LINKER_LANGUAGE CXX)
+set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")

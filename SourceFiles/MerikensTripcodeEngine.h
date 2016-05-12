@@ -58,6 +58,7 @@
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
+#define __stdcall
 #endif
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
