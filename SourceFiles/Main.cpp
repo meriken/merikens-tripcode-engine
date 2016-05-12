@@ -272,9 +272,10 @@ int execute_system_command(const char *command)
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 	std::string wrapped_command;
-	wrapped_command = "cmd /C \"";
+	wrapped_command += "cmd /C \"";
 	wrapped_command += command;
 	wrapped_command += "\"";
+	// std::cout << wrapped_command << std::endl;
 	system_command_spinlock.lock();
 	ret = system(wrapped_command.data());
 	system_command_spinlock.unlock();

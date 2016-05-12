@@ -496,7 +496,11 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
 	char    sourceFileFullPath[MAX_LEN_FILE_PATH + 1];
 	FILE   *sourceFile;
+#if defined(_WIN32) || defined(CYGWIN)
+	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+#else
 	sprintf(sourceFilePath, "OpenCL/bin/OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+#endif
 	sprintf(sourceFileFullPath, "%s/%s", applicationDirectory, sourceFilePath);
 	if ((sourceFile = fopen(sourceFileFullPath, "w"))) {
 		for (int32_t i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
@@ -526,14 +530,26 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sscanf(driverVersion, "%d.%d%s", &driverMajorVersion, &driverMinorVersion, rest);
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
+#if defined(_WIN32) || defined(CYGWIN)
+	if (dummyKernelBinaryFilePath) {
+		sprintf(assemblerCommand, "%s \"%s\\OpenCL\\bin\\OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
+	} else {
+		sprintf(assemblerCommand, "%s \"%s\\OpenCL\\bin\\OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
+	}
+#else
 	if (dummyKernelBinaryFilePath) {
 		sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
 	} else {
 		sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
 	}
+#endif
 	execute_system_command(assemblerCommand);
 	sprintf(assemblerCommand, 
-		    "\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
+#if defined(_WIN32) || defined(CYGWIN)
+		    "\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
+#else
+	        "\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
+#endif
 			applicationDirectory,
 			dummyKernelBinaryFilePath                     ? "rawcode" : 
 			strncmp(deviceVersion, "OpenCL 1.2", 10) == 0 ? "amd"     :
@@ -560,6 +576,9 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	execute_system_command(assemblerCommand);
 
 	if (dummyKernelBinaryFilePath) {
+#if defined(_WIN32) || defined(CYGWIN)
+#else
+#endif
 		char    innerELFFilePath[MAX_LEN_FILE_PATH + 1];
 		sprintf(innerELFFilePath, "%s/OpenCL/bin/OpenCL10GCN_InnerELF_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 		char    GCNCodeFilePath[MAX_LEN_FILE_PATH + 1];
