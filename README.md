@@ -37,7 +37,7 @@ I am also working on the English version of my tripcode search service and would
 * PayPal: `meriken.ygch.net@gmail.com`
 * Bitcoin: `1BZrWADRhLr9DyQYYRJhRcmudE3vntT5em`
 
-## Building
+## Building on Windows
 
 You need the following tools to build Meriken's Tripcode Engine.
 
@@ -46,9 +46,9 @@ You need the following tools to build Meriken's Tripcode Engine.
 * AMD APP SDK 3.0
 * YASM 1.2.0
 
-This program uses Boost 1.60.0 and Boost Process. Make sure to copy Boost files into appropriate Visual Studio folders.
+This program uses Boost and Boost.Process. Make sure to unpack `BoostPackages/boost_1_61_0_b1.7z` and `BoostPackages/lib.7z` before building `VisualStudio/MerikensTripcodeEngine.sln`.
 
-See `MerikensTripcodeEngine.h` for various build options. Don't forget to define `ENGLISH_VERSION` if you want to build an English version for 4chan.
+There are several configurations. Please note that NVIDIA-optimized versions take **extremely** long time to build.
 
 ## Dependencies
 
