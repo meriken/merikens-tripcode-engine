@@ -835,7 +835,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\Win32;$(AMDAPPSDKROOT)\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
@@ -845,18 +845,18 @@
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
     <TargetName>$(ProjectName)64</TargetName>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\x64;$(AMDAPPSDKROOT)\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\Win32;$(AMDAPPSDKROOT)\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_English|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\Win32;$(AMDAPPSDKROOT)\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
@@ -864,7 +864,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_English_NVIDIA|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\Win32;$(AMDAPPSDKROOT)\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
@@ -872,7 +872,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NVIDIA|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\Win32;$(AMDAPPSDKROOT)\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
@@ -883,28 +883,28 @@
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
     <TargetName>$(ProjectName)64</TargetName>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\x64;$(AMDAPPSDKROOT)\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_English|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
     <TargetName>$(ProjectName)English64</TargetName>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\x64;$(AMDAPPSDKROOT)\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_English_NVIDIA|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
     <TargetName>$(ProjectName)English64_NVIDIA</TargetName>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\x64;$(AMDAPPSDKROOT)\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NVIDIA|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
     <TargetName>$(ProjectName)64_NVIDIA</TargetName>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\lib\x64;$(AMDAPPSDKROOT)\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0_b1;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
