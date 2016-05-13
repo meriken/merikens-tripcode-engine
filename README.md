@@ -3,12 +3,12 @@
 
 **I am currently working on a cross-platform version of this application. Donations are greatly appreciated.** 
 
-"Meriken's Tripcode Engine" is a Windows application designed to generate custom/vanity tripcodes at maximum speed. 
+"Meriken's Tripcode Engine" is a cross-platform application designed to generate custom/vanity tripcodes at maximum speed. 
 It is arguably the fastest and most powerful program of its kind. It makes effecitive use of available computing power of CPUs and GPUs, 
 and the user can specify flexible regex patterns for tripcodes. It features highly optimized, extensively parallelized 
 implementations of bitslice DES and SHA-1 for OpenCL, AMD GCN, NVIDIA CUDA, and Intel SSE2/AVX/AVX2.
 
-The English version of this program is available for free download here:
+The Windows version of this program is available for free download here:
 
 http://meriken.ygch.net/programming/merikens-tripcode-engine-english/
 
@@ -37,7 +37,7 @@ I am also working on the English version of my tripcode search service and would
 * PayPal: `meriken.ygch.net@gmail.com`
 * Bitcoin: `1BZrWADRhLr9DyQYYRJhRcmudE3vntT5em`
 
-## Building on Windows
+## Building (Windows)
 
 You need the following tools to build Meriken's Tripcode Engine.
 
@@ -46,11 +46,11 @@ You need the following tools to build Meriken's Tripcode Engine.
 * AMD APP SDK 3.0
 * YASM 1.2.0
 
-This program uses Boost and Boost.Process. Make sure to unpack `BoostPackages/boost_1_61_0_b1.7z` and `BoostPackages/lib.7z` before building `VisualStudio/MerikensTripcodeEngine.sln`.
+This program uses Boost and Boost.Process. Make sure to extract `BoostPackages/boost_1_61_0_b1.7z` and run `BoostPackages\BuildBoostForVisualStudio.bat` before building `VisualStudio/MerikensTripcodeEngine.sln`.
 
 There are several configurations. Please note that NVIDIA-optimized versions take **extremely** long time to build.
 
-## Dependencies
+## Dependencies (Windows)
 
 You need the following software installed in order to run the application:
 
@@ -64,18 +64,52 @@ You need the following software installed in order to run the application:
 
 ## Usage
 
-Make sure to download and install the required software packages before 
-executing the program. If there is no OpenCL driver in the system, make sure to copy
-either `OpenCL\x86\OpenCL.dll` or `OpenCL\x64\OpenCL.dll`,
-depending on the operating system, to the folder where 
-the executables are located.
-
 Specify search patterns in `patterns.txt` and run either
 `MerikensTripcodeEngine.exe`, if you are using a 32-bit operating system, or
 `MerikensTripcodeEngine64.exe`, if you are using a 64-bit operating system.
-Matching tripcodes will be displayed and saved in `tripcodes.txt`.
+Matching tripcodes will be displayed and saved in `tripcodes.txt`. See "Example of 'patterns.txt'" below.
 
-Example of `patterns.txt`:
+## Building (Linux)
+
+You need the following tools to build Meriken's Tripcode Engine.
+
+* CMake 2.8.4 or later
+* C++11-compatible compiler (g++ 5.0.0 or later)
+* AMD APP SDK 3.0 (if you are using an AMD video card.)
+
+This program uses Boost and Boost.Process. Make sure to extract `BoostPackages/boost_1_61_0_b1.7z` and build it before building `MerikensTripcodeEngine`.
+
+# Ubuntu 14.04 LTS
+
+```
+$ cd BoostPackages
+$ 7z x boost_1_61_0_b1.7z
+$ cd boost_1_61_0_b1
+$ ./bootstrap.sh 
+$ sudo apt-get install libbz2-dev python2.7-dev 
+$ ./b2 link=static runtime-link=static -j 8
+$ cd ../../CMake/
+$ mkdir Build
+$ cd Build
+$ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+$ sudo apt-get update && sudo apt-get install gcc-5 g++-5
+$ cmake -DCMAKE_CXX_COMPILER=g++-5 ..
+$ make
+```
+
+## Dependencies (Linux)
+
+You need the following software installed in order to run the application:
+
+* AMD fglrx Driver (if you are using an AMD graphics card)
+
+## Usage (Linux)
+
+Specify search patterns in `patterns.txt` and run `MerikensTripcodeEngine`.
+Matching tripcodes will be displayed and saved in `tripcodes.txt`.
+See "Example of 'patterns.txt'" below.
+
+## Example of "patterns.txt"
 
 ```
 # Meriken's Tripcode Engine English

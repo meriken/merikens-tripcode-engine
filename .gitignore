@@ -21,3 +21,6 @@ tripcodes.txt
 CMake/*Build
 CMake/*build
 *~
+include.7z
+lib.7z
+boost_1_60_0.7z
