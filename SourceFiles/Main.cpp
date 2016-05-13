@@ -2411,5 +2411,7 @@ int main(int argc, char **argv)
 
 	ReleaseResources();
 
+	reset_cursor_pos(prevLineCount);                        \
+
 	return 0;
 }
