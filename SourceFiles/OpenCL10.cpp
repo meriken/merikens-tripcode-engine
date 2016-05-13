@@ -108,10 +108,29 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	FILE   *sourceFile;
 	char   *sourceCode;
 	size_t  sizeSourceCode;
+#if defined(_WIN32) || defined(CYGWIN)
 	strcpy(sourceFilePath, applicationDirectory);
-	strcat(sourceFilePath, "/");
+	strcat(sourceFilePath, "\\OpenCL\\");
 	strcat(sourceFilePath, sourceFileName);
 	sourceFile = fopen(sourceFilePath, "r");
+	if (!sourceFile) {
+		strcpy(sourceFilePath, applicationDirectory);
+		strcat(sourceFilePath, "\\..\\etc\\MerikensTripcodeEngine\\OpenCL\\");
+		strcat(sourceFilePath, sourceFileName);
+		sourceFile = fopen(sourceFilePath, "r");
+	}
+#else
+	strcpy(sourceFilePath, applicationDirectory);
+	strcat(sourceFilePath, "/OpenCL/");
+	strcat(sourceFilePath, sourceFileName);
+	sourceFile = fopen(sourceFilePath, "r");
+	if (!sourceFile) {
+		strcpy(sourceFilePath, applicationDirectory);
+		strcat(sourceFilePath, "/../etc/MerikensTripcodeEngine/OpenCL/");
+		strcat(sourceFilePath, sourceFileName);
+		sourceFile = fopen(sourceFilePath, "r");
+	}
+#endif
 	ERROR0(!sourceFile, ERROR_OPENCL, "Failed to load an OpenCL source file.");
 	sourceCode = (char*)malloc(OPENCL_MAX_SIZE_SOURCE_CODE);
 	ERROR0(sourceCode == NULL, ERROR_NO_MEMORY, GetErrorMessage(ERROR_NO_MEMORY));
@@ -209,208 +228,7 @@ static void CreateProgram(cl_context *context, cl_program *program, cl_device_id
 	}
 }
 
-#include <iostream>
-#include <fstream>
-#include <iterator>
-#include "elfio/elfio.hpp"
-
-using namespace std;
-using namespace ELFIO;
-
-static void ExtractTextSectionInELFFileIntoFile(char *ELFFilePath, char *textSectionFilePath)
-{
-    elfio reader;
-    
-    reader.load(ELFFilePath);
-    Elf_Half sec_num = reader.sections.size();
-    for ( int32_t i = 0; i < sec_num; ++i ) {
-        section* psec = reader.sections[i];
-		if (psec->get_name() == ".text") {
-			ofstream textSectionFile;
-			textSectionFile.open(textSectionFilePath, ios::out | ios::binary);
-			textSectionFile.write(reader.sections[i]->get_data(), reader.sections[i]->get_size());
-			textSectionFile.close();
-		}
-    }
-}
-
-static void ReplaceTextSectionInELFFileWithFile(char *ELFFilePath, char *textSectionFilePath, BOOL innerELFFile)
-{
-    elfio reader, writer;
-    
-	reader.load(ELFFilePath);
-
-	ifstream textSectionFile;
-	textSectionFile.open(textSectionFilePath, ios::in | ios::binary);
-	textSectionFile.seekg(0, ios::end);
-	size_t textSectionSize = textSectionFile.tellg();
-	char *textSection = new char[textSectionSize];
-	textSectionFile.seekg(0, ios::beg);
-	textSectionFile.read(textSection, textSectionSize);
-	textSectionFile.close();
-
-	writer.create(reader.get_class(), reader.get_encoding());
-
-	writer.set_os_abi(reader.get_os_abi());
-	writer.set_abi_version(reader.get_abi_version());
-	writer.set_type(reader.get_type());
-	writer.set_machine(reader.get_machine());
-
-	Elf_Half sec_num = reader.sections.size();
-	section* text_sec = NULL;
-    section* data_sec = NULL;
-    section* symtab_sec = NULL;
-    section* strtab_sec = NULL;
-    for ( int32_t i = 0; i < sec_num; ++i ) {
-		if (reader.sections[i]->get_name() == ".strtab")
-			strtab_sec = reader.sections[i];
-	}
-    for ( int32_t i = 0; i < sec_num; ++i ) {
-        section* src_sec = reader.sections[i];
-		if (src_sec->get_name() == ".shstrtab" || src_sec->get_type() == SHT_NULL)
-			continue;
-
-		section* dest_sec = writer.sections.add(src_sec->get_name());		
-		dest_sec->set_type(src_sec->get_type());
-		dest_sec->set_flags(src_sec->get_flags());
-		dest_sec->set_link(src_sec->get_link());
-		dest_sec->set_addr_align(src_sec->get_addr_align());
-		dest_sec->set_entry_size(src_sec->get_entry_size());
-		dest_sec->set_address(src_sec->get_address());
-		dest_sec->set_info(src_sec->get_info());
-		//dest_sec->set_size(src_sec->get_size());
-		//dest_sec->set_name_string_offset(src_sec->get_name_string_offset());
-		if (src_sec->get_name() == ".text") {
-			dest_sec->set_data(textSection, textSectionSize);
-			text_sec = dest_sec;
-		} else if (src_sec->get_name() == ".data") {
-			dest_sec->set_data(src_sec->get_data(), src_sec->get_size());
-			data_sec = dest_sec;
-		} else if (src_sec->get_name() == ".symtab") {
-			/*
-			symbol_section_accessor src_symbols (symbol_section_accessor(reader, src_sec));
-			symbol_section_accessor dest_symbols(symbol_section_accessor(reader, dest_sec));
-			std::string name;
-			Elf64_Addr value;
-			Elf_Xword size;
-			unsigned char bind;
-			unsigned char type;
-			Elf_Half section_index;
-			unsigned char other;
-
-			for (int32_t i = 0; i < src_symbols.get_symbols_num(); ++i) {
-				int32_t j = 0;
-				string_section_accessor strings = string_section_accessor(strtab_sec);
-
-				src_symbols.get_symbol(i, name, value, size, bind, type, section_index, other);
-				while (strings.get_string(j)) {
-					if (name == strings.get_string(j))
-						break;
-					++j;
-				}
-				if (type == STT_FUNC)
-					size = textSectionSize;
-				if (type == STT_NOTYPE)
-					continue;
-				dest_symbols.add_symbol(j, value, size, bind, type, other, section_index);
-			}
-			*/
-			char *data = new char [src_sec->get_size()];
-			for (int32_t i = 0; i < src_sec->get_size(); ++i) {
-				data[i] = (src_sec->get_data())[i];
-				//printf("%02x ", (int32_t)(((unsigned char *)data)[i]));
-				//if (i % 16 == 15)
-				//	printf("\n");
-			}
-			//printf("\n");
-			if (!innerELFFile && src_sec->get_size() >=  16 + 24 * 3)
-				*(uint64_t *)(data + 24 * 2 + 16) = textSectionSize;
-			dest_sec->set_data(data, src_sec->get_size());
-			//for (int32_t i = 0; i < src_sec->get_size(); ++i) {
-			//	printf("%02x ", (int32_t)(((unsigned char *)data)[i]));
-			//	if (i % 16 == 15)
-			//		printf("\n");
-			//}
-			delete [] data;
-			symtab_sec = dest_sec;
-		} else if (src_sec->get_name() == ".strtab") {
-			dest_sec->set_data(src_sec->get_data(), src_sec->get_size());
-			strtab_sec = dest_sec;
-		} else {
-			dest_sec->set_data(src_sec->get_data(), src_sec->get_size());
-		}
-	}
-
-	Elf_Half seg_num = reader.segments.size();
-    for ( int32_t i = 0; i < seg_num; ++i ) {
-        segment* src_seg = reader.segments[i];
-		segment* dest_seg = writer.segments.add();
-		dest_seg->set_type(src_seg->get_type());
-		dest_seg->set_virtual_address(src_seg->get_virtual_address());
-		dest_seg->set_physical_address(src_seg->get_physical_address());
-		dest_seg->set_memory_size(src_seg->get_memory_size());
-		dest_seg->set_flags(src_seg->get_flags());
-		dest_seg->set_align(src_seg->get_align());
-
-		if (src_seg->get_type() == PT_LOAD && text_sec && data_sec && symtab_sec && strtab_sec) {
-			size_t text_sec_size   = text_sec->get_size();
-			size_t data_sec_size   = data_sec->get_size();
-			size_t symtab_sec_size = symtab_sec->get_size();
-			size_t strtab_sec_size = strtab_sec->get_size();
-			size_t size = text_sec_size + data_sec_size + symtab_sec_size + strtab_sec_size;
-			char *data = new char [size], *p = data;
-			const char *q;
-			int32_t i;
-			for (i = 0, q = text_sec->get_data();   i < text_sec_size;   ++i) *p++ = *q++;
-			for (i = 0, q = data_sec->get_data();   i < data_sec_size;   ++i) *p++ = *q++;
-			for (i = 0, q = symtab_sec->get_data(); i < symtab_sec_size; ++i) *p++ = *q++;
-			for (i = 0, q = strtab_sec->get_data(); i < strtab_sec_size; ++i) *p++ = *q++;
-			dest_seg->set_memory_size(size);
-			dest_seg->set_data(data, size);
-			delete [] data;
-		} else { 
-			dest_seg->set_data(src_seg->get_data(), src_seg->get_file_size());
-		}
-
-		if (src_seg->get_type() == PT_NOTE && innerELFFile) {
-			unsigned char *data = (unsigned char *)(dest_seg->get_data());
-			for (int32_t i = 0; i < dest_seg->get_file_size() - 8; ++i) {
-				if (   data[i    ] == 0x41
-					&& data[i + 1] == 0x10
-					&& data[i + 2] == 0x00
-					&& data[i + 3] == 0x80
-					&& data[i + 4] != 0
-					&& data[i + 5] == 0
-					&& data[i + 6] == 0
-					&& data[i + 7] == 0) {
-					//printf("VGPR: %d\n", (int32_t)data[i + 4]);
-					data[i + 4] = 128U; // VGPR
-					//printf("VGPR: %d\n", (int32_t)data[i + 4]);
-				} else if (   data[i    ] == 0x42
-						   && data[i + 1] == 0x10
-						   && data[i + 2] == 0x00
-						   && data[i + 3] == 0x80
-						   && data[i + 4] != 0
-						   && data[i + 5] == 0
-						   && data[i + 6] == 0
-						   && data[i + 7] == 0) {
-					//printf("SGPR: %d\n", (int32_t)data[i + 4]);
-					data[i + 4] = 102U; // SGPR
-					//printf("SGPR: %d\n", (int32_t)data[i + 4]);
-				}
-			}
-		}
-	}
-	delete[] textSection;
-
-	if (innerELFFile) {
-		ERROR0(!writer.save_inner_elf_file(ELFFilePath), ERROR_OPENCL, "elfio failed.");
-	} else {
-		ERROR0(!writer.save_outer_elf_file(ELFFilePath), ERROR_OPENCL, "elfio failed.");
-	}
-}
-
-static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction, char *dummyKernelBinaryFilePath)
+static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *program, cl_device_id *deviceID, char *deviceName, char *deviceVersion, char *driverVersion, unsigned char keyChar1, unsigned char keyChar2, unsigned char *expansionFunction)
 {
 	gcn_assembler_spinlock.lock();
 
@@ -490,18 +308,23 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	char    asssemblerOutputFilePath[MAX_LEN_FILE_PATH + 1];
 	char    assemblerOutputFileFullPath[MAX_LEN_FILE_PATH + 1];
-	sprintf(asssemblerOutputFilePath, "OpenCL/bin/OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+#if defined(_WIN32) || defined(CYGWIN)
+	sprintf(asssemblerOutputFilePath, "OpenCL\\bin\\OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(assemblerOutputFileFullPath, "%s\\%s", applicationDirectory, asssemblerOutputFilePath);
+#else
+	sprintf(asssemblerOutputFilePath, "/tmp/OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	sprintf(assemblerOutputFileFullPath, "%s/%s", applicationDirectory, asssemblerOutputFilePath);
-
+#endif
 	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
 	char    sourceFileFullPath[MAX_LEN_FILE_PATH + 1];
 	FILE   *sourceFile;
 #if defined(_WIN32) || defined(CYGWIN)
 	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
+	sprintf(sourceFileFullPath, "%s\\%s", applicationDirectory, sourceFilePath);
 #else
-	sprintf(sourceFilePath, "OpenCL/bin/OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
-#endif
+	sprintf(sourceFilePath, "/tmp/OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
 	sprintf(sourceFileFullPath, "%s/%s", applicationDirectory, sourceFilePath);
+#endif
 	if ((sourceFile = fopen(sourceFileFullPath, "w"))) {
 		for (int32_t i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
 			fprintf(sourceFile, "DB_EF%02d = %s\n", i, registerMap[expansionFunction[i]]);
@@ -531,27 +354,18 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
 #if defined(_WIN32) || defined(CYGWIN)
-	if (dummyKernelBinaryFilePath) {
-		sprintf(assemblerCommand, "%s \"%s\\OpenCL\\bin\\OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
-	} else {
-		sprintf(assemblerCommand, "%s \"%s\\OpenCL\\bin\\OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
-	}
+	sprintf(assemblerCommand, "%s \"%s\\OpenCL\\bin\\OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
 #else
-	if (dummyKernelBinaryFilePath) {
-		sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN_OpenCL20.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
-	} else {
-		sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
-	}
+	sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
 #endif
 	execute_system_command(assemblerCommand);
 	sprintf(assemblerCommand, 
 #if defined(_WIN32) || defined(CYGWIN)
 		    "\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
 #else
-	        "\"%s/CLRadeonExtender/clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
+	        "clrxasm -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
 #endif
 			applicationDirectory,
-			dummyKernelBinaryFilePath                     ? "rawcode" : 
 			strncmp(deviceVersion, "OpenCL 1.2", 10) == 0 ? "amd"     :
 			                                                "amd",
 			deviceName,
@@ -574,33 +388,6 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	ERROR0(execute_system_command(assemblerCommand) != 0, ERROR_GCN_ASSEMBLER, "Failed to assemble GCN kernel.");
 	sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, sourceFileFullPath);
 	execute_system_command(assemblerCommand);
-
-	if (dummyKernelBinaryFilePath) {
-#if defined(_WIN32) || defined(CYGWIN)
-#else
-#endif
-		char    innerELFFilePath[MAX_LEN_FILE_PATH + 1];
-		sprintf(innerELFFilePath, "%s/OpenCL/bin/OpenCL10GCN_InnerELF_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
-		char    GCNCodeFilePath[MAX_LEN_FILE_PATH + 1];
-		sprintf(GCNCodeFilePath, "%s/OpenCL/bin/OpenCL10GCN_GCNCode_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
-
-		//sprintf(assemblerCommand, "%s \"%s\" \"%s.original\"", COPY_COMMAND, dummyKernelBinaryFilePath, dummyKernelBinaryFilePath);
-		//execute_system_command(assemblerCommand);
-		
-		ExtractTextSectionInELFFileIntoFile(dummyKernelBinaryFilePath, innerELFFilePath);
-
-		//sprintf(assemblerCommand, "%s \"%s\" \"%s.original\"", COPY_COMMAND, innerELFFilePath, innerELFFilePath);
-		//execute_system_command(assemblerCommand);
-
-		//ExtractTextSectionInELFFileIntoFile(innerELFFilePath, GCNCodeFilePath);
-		//ReplaceTextSectionInELFFileWithFile(innerELFFilePath, GCNCodeFilePath, TRUE);
-		
-		ReplaceTextSectionInELFFileWithFile(innerELFFilePath, assemblerOutputFileFullPath, TRUE);
-		ReplaceTextSectionInELFFileWithFile(dummyKernelBinaryFilePath, innerELFFilePath, FALSE);
-		
-		sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, innerELFFilePath);
-		execute_system_command(assemblerCommand);
-	}
 
 	FILE   *binaryFile = fopen(assemblerOutputFileFullPath, "rb");
 	ERROR0(   binaryFile == NULL
@@ -626,11 +413,6 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 
 	sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, assemblerOutputFileFullPath);
 	execute_system_command(assemblerCommand);
-
-	if (dummyKernelBinaryFilePath) {
-		sprintf(assemblerCommand, "%s \"%s\"", DELETE_COMMAND, dummyKernelBinaryFilePath);
-		execute_system_command(assemblerCommand);
-	}
 
 	gcn_assembler_spinlock.unlock();
 }
@@ -810,18 +592,12 @@ void Thread_SearchForDESTripcodesOnOpenCLDevice(OpenCLDeviceSearchThreadInfo *in
 #ifdef SINGLE_SALT
 			} while (salt[0] != '.' || salt[1] != '.');
 #endif
-			if (false && enableGCNAssembler && isDriverOpenCL20Compatible) {
-				char    dummyKernelBinaryFilePath[MAX_LEN_FILE_PATH + 1];
-				sprintf(dummyKernelBinaryFilePath, "%s/OpenCL/bin/OpenCL10GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
-				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, dummyKernelBinaryFilePath);
-				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, dummyKernelBinaryFilePath);
-			} else if (enableGCNAssembler) {
-				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, NULL);
+			if (enableGCNAssembler) {
+				CreateProgramFromGCNAssemblySource(&context, &program, &deviceID, deviceName, deviceVersion, driverVersion, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction);
 			} else {
-				char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
-				FILE   *binaryFile;
-				sprintf(binaryFilePath, "%s/OpenCL/bin/OpenCL10GCN.bin", applicationDirectory);
-				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, binaryFilePath);
+				// char binaryFilePath[MAX_LEN_FILE_PATH + 1];
+				// sprintf(binaryFilePath, "%s/OpenCL/bin/OpenCL10GCN.bin", applicationDirectory);
+				CreateProgram(&context, &program, &deviceID, sourceFileName, buildOptions, keyInfo.partialKeyAndRandomBytes[1], keyInfo.partialKeyAndRandomBytes[2], keyInfo.expansioinFunction, NULL /* binaryFilePath */);
 			}
 			UpdateOpenCLDeviceStatus(info, "[thread] Creating an OpenCL kernel...");
 			kernel = clCreateKernel(program, "OpenCL_DES_PerformSearching", &openCLError);
