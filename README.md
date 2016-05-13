@@ -79,7 +79,7 @@ You need the following tools to build Meriken's Tripcode Engine.
 
 This program uses Boost and Boost.Process. Make sure to extract `BoostPackages/boost_1_61_0_b1.7z` and build it before building `MerikensTripcodeEngine`.
 
-# Ubuntu 14.04 LTS
+### Ubuntu 14.04 LTS
 
 ```
 $ cd BoostPackages
