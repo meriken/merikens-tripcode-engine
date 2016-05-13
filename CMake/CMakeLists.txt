@@ -1,16 +1,6 @@
 cmake_minimum_required(VERSION 2.8.4)
 project(MerikensTripcodeEngine CXX)
 
-# ./bootstrap.sh 
-# sudo apt-get install libbz2-dev python2.7-dev 
-# ./b2 link=static runtime-link=static -j 8
-# cd ../../CMake/
-# mkdir Build
-# cd Build
-# sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-# sudo apt-get update && sudo apt-get install gcc-5 g++-5
-# cmake -DCMAKE_CXX_COMPILER=g++-5 ..
-
 set(MTE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SourceFiles)
 set(MTE_BOOST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../BoostPackages)
 set(MTE_BOOST_PACKAGE "boost_1_61_0_b1")
@@ -32,10 +22,13 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	endif()
 endif()
 
+
+
 ##########
 # OpenCL #
 ##########
 
+file(COPY "${MTE_SOURCE_DIR}/OpenCL")
 set(CYGWIN_AMD_APP_SDK_DIR "/cygdrive/c/Program\ Files\ (x86)/AMD\ APP\ SDK/3.0")
 if(AMDAPPSDKROOT AND EXISTS ${AMDAPPSDKROOT})
 	set(UNIX_AMD_APP_SDK_DIR ${AMDAPPSDKROOT})
