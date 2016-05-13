@@ -718,9 +718,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\SourceFiles\OpenCL\OpenCL10.cl" />
-    <None Include="..\SourceFiles\OpenCL\OpenCL10_AMD_pre-GCN.cl" />
+    <None Include="..\SourceFiles\OpenCL\OpenCL10_AMD_VLIW.cl" />
     <None Include="..\SourceFiles\OpenCL\OpenCL12.cl" />
-    <None Include="..\SourceFiles\OpenCL\OpenCL12_AMD_pre-GCN.cl" />
+    <None Include="..\SourceFiles\OpenCL\OpenCL12_AMD_VLIW.cl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD13A840-16DE-4D22-9D2C-069440A352D6}</ProjectGuid>
