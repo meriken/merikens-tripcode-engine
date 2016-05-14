@@ -534,14 +534,17 @@ void Thread_RunChildProcessForOpenCLDevice(OpenCLDeviceSearchThreadInfo *info)
 		args.push_back(CONVERT_FROM_BYTES(termination_event.name()));
 	}
 
-	boost::process::pipe pipe = boost::process::create_pipe();
-	boost::iostreams::file_descriptor_sink sink(pipe.sink, boost::iostreams::close_handle);
+	boost::process::pipe stdout_pipe = boost::process::create_pipe();
+	boost::iostreams::file_descriptor_sink stdout_sink(stdout_pipe.sink, boost::iostreams::close_handle);
+	boost::process::pipe stderr_pipe = boost::process::create_pipe();
+	boost::iostreams::file_descriptor_sink stderr_sink(stderr_pipe.sink, boost::iostreams::close_handle);
 	boost::process::child child_process = boost::process::execute(
 		boost::process::initializers::set_args(args),
-		boost::process::initializers::bind_stdout(sink),
-		boost::process::initializers::start_in_dir(applicationDirectory),
+		boost::process::initializers::bind_stdout(stdout_sink),
+		boost::process::initializers::bind_stderr(stderr_sink),
+		//boost::process::initializers::start_in_dir(applicationDirectory),
 		boost::process::initializers::inherit_env());
-	boost::iostreams::file_descriptor_source source(pipe.source, boost::iostreams::close_handle);
+	boost::iostreams::file_descriptor_source source(stdout_pipe.source, boost::iostreams::close_handle);
 	boost::iostreams::stream<boost::iostreams::file_descriptor_source> input_stream(source);
 
 	boost_process_spinlock.unlock();

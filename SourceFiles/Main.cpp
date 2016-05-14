@@ -824,8 +824,9 @@ void CheckSearchThreads()
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
 			// Boost.Processs is happy with none of these lines below.
+#if defined(_WIN32) || defined(__CYGWIN__)
 #if 0
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(__CYGWIN__)
 			TerminateThread(native_handle, 0);
 #elif defined(_POSIX_THREADS)
 			pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -839,6 +840,9 @@ void CheckSearchThreads()
 																	       ? Thread_SearchForDESTripcodesOnOpenCLDevice
 													                       : Thread_SearchForSHA1TripcodesOnOpenCLDevice,
 																	   &(openCLDeviceSearchThreadInfoArray[index]));
+#else
+			info->currentSpeed = 0;
+#endif
 		}
 		//*/
 	}
@@ -863,14 +867,22 @@ void KeepSearchThreadsAlive()
 #endif
 }
 
-void PrintStatus()
+void PrintStatus(bool update_status = true)
 {
 	if (GetErrorState() || UpdateTerminationState())
 		return;
 
 	current_state_spinlock.lock();
 
-	char msg[MAX_NUM_LINES_STATUS_MSG][LEN_LINE_BUFFER_FOR_SCREEN];
+	static char msg[MAX_NUM_LINES_STATUS_MSG][LEN_LINE_BUFFER_FOR_SCREEN];
+	if (prevLineCount && !update_status && !options.redirection) {
+	    for (int32_t i = 0; i < prevLineCount; ++i)
+	        printf("%-79s\n", &(msg[i][0]));
+	    reset_cursor_pos(-prevLineCount);
+	    current_state_spinlock.unlock();
+	    return;
+	}
+
 	int32_t lineCount = 0;
 
 #define NEXT_LINE &(msg[lineCount++][0])
@@ -1477,6 +1489,15 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 	}
 }
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/predef.h>
+#if BOOST_OS_MACOS
+#include <mach-o/dyld.h>
+#elif BOOST_OS_BSD
+#include <sys/sysctl.h>
+#endif
+
 void ObtainOptions(int32_t argCount, char **arguments)
 {
 	int32_t i;
@@ -1484,8 +1505,20 @@ void ObtainOptions(int32_t argCount, char **arguments)
 	// Get the application path and directory.
 #if defined(_MSC_VER)
 	_fullpath(applicationPath, arguments[0], sizeof(applicationPath));
+#elif BOOST_OS_LINUX
+	readlink("/proc/self/exe", applicationPath, sizeof(applicationPath));
+#elif BOOST_OS_MACOS
+	uint32_t size = sizeof(applicationPath);
+	int ret = _NSGetExecutablePath(applicationPath, &size);
+#elif BOOST_OS_BSD
+	int mib[4] = {0};
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC;
+	mib[2] = KERN_PROC_PATHNAME;
+	mib[3] = -1;
+	size_t size = sizeof(applicationPath);
+	sysctl(mib, 4, applicationPath, &size, NULL, 0);
 #else
-	// realpath(arguments[0], applicationPath);
 	strncpy(applicationPath, arguments[0], sizeof(applicationPath));
 #endif
 	strcpy(applicationDirectory, applicationPath);
@@ -1770,7 +1803,7 @@ void ProcessValidTripcodePair(unsigned char *tripcode, unsigned char *key)
 	current_state_spinlock.unlock();
 
 	if (!options.redirection)
-		PrintStatus();
+		PrintStatus(false);
 	if (!options.redirection && options.beepWhenNewTripcodeIsFound)
 		printf("\a");
 }
@@ -1830,7 +1863,7 @@ void ProcessInvalidTripcodePair(unsigned char *tripcode, unsigned char *key)
 	current_state_spinlock.unlock();
 
 	if (options.outputInvalidTripcode && !options.redirection && !UpdateTerminationState() && !GetErrorState())
-		PrintStatus();
+		PrintStatus(false);
 }
 
 void OpenTripcodeFile()
