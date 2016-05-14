@@ -48,7 +48,7 @@ You need the following tools to build Meriken's Tripcode Engine.
 
 This program uses Boost and Boost.Process. Make sure to extract `BoostPackages/boost_1_61_0_b1.7z` and run `BoostPackages\BuildBoostForVisualStudio.bat` before building `VisualStudio/MerikensTripcodeEngine.sln`.
 
-There are several configurations. Please note that NVIDIA-optimized versions take **extremely** long time to build.
+There are several configurations. If you are using a 64-bit operating system, you need to build both 32-bit and  64-bit executables. Please note that NVIDIA-optimized versions take **extremely** long time to build.
 
 ## Dependencies (Windows)
 
@@ -62,7 +62,7 @@ You need the following software installed in order to run the application:
 [4]: http://support.amd.com/en-us/download
 [5]: http://www.nvidia.com/Download/index.aspx?lang=en-us
 
-## Usage
+## Usage (Windows)
 
 Specify search patterns in `patterns.txt` and run either
 `MerikensTripcodeEngine.exe`, if you are using a 32-bit operating system, or
@@ -71,19 +71,23 @@ Matching tripcodes will be displayed and saved in `tripcodes.txt`. See "Example 
 
 ## Building (Linux)
 
+**Note:** Linux support is preliminary. Only OpenCL, AMD GCN, and Intel SSE2 are supported.
+
 You need the following tools to build Meriken's Tripcode Engine.
 
 * CMake 2.8.4 or later
-* C++11-compatible compiler
-* AMD APP SDK 3.0 (if you are using an AMD video card.)
+* C++11-compliant compiler (g++-4.8 or later/clang++-3.5 or later)
+* AMD APP SDK 3.0 (if you are using an AMD/NVIDIA video card.)
 
-This program uses Boost and Boost.Process. Make sure to extract `BoostPackages/boost_1_61_0_b1.7z` and build it before building `MerikensTripcodeEngine`.
+This program uses Boost and Boost.Process. Make sure to extract `BoostPackages/boost_1_61_0_b1.7z` and build it before building `MerikensTripcodeEngine`. You also need to build and install CLRadeonExtender in the package.
 
-### Build Instructions for Ubuntu 14.04 LTS
+### Build Instructions for Ubuntu 14.04 LTS/16.04 LTS
 
 ```
 $ sudo apt-get update && sudo apt-get install p7zip-full libbz2-dev python2.7-dev 
 $ ./BuildAll.sh
+$ sudo make -C CLRadeonExtender/CLRX-mirror-master/build install
+$ sudo make -C CMakeBuild install
 ```
 
 ## Dependencies (Linux)
