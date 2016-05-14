@@ -9,3 +9,4 @@ mkdir CMakeBuild
 cd CMakeBuild
 cmake ../CMake
 make
+echo TEST/ >> patterns.txt
