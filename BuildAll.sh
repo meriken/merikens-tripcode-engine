@@ -4,9 +4,9 @@ cd BoostPackages
 cd boost_1_61_0
 ./bootstrap.sh 
 ./b2 link=static runtime-link=static -j 8
-cd ../..
+cd ../../
 mkdir CMakeBuild
 cd CMakeBuild
-cmake ../CMake
+cmake ../CMake/
 make
 echo TEST/ >> patterns.txt
