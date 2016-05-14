@@ -823,8 +823,8 @@ void CheckSearchThreads()
 			// auto native_handle = opencl_device_search_threads[index]->native_handle();
 			opencl_device_search_threads[index]->detach();
 			delete opencl_device_search_threads[index];
-			// Boost.Processs is happy with none of these lines below.
 #if defined(_WIN32) || defined(__CYGWIN__)
+			// Boost.Processs is happy with none of these lines below.
 #if 0
 #if defined(_WIN32) || defined(__CYGWIN__)
 			TerminateThread(native_handle, 0);
@@ -1489,9 +1489,6 @@ void InitSearchDevices(BOOL displayDeviceInformation)
 	}
 }
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/predef.h>
 #if BOOST_OS_MACOS
 #include <mach-o/dyld.h>
 #elif BOOST_OS_BSD
@@ -1506,10 +1503,11 @@ void ObtainOptions(int32_t argCount, char **arguments)
 #if defined(_MSC_VER)
 	_fullpath(applicationPath, arguments[0], sizeof(applicationPath));
 #elif BOOST_OS_LINUX
-	readlink("/proc/self/exe", applicationPath, sizeof(applicationPath));
+	size_t len = readlink("/proc/self/exe", applicationPath, sizeof(applicationPath));
+	ASSERT(0 < len && len < sizeof(applicationPath));
 #elif BOOST_OS_MACOS
 	uint32_t size = sizeof(applicationPath);
-	int ret = _NSGetExecutablePath(applicationPath, &size);
+	ASSERT(_NSGetExecutablePath(applicationPath, &size) == 0);
 #elif BOOST_OS_BSD
 	int mib[4] = {0};
 	mib[0] = CTL_KERN;
@@ -1517,7 +1515,9 @@ void ObtainOptions(int32_t argCount, char **arguments)
 	mib[2] = KERN_PROC_PATHNAME;
 	mib[3] = -1;
 	size_t size = sizeof(applicationPath);
-	sysctl(mib, 4, applicationPath, &size, NULL, 0);
+	ASSERT(sysctl(mib, 4, applicationPath, &size, NULL, 0) == 0);
+#elif BOOST_OS_SOLARIS
+	ASSERT(realpath(getexecname(), applicationPath));
 #else
 	strncpy(applicationPath, arguments[0], sizeof(applicationPath));
 #endif

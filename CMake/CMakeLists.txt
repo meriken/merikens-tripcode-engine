@@ -3,7 +3,7 @@ project(MerikensTripcodeEngine CXX)
 
 set(MTE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SourceFiles)
 set(MTE_BOOST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../BoostPackages)
-set(MTE_BOOST_PACKAGE "boost_1_61_0_b1")
+set(MTE_BOOST_PACKAGE "boost_1_61_0")
 
 
 ###########

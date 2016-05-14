@@ -82,7 +82,10 @@ typedef int BOOL;
 #ifdef ENABLE_CUDA
 #include <mutex>
 #endif
+#ifdef _WIN32
+// g++-4 does not have codecvt.
 #include <codecvt>
+#endif
 #include <locale>
 
 // Standard C libraries
