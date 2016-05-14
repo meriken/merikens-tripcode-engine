@@ -74,27 +74,16 @@ Matching tripcodes will be displayed and saved in `tripcodes.txt`. See "Example 
 You need the following tools to build Meriken's Tripcode Engine.
 
 * CMake 2.8.4 or later
-* C++11-compatible compiler (g++ 5.0.0 or later)
+* C++11-compatible compiler
 * AMD APP SDK 3.0 (if you are using an AMD video card.)
 
 This program uses Boost and Boost.Process. Make sure to extract `BoostPackages/boost_1_61_0_b1.7z` and build it before building `MerikensTripcodeEngine`.
 
-### Ubuntu 14.04 LTS
+### Build Instructions for Ubuntu 14.04 LTS
 
 ```
-$ cd BoostPackages
-$ 7z x boost_1_61_0_b1.7z
-$ cd boost_1_61_0_b1
-$ ./bootstrap.sh 
-$ sudo apt-get install libbz2-dev python2.7-dev 
-$ ./b2 link=static runtime-link=static -j 8
-$ cd ../../CMake/
-$ mkdir Build
-$ cd Build
-$ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-$ sudo apt-get update && sudo apt-get install gcc-5 g++-5
-$ cmake -DCMAKE_CXX_COMPILER=g++-5 ..
-$ make
+$ sudo apt-get update && sudo apt-get install p7zip-full libbz2-dev python2.7-dev 
+$ ./BuildAll.sh
 ```
 
 ## Dependencies (Linux)

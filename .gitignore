@@ -18,7 +18,6 @@ tripcodes.txt
 *.bc
 *.ii
 *.s
-CMake/*Build
-CMake/*build
+CMakeBuild
 *~
 CLRadeonExtender/CLRX-mirror-master
