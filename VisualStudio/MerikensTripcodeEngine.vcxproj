@@ -860,7 +860,7 @@
     <LibraryPath>$(SolutionDir)\..\BoostPackages\boost_1_61_0\stage\Win32\lib;$(AMDAPPSDKROOT)\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
-    <TargetName>$(ProjectName)English</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_English_NVIDIA|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -868,7 +868,7 @@
     <LibraryPath>$(SolutionDir)\..\BoostPackages\boost_1_61_0\stage\Win32\lib;$(AMDAPPSDKROOT)\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
-    <TargetName>$(ProjectName)English_NVIDIA</TargetName>
+    <TargetName>$(ProjectName)_NVIDIA</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NVIDIA|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -888,14 +888,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_English|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
-    <TargetName>$(ProjectName)English64</TargetName>
+    <TargetName>$(ProjectName)64</TargetName>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\boost_1_61_0\stage\x64\lib;$(AMDAPPSDKROOT)\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_English_NVIDIA|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\..\WindowsBinaries</OutDir>
-    <TargetName>$(ProjectName)English64_NVIDIA</TargetName>
+    <TargetName>$(ProjectName)64_NVIDIA</TargetName>
     <LibraryPath>$(SolutionDir)\..\BoostPackages\boost_1_61_0\stage\x64\lib;$(AMDAPPSDKROOT)\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <IncludePath>$(SolutionDir)\..\BoostPackages\include;$(SolutionDir)\..\BoostPackages\boost_1_61_0;$(AMDAPPSDKROOT)\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>

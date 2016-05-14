@@ -306,24 +306,18 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	salt[1] = CONVERT_CHAR_FOR_SALT(keyChar2);
 	DES_CreateExpansionFunction((char *)salt, expansionFunction);
 	
-	char    asssemblerOutputFilePath[MAX_LEN_FILE_PATH + 1];
 	char    assemblerOutputFileFullPath[MAX_LEN_FILE_PATH + 1];
-#if defined(_WIN32) || defined(CYGWIN)
-	sprintf(asssemblerOutputFilePath, "OpenCL\\bin\\OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
-	sprintf(assemblerOutputFileFullPath, "%s\\%s", applicationDirectory, asssemblerOutputFilePath);
+#if defined(_WIN32)
+	sprintf(assemblerOutputFileFullPath, "%s\\OpenCL\\bin\\OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 #else
-	sprintf(asssemblerOutputFilePath, "/tmp/OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
-	sprintf(assemblerOutputFileFullPath, "%s/%s", applicationDirectory, asssemblerOutputFilePath);
+	sprintf(assemblerOutputFileFullPath, "/tmp/OpenCL10GCN_AssemblerOutput_%02x%02x%02x%02x.bin", RandomByte(), RandomByte(), RandomByte(), RandomByte());
 #endif
-	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
 	char    sourceFileFullPath[MAX_LEN_FILE_PATH + 1];
 	FILE   *sourceFile;
-#if defined(_WIN32) || defined(CYGWIN)
-	sprintf(sourceFilePath, "OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
-	sprintf(sourceFileFullPath, "%s\\%s", applicationDirectory, sourceFilePath);
+#if defined(_WIN32)
+	sprintf(sourceFileFullPath, "%s\\OpenCL\\bin\\OpenCL10GCN_%02x%02x%02x%02x.asm", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 #else
-	sprintf(sourceFilePath, "/tmp/OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
-	sprintf(sourceFileFullPath, "%s/%s", applicationDirectory, sourceFilePath);
+	sprintf(sourceFileFullPath, "/tmp/OpenCL10GCN_%02x%02x%02x%02x.asm", RandomByte(), RandomByte(), RandomByte(), RandomByte());
 #endif
 	if ((sourceFile = fopen(sourceFileFullPath, "w"))) {
 		for (int32_t i = 0; i < DES_SIZE_EXPANSION_FUNCTION; ++i)
@@ -333,7 +327,6 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 		int32_t randomByteForKey7 = RandomByte();
 		for (int32_t i = 0; i < OPENCL_DES_BS_DEPTH; ++i) {
 			key7Array[i] = keyCharTable_SecondByteAndOneByte[randomByteForKey7 + i];
-			char s[OPENCL_DES_MAX_LEN_BUILD_OPTIONS + 1]; 
 			fprintf(sourceFile, "KEY7_%02d = 0x%02x\n", i, key7Array[i]);
 		}
 		for (int32_t j = 0; j < 7; ++j) {
@@ -353,19 +346,22 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sscanf(driverVersion, "%d.%d%s", &driverMajorVersion, &driverMinorVersion, rest);
 	
 	char    assemblerCommand[MAX_LEN_COMMAND_LINE + 1];
-#if defined(_WIN32) || defined(CYGWIN)
+#if defined(_WIN32)
 	sprintf(assemblerCommand, "%s \"%s\\OpenCL\\bin\\OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
-#else
-	sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\"", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
-#endif
 	execute_system_command(assemblerCommand);
+#else
+	sprintf(assemblerCommand, "%s \"%s/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\" 2> /dev/null", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
+	execute_system_command(assemblerCommand);
+	sprintf(assemblerCommand, "%s \"%s/../etc/MerikensTripcodeEngine/OpenCL/bin/OpenCL10GCN.asm\" >> \"%s\" 2> /dev/null", TYPE_COMMAND, applicationDirectory, sourceFileFullPath);
+	execute_system_command(assemblerCommand);
+#endif
 	sprintf(assemblerCommand, 
 #if defined(_WIN32) || defined(CYGWIN)
 		    "\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
+			applicationDirectory,
 #else
 	        "clrxasm -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
 #endif
-			applicationDirectory,
 			strncmp(deviceVersion, "OpenCL 1.2", 10) == 0 ? "amd"     :
 			                                                "amd",
 			deviceName,

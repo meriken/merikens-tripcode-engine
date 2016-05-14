@@ -630,7 +630,7 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 
 	char    binaryFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *binaryFile;
-#if defined(_WIN32) || defined(CYGWIN)
+#if defined(_WIN32)
 	sprintf(binaryFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
 #else
 	sprintf(binaryFilePath, "/tmp/OpenCL12GCN_%02x%02x%02x%02x.bin", applicationDirectory, RandomByte(), RandomByte(), RandomByte(), RandomByte());
@@ -638,10 +638,18 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	
 	char    sourceFilePath[MAX_LEN_FILE_PATH + 1];
 	FILE   *sourceFile;
-#if defined(_WIN32) || defined(CYGWIN)
+#if defined(_WIN32)
 	sprintf(sourceFilePath, "%s\\OpenCL\\bin\\OpenCL12GCN.asm", applicationDirectory);
 #else
-	sprintf(sourceFilePath, "/tmp/OpenCL12GCN.asm", applicationDirectory);
+	strcpy(sourceFilePath, applicationDirectory);
+	strcat(sourceFilePath, "/OpenCL/bin/OpenCL12GCN.asm");
+    sourceFile = fopen(sourceFilePath, "r");
+	if (sourceFile) {
+	  fclose(sourceFile);
+	} else {
+		strcpy(sourceFilePath, applicationDirectory);
+		strcat(sourceFilePath, "/../etc/MerikensTripcodeEngine/OpenCL/bin/OpenCL12GCN.asm");
+	}
 #endif
 	
 	int driverMajorVersion;
@@ -653,10 +661,10 @@ static void CreateProgramFromGCNAssemblySource(cl_context *context, cl_program *
 	sprintf(assemblerCommand, 
 #if defined(_WIN32) || defined(CYGWIN)
 			"\"%s\\CLRadeonExtender\\clrxasm\" -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
+			applicationDirectory,
 #else
 		    "clrxasm -b %s -g %s -A %s -t %d%02d -o \"%s\" \"%s\"",
 #endif
-			applicationDirectory,
 			"amd",
 			deviceName,
 			(   strcmp(deviceName, "CapeVerde") == 0
